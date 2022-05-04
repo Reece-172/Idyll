@@ -17,3 +17,16 @@ In the function 'create_A()', we set it to collide with B.
 However, in the function create_B(), we do not set it to collide with A. Then when A collides with B, A will go through B.
 
 - 3 types of joints - point-to-point (like elbow), hinge (like door), slider (like sliding door), cone-twist (useful for ragdoll)
+
+--------------------------------------------------------------------------------------------------
+MOTION 
+
+- There are 3 different types of objects in Bullet
+Dynamic (moving) rigidbodies: positive mass, every simulation frame the dynamics will update its world transform.
+Static rigidbodies: zero mass, cannot move but just collide.
+Kinematic rigidbodies: zero mass, can be animated by the user, but there will be only one way interaction: dynamic objects will be pushed away but there is no influence from dynamic objects.
+
+- DISABLE_DEACTIVATION - When a rigid body is no longer participating in dynamic interaction in the physics world, 
+ammojs deactivates it. In this deactivated state we won’t be able to apply force to it. 
+To stop this from happening set the activation state for the rigid body to STATE.DISABLE_DEACTIVATION.
+
