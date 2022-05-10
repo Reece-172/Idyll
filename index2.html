@@ -18,6 +18,14 @@
             moveDirection = { left: 0, right: 0, forward: 0, back: 0 } //used to hold the respective directional key (WASD)
             const STATE = { DISABLE_DEACTIVATION : 4 }
 
+                //kinematic object declaration
+                let kObject = null, //handle to the kinematic object
+                kMoveDirection = { left:0, right:0, forward:0, back: 0} , //will hold the keypress direction for moving the kinematic object
+                tmpPos = new THREE.Vector3(), 
+                tmpQuat = new THREE.Quaternion();
+                const FLAGS = {CF_KINEMATIC_OBJECT: 2} //must flag a rigid body as kinematic
+                let ammoTmpPos = null, ammoTmpQuat = null;
+
             //Ammojs Initialization
             Ammo().then(start)
 
@@ -25,11 +33,16 @@
 
                 tmpTrans = new Ammo.btTransform();
 
+                ammoTmpPos = new Ammo.btVector3();
+                ammoTmpQuat = new Ammo.btQuaternion();
+
                 setupPhysicsWorld();
 
                 setupGraphics();
                 createBlock();
                 createBall();
+                createKinematicBox();
+                
 
                 setupEventHandlers();
                 renderFrame();
@@ -110,7 +123,9 @@
 
                 let deltaTime = clock.getDelta();
 
+                //add moving object here
                 moveBall();
+                moveKinematic();
 
                 updatePhysics( deltaTime );
 
@@ -149,6 +164,23 @@
                         moveDirection.right = 1
                         break;
 
+                    //below 4 cases are for kinematic object. uses directional arrows
+                    case 38: //↑: FORWARD
+                        kMoveDirection.forward = 1
+                        break;
+                            
+                    case 40: //↓: BACK
+                        kMoveDirection.back = 1
+                        break;
+                            
+                    case 37: //←: LEFT
+                        kMoveDirection.left = 1
+                        break;
+                            
+                    case 39: //→: RIGHT
+                        kMoveDirection.right = 1
+                        break;
+
                 }
             }
 
@@ -172,15 +204,115 @@
                         moveDirection.right = 0
                         break;
 
+                    //below 4 cases are for kinematic object. uses directional arrows
+                    case 38: //↑: FORWARD
+                        kMoveDirection.forward = 0
+                        break;
+                        
+                    case 40: //↓: BACK
+                        kMoveDirection.back = 0
+                        break;
+                        
+                    case 37: //←: LEFT
+                        kMoveDirection.left = 0
+                        break;
+                        
+                    case 39: //→: RIGHT
+                        kMoveDirection.right = 0
+                        break;
+
                 }
 
             }
 
 
+            function createKinematicBox(){
+
+                let pos = {x: 40, y: 6, z: 5};
+                let scale = {x: 10, y: 10, z: 10};
+                let quat = {x: 0, y: 0, z: 0, w: 1};
+                let mass = 0;
+
+                //threeJS Section
+                kObject = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: 0x30ab78}));
+
+                kObject.position.set(pos.x, pos.y, pos.z);
+                kObject.scale.set(scale.x, scale.y, scale.z);
+
+                kObject.castShadow = true;
+                kObject.receiveShadow = true;
+
+                scene.add(kObject);
 
 
+                //Ammojs Section
+                let transform = new Ammo.btTransform();
+                transform.setIdentity();
+                transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+                transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+                let motionState = new Ammo.btDefaultMotionState( transform );
 
-            
+                let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
+                colShape.setMargin( 0.05 );
+
+                let localInertia = new Ammo.btVector3( 0, 0, 0 );
+                colShape.calculateLocalInertia( mass, localInertia );
+
+                let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+                let body = new Ammo.btRigidBody( rbInfo );
+
+                body.setFriction(4);
+                body.setRollingFriction(10);
+
+                //below 2 lines differentiate from other objects
+                body.setActivationState( STATE.DISABLE_DEACTIVATION );
+                body.setCollisionFlags( FLAGS.CF_KINEMATIC_OBJECT );
+
+
+                physicsWorld.addRigidBody( body );
+                kObject.userData.physicsBody = body;
+
+            }
+
+
+            function moveKinematic(){
+
+                let scalingFactor = 0.3;
+
+                let moveX =  kMoveDirection.right - kMoveDirection.left;
+                let moveZ =  kMoveDirection.back - kMoveDirection.forward;
+                let moveY =  0;
+
+
+                let translateFactor = tmpPos.set(moveX, moveY, moveZ);
+
+                translateFactor.multiplyScalar(scalingFactor);
+
+                kObject.translateX(translateFactor.x);
+                kObject.translateY(translateFactor.y);
+                kObject.translateZ(translateFactor.z);
+
+                kObject.getWorldPosition(tmpPos);
+                kObject.getWorldQuaternion(tmpQuat);
+
+                let physicsBody = kObject.userData.physicsBody;
+
+                let ms = physicsBody.getMotionState();
+                if ( ms ) {
+
+                    ammoTmpPos.setValue(tmpPos.x, tmpPos.y, tmpPos.z);
+                    ammoTmpQuat.setValue( tmpQuat.x, tmpQuat.y, tmpQuat.z, tmpQuat.w);
+
+
+                    tmpTrans.setIdentity();
+                    tmpTrans.setOrigin( ammoTmpPos ); 
+                    tmpTrans.setRotation( ammoTmpQuat ); 
+
+                    ms.setWorldTransform(tmpTrans);
+
+                }
+
+            }
 
             function createBlock(){
                 

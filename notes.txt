@@ -30,3 +30,14 @@ Kinematic rigidbodies: zero mass, can be animated by the user, but there will be
 ammojs deactivates it. In this deactivated state we won’t be able to apply force to it. 
 To stop this from happening set the activation state for the rigid body to STATE.DISABLE_DEACTIVATION.
 
+Kinematic rigid body: If you plan to animate or move static objects, you should flag them as kinematic. 
+                    Also disable the sleeping/deactivation for them during the animation.
+                    Not affected by any force (like gravity) from physical world
+                    A good example of where a kinematic object would be useful, as stated earlier above, is a floating block that would ferry a player across a dangerous sea of lava unto a safe section of the game.
+
+There are three types of physics objects: “dynamic”, “static” & “kinematic”. 
+Static objects, shouldn’t move and are the simplest and most efficient try to use static objects where possible. 
+Kinematic objects are like static objects but you can move them around. 
+Dynamic objects are the objects in your scene which get moved by the physics system itself and what you think of most with physics systems. These are expensive so try to keep their shapes simple.
+
+kinematic vs dynamic - dynamic is affected by world physics; kinematic is not
