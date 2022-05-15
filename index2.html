@@ -26,7 +26,10 @@
             const FLAGS = {CF_KINEMATIC_OBJECT: 2} //must flag a rigid body as kinematic
             let ammoTmpPos = null, ammoTmpQuat = null;
 
-            let colGroupKinematic = 1, colGroupChar = 2, colGroupBlock = 4; //collision purposes
+            let collectible1Object = null, //put here if want to make the object global
+            collectible2Object = null;
+
+            let colGroupKinematic = 1, colGroupChar = 2, colGroupCollectible = 3, colGroupBlock = 4; //collision purposes
 
             //Ammojs Initialization
             Ammo().then(start)
@@ -44,6 +47,8 @@
                 createBlock();
                 createChar();
                 createKinematicBox();
+                createCollectible1();
+                createCollectible2();
 
                 
             
@@ -63,6 +68,8 @@
 
                 physicsWorld           = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
                 physicsWorld.setGravity(new Ammo.btVector3(0, -20, 0));
+
+                //remember to destroy all 'new' Ammo stuff at the end
 
             }
 
@@ -138,12 +145,17 @@
 
                 requestAnimationFrame( renderFrame );
 
-                if (Math.abs(charObject.position.getComponent(0) - kObject.position.getComponent(0)) <= 6){ 
-                    scene.remove(kObject); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. Also, cube can still be moved 
-                    //physicsWorld.removeRigidBody(kObject);
-                    //Ammo.destroy(kObject.body);
+                if (Math.abs(charObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 4){ 
+                    scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+                    //physicsWorld.removeRigidBody(collectible1Object);
+                    //Ammo.destroy(collectible1Object.body);
 
                     //may need to remove the object from rigidbodies array.
+                }
+
+                if (Math.abs(charObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 4){ 
+                    scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+                    
                 }
 
             }
@@ -175,12 +187,12 @@
 
                     case 68: //D: RIGHT
                         moveDirection.right = 1
-                        console.log("Char x-pos: " + charObject.position.getComponent(0) + "; kobj x-pos: " + kObject.position.getComponent(0));
+                        //console.log("Char x-pos: " + charObject.position.getComponent(0) + "; kobj x-pos: " + kObject.position.getComponent(0));
 
                         break;
 
                     case 32: //space bar
-                        console.log(charObject.position.getComponent(1));
+                        //console.log(charObject.position.getComponent(1));
                         if (charObject.position.getComponent(1) <= 12){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
                             moveDirection.up = 1.5
                             break;
@@ -296,7 +308,7 @@
                 body.setCollisionFlags( FLAGS.CF_KINEMATIC_OBJECT );
 
 
-                physicsWorld.addRigidBody( body, colGroupKinematic, colGroupBlock );
+                physicsWorld.addRigidBody( body, colGroupKinematic, colGroupBlock|colGroupChar|colGroupCollectible );
                 kObject.userData.physicsBody = body;
 
             
@@ -425,7 +437,7 @@
                 body.setActivationState( STATE.DISABLE_DEACTIVATION );
 
 
-                physicsWorld.addRigidBody( body, colGroupChar, colGroupBlock );
+                physicsWorld.addRigidBody( body, colGroupChar, colGroupBlock|colGroupKinematic );
                 
                 char.userData.physicsBody = body;
                 rigidBodies.push(char);
@@ -449,6 +461,89 @@
 
                 
 
+            }
+
+            //collectible items (make a class in future)
+            function createCollectible1(){
+                
+                let pos = {x: -20, y: 6, z: 20};
+                let scale = {x: 1, y: 1, z: 1};
+                let quat = {x: 0, y: 0, z: 0, w: 1};
+                let mass = 0;
+
+                //threeJS Section
+                let collectible1 = collectible1Object = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: "blue"}));
+
+                collectible1.position.set(pos.x, pos.y, pos.z);
+                collectible1.scale.set(scale.x, scale.y, scale.z);
+
+                collectible1.castShadow = true;
+                collectible1.receiveShadow = true;
+
+                scene.add(collectible1);
+
+
+                //Ammojs Section
+                let transform = new Ammo.btTransform();
+                transform.setIdentity();
+                transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+                transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+                let motionState = new Ammo.btDefaultMotionState( transform );
+
+                let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
+                colShape.setMargin( 0.05 );
+
+                let localInertia = new Ammo.btVector3( 0, 0, 0 );
+                colShape.calculateLocalInertia( mass, localInertia );
+
+                let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+                let body = new Ammo.btRigidBody( rbInfo );
+
+                body.setFriction(4);
+                body.setRollingFriction(10);
+
+                physicsWorld.addRigidBody( body, colGroupCollectible, colGroupKinematic|colGroupBlock);
+            }
+
+            function createCollectible2(){
+                
+                let pos = {x: 15, y: 3, z: 40};
+                let scale = {x: 1, y: 1, z: 1};
+                let quat = {x: 0, y: 0, z: 0, w: 1};
+                let mass = 0;
+
+                //threeJS Section
+                let collectible2 = collectible2Object = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: "blue"}));
+
+                collectible2.position.set(pos.x, pos.y, pos.z);
+                collectible2.scale.set(scale.x, scale.y, scale.z);
+
+                collectible2.castShadow = true;
+                collectible2.receiveShadow = true;
+
+                scene.add(collectible2);
+
+
+                //Ammojs Section
+                let transform = new Ammo.btTransform();
+                transform.setIdentity();
+                transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+                transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+                let motionState = new Ammo.btDefaultMotionState( transform );
+
+                let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
+                colShape.setMargin( 0.05 );
+
+                let localInertia = new Ammo.btVector3( 0, 0, 0 );
+                colShape.calculateLocalInertia( mass, localInertia );
+
+                let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+                let body = new Ammo.btRigidBody( rbInfo );
+
+                body.setFriction(4);
+                body.setRollingFriction(10);
+
+                physicsWorld.addRigidBody( body, colGroupCollectible, colGroupKinematic|colGroupBlock);
             }
 
 
