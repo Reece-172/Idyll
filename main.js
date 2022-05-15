@@ -5,13 +5,18 @@ let physicsWorld,
   renderer,
   rigidBodies = [],
   tmpTrans = null;
-
+/**TO-DO
+ * Orbital control
+ * New models
+ * Collision -> on new objects
+**/
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0 }; //used to hold the respective directional key (WASD)
 
-  let heroObject = null,
-    HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
-  const STATE = { DISABLE_DEACTIVATION: 4 };
+let heroObject = null,
+  HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
+const STATE = { DISABLE_DEACTIVATION: 4 };
+ //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -26,6 +31,9 @@ function start() {
   createBall();
   createHead();
   createTree();
+  loadCharacter();
+  loadTree();
+
   setupEventHandlers();
   renderFrame();
 }
@@ -249,7 +257,7 @@ function createBall() {
   transform.setIdentity();
   transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
   transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-  transform.setScale
+  transform.setScale;
   let motionState = new Ammo.btDefaultMotionState(transform);
 
   let colShape = new Ammo.btSphereShape(radius);
@@ -367,9 +375,8 @@ function createTree() {
   );
 }
 
-function createHead() {
+function loadCharacter() {
   let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 20, y: 20, z: 20 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
@@ -377,8 +384,11 @@ function createHead() {
   loader.load(
     "./resources/models/Yasuo.glb",
     function (gltf) {
-      gltf.scene.scale.set(10,10,10);
+      gltf.scene.scale.set(10, 10, 10);
+      gltf.scene.translateY(1);
       const yasuo = gltf.scene;
+      yasuo.castShadow = true;
+      yasuo.receiveShadow = true;
       scene.add(yasuo);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -387,7 +397,7 @@ function createHead() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -444,12 +454,109 @@ function createHead() {
       let body = new Ammo.btRigidBody(rbInfo);
 
       body.setFriction(4);
+
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
       physicsWorld.addRigidBody(body);
 
       yasuo.userData.physicsBody = body;
       rigidBodies.push(yasuo);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
+  );
+}
+
+function loadTree() {
+  let pos = { x: 200, y: -40, z: 0 };
+  let scale = { x: 30, y: 30, z: 30 };
+  let quat = { x: 0, y: 0, z: 0, w: 1 };
+  let mass = 0;
+
+  var loader = new THREE.GLTFLoader();
+  loader.load(
+    "./resources/models/HoverBoard.glb",
+    function (gltf) {
+      gltf.scene.scale.set(10, 10, 10);
+      gltf.scene.translateX(30);
+      gltf.scene.translateY(0);
+      const model = gltf.scene;
+      
+      model.castShadow = true;
+      model.receiveShadow = true;
+      scene.add(model);
+      //Ammojs Section -> physics section
+      let transform = new Ammo.btTransform();
+      transform.setIdentity();
+      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+      transform.setRotation(
+        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+      );
+
+      let motionState = new Ammo.btDefaultMotionState(transform);
+
+      let localInertia = new Ammo.btVector3(0, 0, 0);
+      let verticesPos = model.geometry.getAttribute("position"),
+        array;
+      let triangles = [];
+      for (let i = 0; i < verticesPos.length; i += 3) {
+        triangle.push({
+          x: verticesPos[i],
+          y: verticesPos[i + 2],
+          z: verticesPos(i + 3),
+        });
+      }
+
+      let triangle,
+        triangle_mesh = new Ammo.btTriangleMesh();
+
+      let vecA = new Ammo.btVector3(0, 0, 0);
+      let vecB = new Ammo.btVector3(0, 0, 0);
+      let vecC = new Ammo.btVector3(0, 0, 0);
+
+      for (let i = 0; i < triangles.length - 3; i += 3) {
+        vecA.setX(triangles[i].x);
+        vecA.setY(triangles[i].y);
+        vecA.setZ(triangles[i].z);
+
+        vecB.setX(triangles[i + 1].x);
+        vecB.setY(triangles[i + 1].y);
+        vecB.setZ(triangles[i + 1].z);
+
+        vecC.setX(triangles[i + 2].x);
+        vecC.setY(triangles[i + 2].y);
+        vecC.setZ(triangles[i + 2].z);
+
+        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
+      }
+
+      Ammo.destroy(vecA);
+      Ammo.destroy(vecB);
+      Ammo.destroy(vecC);
+
+      const shape = new Ammo.btconvexTriangleMeshShape(
+        triangle_mesh,
+        (model.geometry.verticesNeedUpdate = true)
+      );
+      shape.getMargin(0.05);
+      shape.calculateLocalInertia(mass, localInertia);
+      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+        mass,
+        motionState,
+        colShape,
+        localInertia
+      );
+      let body = new Ammo.btRigidBody(rbInfo);
+
+      body.setFriction(4);
+      body.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+      physicsWorld.addRigidBody(body);
+
+      model.userData.physicsBody = body;
+      rigidBodies.push(model);
     },
     undefined,
     function (error) {
