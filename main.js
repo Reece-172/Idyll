@@ -10,6 +10,7 @@ let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0 }; //used to hold the respective directional key (WASD)
 const STATE = { DISABLE_DEACTIVATION: 4 };
 
+
 //Ammojs Initialization
 Ammo().then(start);
 
@@ -105,6 +106,7 @@ function renderFrame() {
 
   moveBall();
 
+  camera.lookAt(ballObject.position);
   updatePhysics(deltaTime);
 
   renderer.render(scene, camera);
@@ -169,7 +171,7 @@ function createBlock() {
 
   //threeJS Section
   let blockPlane = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(),
+    new THREE.BoxBufferGeometry(),
     new THREE.MeshPhongMaterial({ color: "brown" })
   );
 
