@@ -571,13 +571,13 @@ class ThirdPersonCameraDemo {
         './resources/posz.jpg',
         './resources/negz.jpg',
     ]);
-    texture.encoding = THREE.sRGBEncoding;
     this._scene.background = texture;
 
+    const grass = new THREE.TextureLoader().load("./resources/grass.jpg")
     const plane = new THREE.Mesh(
         new THREE.PlaneGeometry(5000, 5000, 10, 10),
         new THREE.MeshStandardMaterial({
-            color: 0x808080,
+            map: grass,
           }));
     plane.castShadow = false;
     plane.receiveShadow = true;
