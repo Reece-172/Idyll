@@ -48,7 +48,18 @@ function setupGraphics() {
 
   //create the scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color("0xbfd1e5");
+  const loader = new THREE.CubeTextureLoader();
+    const texture = loader.load([
+        './resources/skybox/posx.jpg', //left
+        './resources/skybox/negx.jpg', //right
+        './resources/skybox/posy.jpg',//up
+        './resources//skybox/negy.jpg', //down
+        './resources/skybox/posz.jpg',//front
+        './resources/skybox/negz.jpg',//back
+    ]);
+    
+  scene.background = texture;
+  // scene.background = new THREE.Color("0xbfd1e5");
 
   //create camera
   camera = new THREE.PerspectiveCamera(
@@ -89,8 +100,8 @@ function setupGraphics() {
   dirLight.shadow.camera.far = 13500;
 
   //Setup the renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setClearColor(0xbfd1e5);
+  renderer = new THREE.WebGLRenderer({ alpha: true });
+  renderer.setClearColor(0x000, 0);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
