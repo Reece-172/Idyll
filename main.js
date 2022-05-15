@@ -8,8 +8,10 @@ let physicsWorld,
 
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0 }; //used to hold the respective directional key (WASD)
-const STATE = { DISABLE_DEACTIVATION: 4 };
 
+  let heroObject = null,
+    HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
+  const STATE = { DISABLE_DEACTIVATION: 4 };
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -22,6 +24,7 @@ function start() {
   setupGraphics();
   createBlock();
   createBall();
+  createHead();
 
   setupEventHandlers();
   renderFrame();
@@ -49,17 +52,16 @@ function setupGraphics() {
   //create the scene
   scene = new THREE.Scene();
   const loader = new THREE.CubeTextureLoader();
-    const texture = loader.load([
-        './resources/skybox/posx.jpg', //left
-        './resources/skybox/negx.jpg', //right
-        './resources/skybox/posy.jpg',//up
-        './resources//skybox/negy.jpg', //down
-        './resources/skybox/posz.jpg',//front
-        './resources/skybox/negz.jpg',//back
-    ]);
-    
-  scene.background = texture;
-  // scene.background = new THREE.Color("0xbfd1e5");
+  const texture = loader.load([
+    "./resources/skybox/posx.jpg", //left
+    "./resources/skybox/negx.jpg", //right
+    "./resources/skybox/posy.jpg", //up
+    "./resources//skybox/negy.jpg", //down
+    "./resources/skybox/posz.jpg", //front
+    "./resources/skybox/negz.jpg", //back
+  ]);
+
+  scene.background = texture; //set the cube map as the background
 
   //create camera
   camera = new THREE.PerspectiveCamera(
@@ -100,7 +102,7 @@ function setupGraphics() {
   dirLight.shadow.camera.far = 13500;
 
   //Setup the renderer
-  renderer = new THREE.WebGLRenderer({ alpha: true });
+  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setClearColor(0x000, 0);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -151,7 +153,6 @@ function handleKeyDown(event) {
       break;
   }
 }
-
 function handleKeyUp(event) {
   let keyCode = event.keyCode;
 
@@ -176,14 +177,15 @@ function handleKeyUp(event) {
 
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 100, y: 2, z: 100 };
+  let scale = { x: 500, y: 2, z: 500 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
+  const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
   let blockPlane = new THREE.Mesh(
     new THREE.BoxBufferGeometry(),
-    new THREE.MeshPhongMaterial({ color: "brown" })
+    new THREE.MeshPhongMaterial({ map: grass })
   );
 
   blockPlane.position.set(pos.x, pos.y, pos.z);
@@ -247,6 +249,7 @@ function createBall() {
   transform.setIdentity();
   transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
   transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+  transform.setScale
   let motionState = new Ammo.btDefaultMotionState(transform);
 
   let colShape = new Ammo.btSphereShape(radius);
@@ -272,58 +275,97 @@ function createBall() {
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 }
-
 
 function createHead() {
-  let pos = { x: 0, y: 4, z: 0 };
-  let radius = 2;
+  let pos = { x: 0, y: 0, z: 0 };
+  let scale = { x: 20, y: 20, z: 20 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 1;
+  let mass = 0;
 
-  //threeJS Section
-  let ball = (ballObject = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(radius),
-    new THREE.MeshPhongMaterial({ color: 0xff0505 })
-  ));
+  var loader = new THREE.GLTFLoader();
+  loader.load(
+    "./resources/models/Yasuo.glb",
+    function (gltf) {
+      gltf.scene.scale.set(10,10,10);
+      const yasuo = gltf.scene;
+      scene.add(yasuo);
+      //Ammojs Section -> physics section
+      let transform = new Ammo.btTransform();
+      transform.setIdentity();
+      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+      transform.setRotation(
+        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+      );
+    
+      let motionState = new Ammo.btDefaultMotionState(transform);
 
-  ball.position.set(pos.x, pos.y, pos.z);
+      let localInertia = new Ammo.btVector3(0, 0, 0);
+      let verticesPos = yasuo.geometry.getAttribute("position"),
+        array;
+      let triangles = [];
+      for (let i = 0; i < verticesPos.length; i += 3) {
+        triangle.push({
+          x: verticesPos[i],
+          y: verticesPos[i + 2],
+          z: verticesPos(i + 3),
+        });
+      }
 
-  ball.castShadow = true;
-  ball.receiveShadow = true;
+      let triangle,
+        triangle_mesh = new Ammo.btTriangleMesh();
 
-  scene.add(ball);
+      let vecA = new Ammo.btVector3(0, 0, 0);
+      let vecB = new Ammo.btVector3(0, 0, 0);
+      let vecC = new Ammo.btVector3(0, 0, 0);
 
-  //Ammojs Section
-  let transform = new Ammo.btTransform();
-  transform.setIdentity();
-  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-  transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-  let motionState = new Ammo.btDefaultMotionState(transform);
+      for (let i = 0; i < triangles.length - 3; i += 3) {
+        vecA.setX(triangles[i].x);
+        vecA.setY(triangles[i].y);
+        vecA.setZ(triangles[i].z);
 
-  let colShape = new Ammo.btSphereShape(radius);
-  colShape.setMargin(0.05);
+        vecB.setX(triangles[i + 1].x);
+        vecB.setY(triangles[i + 1].y);
+        vecB.setZ(triangles[i + 1].z);
 
-  let localInertia = new Ammo.btVector3(0, 0, 0);
-  colShape.calculateLocalInertia(mass, localInertia);
+        vecC.setX(triangles[i + 2].x);
+        vecC.setY(triangles[i + 2].y);
+        vecC.setZ(triangles[i + 2].z);
 
-  let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-    mass,
-    motionState,
-    colShape,
-    localInertia
+        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
+      }
+
+      Ammo.destroy(vecA);
+      Ammo.destroy(vecB);
+      Ammo.destroy(vecC);
+
+      const shape = new Ammo.btconvexTriangleMeshShape(
+        triangle_mesh,
+        (yasuo.geometry.verticesNeedUpdate = true)
+      );
+      shape.getMargin(0.05);
+      shape.calculateLocalInertia(mass, localInertia);
+      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+        mass,
+        motionState,
+        colShape,
+        localInertia
+      );
+      let body = new Ammo.btRigidBody(rbInfo);
+
+      body.setFriction(4);
+      body.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+      physicsWorld.addRigidBody(body);
+
+      yasuo.userData.physicsBody = body;
+      rigidBodies.push(yasuo);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
   );
-  let body = new Ammo.btRigidBody(rbInfo);
-
-  body.setFriction(4);
-  body.setRollingFriction(10);
-  body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-  physicsWorld.addRigidBody(body);
-
-  ball.userData.physicsBody = body;
-  rigidBodies.push(ball);
 }
-
 
 function moveBall() {
   //this goes in renderframe()
