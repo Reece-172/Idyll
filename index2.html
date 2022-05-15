@@ -15,7 +15,7 @@
             let physicsWorld, scene, camera, renderer, rigidBodies = [], tmpTrans = null
 
             let charObject = null, 
-            moveDirection = { left: 0, right: 0, forward: 0, back: 0 } //used to hold the respective directional key (WASD)
+            moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down:0 } //used to hold the respective directional key (WASD)
             const STATE = { DISABLE_DEACTIVATION : 4 }
 
                 //kinematic object declaration
@@ -57,7 +57,7 @@
                     solver                  = new Ammo.btSequentialImpulseConstraintSolver();
 
                 physicsWorld           = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-                physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+                physicsWorld.setGravity(new Ammo.btVector3(0, -20, 0));
 
             }
 
@@ -164,6 +164,14 @@
                         moveDirection.right = 1
                         break;
 
+                    case 32: //space bar
+                        //console.log(charObject.position.getComponent(1));
+                        if (charObject.position.getComponent(1) <= 12){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
+                            moveDirection.up = 1.5
+                            break;
+                        }
+                        break;
+
                     //below 4 cases are for kinematic object. uses directional arrows
                     case 38: //↑: FORWARD
                         kMoveDirection.forward = 1
@@ -203,6 +211,9 @@
                     case 68: //RIGHT
                         moveDirection.right = 0
                         break;
+
+                    case 32: //space bar
+                        moveDirection.up = 0
 
                     //below 4 cases are for kinematic object. uses directional arrows
                     case 38: //↑: FORWARD
@@ -359,7 +370,7 @@
             function createChar(){
                 
                 let pos = {x: 0, y: 8, z: 0};
-                let scale = {x: 10, y: 10, z: 10};
+                let scale = {x: 5, y: 10, z: 5};
                 let quat = {x: 0, y: 0, z: 0, w: 1};
                 let mass = 10;
 
@@ -392,7 +403,6 @@
                 let body = new Ammo.btRigidBody( rbInfo );
 
                 body.setFriction(4);
-                body.setGravity(-10);
                 //body.setRollingFriction(10);
                 body.setActivationState( STATE.DISABLE_DEACTIVATION );
 
@@ -405,11 +415,11 @@
 
             function moveChar(){ //this goes in renderframe()
 
-                let scalingFactor = 20;
+                let scalingFactor = 10;
 
                 let moveX =  moveDirection.right - moveDirection.left;
                 let moveZ =  moveDirection.back - moveDirection.forward;
-                let moveY =  0; //0 because we not doing up-down movement
+                let moveY =  moveDirection.up - moveDirection.down*2;
 
                 if( moveX == 0 && moveY == 0 && moveZ == 0) return;
 
