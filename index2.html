@@ -26,6 +26,8 @@
             const FLAGS = {CF_KINEMATIC_OBJECT: 2} //must flag a rigid body as kinematic
             let ammoTmpPos = null, ammoTmpQuat = null;
 
+            let colGroupKinematic = 1, colGroupChar = 2, colGroupBlock = 4; //collision purposes
+
             //Ammojs Initialization
             Ammo().then(start)
 
@@ -136,11 +138,12 @@
 
                 requestAnimationFrame( renderFrame );
 
-                if (Math.abs(charObject.position.getComponent(0) - kObject.position.getComponent(0)) <= 6){ //if the distance between the x-components of the objects is less than 2, then remove
+                if (Math.abs(charObject.position.getComponent(0) - kObject.position.getComponent(0)) <= 6){ 
                     scene.remove(kObject); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. Also, cube can still be moved 
-                    physicsWorld.removeRigidBody(kObject);
+                    //physicsWorld.removeRigidBody(kObject);
                     //Ammo.destroy(kObject.body);
-                    //rigidBodies.pop(kObject);
+
+                    //may need to remove the object from rigidbodies array.
                 }
 
             }
@@ -172,7 +175,7 @@
 
                     case 68: //D: RIGHT
                         moveDirection.right = 1
-                        
+                        console.log("Char x-pos: " + charObject.position.getComponent(0) + "; kobj x-pos: " + kObject.position.getComponent(0));
 
                         break;
 
@@ -293,7 +296,7 @@
                 body.setCollisionFlags( FLAGS.CF_KINEMATIC_OBJECT );
 
 
-                physicsWorld.addRigidBody( body );
+                physicsWorld.addRigidBody( body, colGroupKinematic, colGroupBlock );
                 kObject.userData.physicsBody = body;
 
             
@@ -378,7 +381,7 @@
                 body.setFriction(4);
                 body.setRollingFriction(10);
 
-                physicsWorld.addRigidBody( body );
+                physicsWorld.addRigidBody( body, colGroupBlock, colGroupKinematic|colGroupChar);
             }
 
 
@@ -422,7 +425,7 @@
                 body.setActivationState( STATE.DISABLE_DEACTIVATION );
 
 
-                physicsWorld.addRigidBody( body );
+                physicsWorld.addRigidBody( body, colGroupChar, colGroupBlock );
                 
                 char.userData.physicsBody = body;
                 rigidBodies.push(char);

@@ -41,3 +41,7 @@ Kinematic objects are like static objects but you can move them around.
 Dynamic objects are the objects in your scene which get moved by the physics system itself and what you think of most with physics systems. These are expensive so try to keep their shapes simple.
 
 kinematic vs dynamic - dynamic is affected by world physics; kinematic is not
+
+------------------------------------------
+
+- if collision groups aren't set, then it seems that all objects collide with eachother
