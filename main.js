@@ -5,13 +5,18 @@ let physicsWorld,
   renderer,
   rigidBodies = [],
   tmpTrans = null;
-
+/**TO-DO
+ * Orbital control
+ * New models
+ * Collision -> on new objects
+**/
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0 }; //used to hold the respective directional key (WASD)
 
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
+ //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -356,6 +361,7 @@ function loadCharacter() {
       let body = new Ammo.btRigidBody(rbInfo);
 
       body.setFriction(4);
+
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
       physicsWorld.addRigidBody(body);
@@ -378,11 +384,11 @@ function loadTree() {
 
   var loader = new THREE.GLTFLoader();
   loader.load(
-    "./resources/models/Tree.glb",
+    "./resources/models/HoverBoard.glb",
     function (gltf) {
-      gltf.scene.scale.set(25, 25, 25);
+      gltf.scene.scale.set(10, 10, 10);
       gltf.scene.translateX(30);
-      gltf.scene.translateY(30);
+      gltf.scene.translateY(0);
       const model = gltf.scene;
       
       model.castShadow = true;
