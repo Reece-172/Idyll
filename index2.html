@@ -361,7 +361,7 @@
                 let pos = {x: 0, y: 8, z: 0};
                 let scale = {x: 10, y: 10, z: 10};
                 let quat = {x: 0, y: 0, z: 0, w: 1};
-                let mass = 3;
+                let mass = 10;
 
                 //threeJS Section
                 let char = charObject = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: 0xff0505}));
@@ -392,7 +392,8 @@
                 let body = new Ammo.btRigidBody( rbInfo );
 
                 body.setFriction(4);
-                body.setRollingFriction(10);
+                body.setGravity(-10);
+                //body.setRollingFriction(10);
                 body.setActivationState( STATE.DISABLE_DEACTIVATION );
 
 
@@ -418,8 +419,7 @@
                 let physicsBody = charObject.userData.physicsBody;
                 physicsBody.setLinearVelocity( resultantImpulse );
 
-                //new code
-                // i
+                
 
             }
 
