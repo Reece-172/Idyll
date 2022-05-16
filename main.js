@@ -32,7 +32,8 @@ function start() {
   //createHead();
   for(var i=0;i<20;i++){
     createTree();
-  }
+  }  
+  
   //createTree();
   //createTree();
   //loadCharacter();
