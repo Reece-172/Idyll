@@ -29,10 +29,14 @@ function start() {
   setupGraphics();
   createBlock();
   createBall();
-  createHead();
-  createTree();
-  loadCharacter();
-  loadTree();
+  //createHead();
+  for(var i=0;i<20;i++){
+    createTree();
+  }
+  //createTree();
+  //createTree();
+  //loadCharacter();
+  //loadTree();
 
   setupEventHandlers();
   renderFrame();
@@ -108,6 +112,7 @@ function setupGraphics() {
   dirLight.shadow.camera.bottom = -d;
 
   dirLight.shadow.camera.far = 13500;
+  
 
   //Setup the renderer
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -283,8 +288,8 @@ function createBall() {
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 }
-function createTree() {
-  let pos = { x: 1, y: 1, z: 0 };
+function createTree(x,y) {
+  let pos = { x: x, y: y, z: 0 };
   let scale = { x: 2, y: 2, z: 2 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
@@ -294,8 +299,9 @@ function createTree() {
     "./resources/models/enchantedforest_tree_4.glb",
     function (gltf) {
       gltf.scene.scale.set(4,4,4);
+      gltf.scene.position.set(Math.floor(Math.random()*(250+1)),Math.floor(Math.random()*(2+1)),Math.floor(Math.random()*(250+1)));
       const tree = gltf.scene;
-
+      
       scene.add(tree);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
