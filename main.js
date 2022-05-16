@@ -29,7 +29,7 @@ function start() {
   setupGraphics();
   createBlock();
   createBall();
-  createHead();
+  //createHead();
   createTree();
   loadCharacter();
   loadTree();
@@ -126,6 +126,7 @@ function renderFrame() {
   let deltaTime = clock.getDelta();
 
   moveBall();
+  moveCharacter();
 
   camera.lookAt(ballObject.position);
   updatePhysics(deltaTime);
@@ -580,6 +581,24 @@ function moveBall() {
   resultantImpulse.op_mul(scalingFactor);
 
   let physicsBody = ballObject.userData.physicsBody;
+  physicsBody.setLinearVelocity(resultantImpulse);
+}
+
+function moveCharacter() {
+  //this goes in renderframe()
+
+  let scalingFactor = 20;
+
+  let moveX = moveDirection.right - moveDirection.left;
+  let moveZ = moveDirection.back - moveDirection.forward;
+  let moveY = 0; //0 because we not doing up-down movement
+
+  if (moveX == 0 && moveY == 0 && moveZ == 0) return;
+
+  let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
+  resultantImpulse.op_mul(scalingFactor);
+
+  let physicsBody = heroObject.userData.physicsBody;
   physicsBody.setLinearVelocity(resultantImpulse);
 }
 
