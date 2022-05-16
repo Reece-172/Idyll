@@ -145,7 +145,7 @@
 
                 requestAnimationFrame( renderFrame );
 
-                if (Math.abs(charObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 4){ 
+                if ((Math.abs(charObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(charObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) ){ //change
                     scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
                     //physicsWorld.removeRigidBody(collectible1Object);
                     //Ammo.destroy(collectible1Object.body);
@@ -153,9 +153,10 @@
                     //may need to remove the object from rigidbodies array.
                 }
 
-                if (Math.abs(charObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 4){ 
+                if ((Math.abs(charObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(charObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
                     scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-                    
+                    //make sound
+                    //add to counter to collect however many collectibles there are
                 }
 
             }
@@ -188,7 +189,7 @@
                     case 68: //D: RIGHT
                         moveDirection.right = 1
                         //console.log("Char x-pos: " + charObject.position.getComponent(0) + "; kobj x-pos: " + kObject.position.getComponent(0));
-
+                        //console.log(Math.abs(charObject.position.getComponent(0) - collectible1Object.position.getComponent(0)));
                         break;
 
                     case 32: //space bar
