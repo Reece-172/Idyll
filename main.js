@@ -37,7 +37,7 @@ function start() {
   
   //createTree();
   //createTree();
-  loadCharacter();
+  // loadCharacter();
   //loadTree();
 
   setupEventHandlers();
