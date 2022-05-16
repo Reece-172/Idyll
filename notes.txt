@@ -1,0 +1,32 @@
+sourced from https://medium.com/@bluemagnificent/intro-to-javascript-3d-physics-using-ammo-js-and-three-js-dd48df81f591
+
+-Each rigid body needs to reference a collision shape. 
+The collision shape is for collisions only, and thus has no concept of mass, inertia, restitution, etc. 
+If you have many bodies that use the same collision shape [eg every spaceship in your simulation is a 5-unit-radius sphere], 
+it is good practice to have only one Bullet (ammo.js) collision shape, and share it among all those bodies
+
+- if we want a rigid body to be static (ie, not move by any forces), we set the mass to 0 (then it has infinite mass)
+
+-  we loop through the rigidBodies array for each threejs object in it we get its associated ammo.js rigid body, 
+obtain the world transform, apply the obtained transform to the transform of the threejs object
+
+- we use collision filtering to select which sets of objects collides and which sets don’t.
+
+- ensure collisions are reflected in both objects involved. eg, we have rigid bodies A and B. 
+In the function 'create_A()', we set it to collide with B. 
+However, in the function create_B(), we do not set it to collide with A. Then when A collides with B, A will go through B.
+
+- 3 types of joints - point-to-point (like elbow), hinge (like door), slider (like sliding door), cone-twist (useful for ragdoll)
+
+--------------------------------------------------------------------------------------------------
+MOTION 
+
+- There are 3 different types of objects in Bullet
+Dynamic (moving) rigidbodies: positive mass, every simulation frame the dynamics will update its world transform.
+Static rigidbodies: zero mass, cannot move but just collide.
+Kinematic rigidbodies: zero mass, can be animated by the user, but there will be only one way interaction: dynamic objects will be pushed away but there is no influence from dynamic objects.
+
+- DISABLE_DEACTIVATION - When a rigid body is no longer participating in dynamic interaction in the physics world, 
+ammojs deactivates it. In this deactivated state we won’t be able to apply force to it. 
+To stop this from happening set the activation state for the rigid body to STATE.DISABLE_DEACTIVATION.
+
