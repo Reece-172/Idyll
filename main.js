@@ -101,7 +101,7 @@ function setupPhysicsWorld() {
     solver,
     collisionConfiguration
   );
-  physicsWorld.setGravity(new Ammo.btVector3(0, -20, 0));
+  physicsWorld.setGravity(new Ammo.btVector3(0, -60, 0));
 
   //remember to destroy all 'new' Ammo stuff at the end
 }
@@ -151,10 +151,10 @@ function setupGraphics() {
 
   dirLight.castShadow = true;
 
-  dirLight.shadow.mapSize.width = 2048;
-  dirLight.shadow.mapSize.height = 2048;
+  dirLight.shadow.mapSize.width = 4098;
+  dirLight.shadow.mapSize.height = 4098;
 
-  let d = 50;
+  let d = 200;
 
   dirLight.shadow.camera.left = -d;
   dirLight.shadow.camera.right = d;
@@ -289,7 +289,7 @@ function handleKeyDown(event) {
 
     case 32: //space bar
       //console.log(charObject.position.getComponent(1));
-      if (ballObject.position.getComponent(1) <= 10) {
+      if (ballObject.position.getComponent(1) <= 3) {
         //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
         moveDirection.up = 1;
         break;
@@ -1387,7 +1387,7 @@ function createGrass() {
 }
 
 function loadCharacter() {
-  let pos = { x: 10, y: 0, z: -50 };
+  let pos = { x: 10, y: 1, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
@@ -1396,7 +1396,6 @@ function loadCharacter() {
     "./resources/models/Yasuo.glb",
     function (gltf) {
       gltf.scene.scale.set(10, 10, 10);
-      gltf.scene.translateY(1);
       gltf.scene.traverse(function (node) {
         if (node.isMesh) {
           node.castShadow = true;
