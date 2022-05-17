@@ -47,6 +47,13 @@ function start() {
   //use for-loop for collectibles
   createCollectible1();
   createCollectible2();
+  loadVolcano();
+  //createHead();
+  for(var i=0;i<50;i++){
+    createTree();
+  }  
+  
+
 
   setupEventHandlers();
   renderFrame();
@@ -75,6 +82,7 @@ function setupGraphics() {
 
   //create the scene
   scene = new THREE.Scene();
+  scene.fog = new THREE.Fog( 0xffffff, 0.015, 800); 
   const loader = new THREE.CubeTextureLoader();
   const texture = loader.load([
     "./resources/skybox/posx.jpg", //left
@@ -124,6 +132,7 @@ function setupGraphics() {
   dirLight.shadow.camera.bottom = -d;
 
   dirLight.shadow.camera.far = 13500;
+  
 
   //Setup the renderer
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -142,7 +151,7 @@ function renderFrame() {
   let deltaTime = clock.getDelta();
   //createFont();
   moveBall();
-
+  // moveHero();
   camera.lookAt(ballObject.position);
   updatePhysics(deltaTime);
 
@@ -183,18 +192,22 @@ function handleKeyDown(event) {
   switch (keyCode) {
     case 87: //W: FORWARD
       moveDirection.forward = 1;
+      HeroMoveDirection.forward = 1;
       break;
 
     case 83: //S: BACK
       moveDirection.back = 1;
+      HeroMoveDirection.forward = 1;
       break;
 
     case 65: //A: LEFT
       moveDirection.left = 1;
+      HeroMoveDirection.forward = 1;
       break;
 
     case 68: //D: RIGHT
       moveDirection.right = 1;
+      HeroMoveDirection.forward = 1;
       break;
 
     case 32: //space bar
@@ -213,18 +226,22 @@ function handleKeyUp(event) {
   switch (keyCode) {
     case 87: //FORWARD
       moveDirection.forward = 0;
+      HeroMoveDirection.forward = 0;
       break;
 
     case 83: //BACK
       moveDirection.back = 0;
+      HeroMoveDirection.forward = 0;
       break;
 
     case 65: //LEFT
       moveDirection.left = 0;
+      HeroMoveDirection.forward = 0;
       break;
 
     case 68: //RIGHT
       moveDirection.right = 0;
+      HeroMoveDirection.forward = 0;
       break;
 
     case 32: //space bar
@@ -373,6 +390,99 @@ function createBall() {
   rigidBodies.push(ball);
 }
 
+function createTree(x,y) {
+  let pos = { x: x, y: y, z: 0 };
+  let scale = { x: 2, y: 2, z: 2 };
+  let quat = { x: 0, y: 0, z: 0, w: 1 };
+  let mass = 0;
+
+  var loader = new THREE.GLTFLoader();
+  loader.load(
+    "./resources/models/Tree.glb",
+    function (gltf) {
+      gltf.scene.scale.set(14,14,14);
+      gltf.scene.position.set(Math.floor(Math.random()*(250+20)),18,Math.floor(Math.random()*(250+20)));
+      const tree = gltf.scene;
+      
+      scene.add(tree);
+      //Ammojs Section -> physics section
+      let transform = new Ammo.btTransform();
+      transform.setIdentity();
+      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+      transform.setRotation(
+        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+      );
+    
+      let motionState = new Ammo.btDefaultMotionState(transform);
+
+      let localInertia = new Ammo.btVector3(0, 0, 0);
+      let verticesPos = tree.geometry.getAttribute("position"),
+        array;
+      let triangles = [];
+      for (let i = 0; i < verticesPos.length; i += 3) {
+        triangle.push({
+          x: verticesPos[i],
+          y: verticesPos[i + 2],
+          z: verticesPos(i + 3),
+        });
+      }
+
+      let triangle,
+        triangle_mesh = new Ammo.btTriangleMesh();
+
+      let vecA = new Ammo.btVector3(0, 0, 0);
+      let vecB = new Ammo.btVector3(0, 0, 0);
+      let vecC = new Ammo.btVector3(0, 0, 0);
+
+      for (let i = 0; i < triangles.length - 3; i += 3) {
+        vecA.setX(triangles[i].x);
+        vecA.setY(triangles[i].y);
+        vecA.setZ(triangles[i].z);
+
+        vecB.setX(triangles[i + 1].x);
+        vecB.setY(triangles[i + 1].y);
+        vecB.setZ(triangles[i + 1].z);
+
+        vecC.setX(triangles[i + 2].x);
+        vecC.setY(triangles[i + 2].y);
+        vecC.setZ(triangles[i + 2].z);
+
+        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
+      }
+
+      Ammo.destroy(vecA);
+      Ammo.destroy(vecB);
+      Ammo.destroy(vecC);
+
+      const shape = new Ammo.btconvexTriangleMeshShape(
+        triangle_mesh,
+        (tree.geometry.verticesNeedUpdate = true)
+      );
+      shape.getMargin(0.05);
+      shape.calculateLocalInertia(mass, localInertia);
+      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+        mass,
+        motionState,
+        colShape,
+        localInertia
+      );
+      let body = new Ammo.btRigidBody(rbInfo);
+
+      body.setFriction(4);
+      body.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+      physicsWorld.addRigidBody(body);
+
+      tree.userData.physicsBody = body;
+      rigidBodies.push(tree);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
+  );
+}
+
 function loadCharacter() {
   let pos = { x: 10, y: 0, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
@@ -388,6 +498,7 @@ function loadCharacter() {
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
       yasuo.castShadow = true;
       yasuo.receiveShadow = true;
+      heroObject = new THREE.Mesh(yasuo.geomerty, yasuo.material);
       scene.add(yasuo);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -468,18 +579,19 @@ function loadCharacter() {
   );
 }
 
-function loadTree() {
-  let pos = { x: 200, y: -40, z: 0 };
+function loadVolcano() {
+  let pos = { x: 0, y: 0, z: 0 };
   let scale = { x: 30, y: 30, z: 30 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   var loader = new THREE.GLTFLoader();
   loader.load(
-    "./resources/models/HoverBoard.glb",
+    "./resources/models/Volcano.glb",
     function (gltf) {
-      gltf.scene.scale.set(10, 10, 10);
-      gltf.scene.translateX(30);
+      gltf.scene.scale.set(300, 300, 300);
+      gltf.scene.translateX(300);
+      gltf.scene.translateZ(-300);
       gltf.scene.translateY(0);
       const model = gltf.scene;
       
@@ -663,6 +775,24 @@ function createCollectible2(){
   body.setRollingFriction(10);
 
   physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
+
+}
+function moveHero() {
+  //this goes in renderframe()
+
+  let scalingFactor = 20;
+
+  let moveX = HeroMoveDirection.right - HeroMoveDirection.left;
+  let moveZ = HeroMoveDirection.back - HeroMoveDirection.forward;
+  let moveY = 0; //0 because we not doing up-down movement
+
+  if (moveX == 0 && moveY == 0 && moveZ == 0) return;
+
+  let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
+  resultantImpulse.op_mul(scalingFactor);
+
+  let physicsBody = heroObject.userData.physicsBody;
+  physicsBody.setLinearVelocity(resultantImpulse);
 }
 
 function updatePhysics(deltaTime) {
