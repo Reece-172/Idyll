@@ -13,7 +13,7 @@ let physicsWorld,
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
-// Variable to store first person / third person state
+// Variable to store first person / third person state 
 let firstPerson = false;
 let lookLeft = false, lookRight = false, lookBack = false;
 
@@ -25,12 +25,14 @@ const STATE = { DISABLE_DEACTIVATION: 4 };
 let collectible1Object = null, //put here if want to make the object global
   collectible2Object = null;
 
-let colGroupBall = 1,
-  colGroupChar = 2,
-  colGroupCollectible = 3,
-  colGroupBlock = 4; //collision purposes
+let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4; //collision purposes
 
 let collectCounter;
+
+let cbContactPairResult, blockPlane, ball;
+let cbContactResult;
+
+
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -40,8 +42,13 @@ function start() {
   collectCounter = 0;
 
   setupPhysicsWorld();
-
   setupGraphics();
+  
+  for(var i=0;i<15;i++){
+    createCollectible1();
+  } 
+
+  
   createBlock();
   createBall();
   loadCharacter();
@@ -77,13 +84,17 @@ function start() {
   //createFont();
 
   //use for-loop for collectibles
-  createCollectible1();
-  createCollectible2();
+  //createCollectible1();
+  //createCollectible2();
   loadVolcano();
   //createHead();
   for (var i = 0; i < 50; i++) {
     createTree();
-  }
+  }  
+
+  setupContactResultCallback();   
+  setupContactPairResultCallback();
+
 
   setupEventHandlers();
   renderFrame();
@@ -101,7 +112,7 @@ function setupPhysicsWorld() {
     solver,
     collisionConfiguration
   );
-  physicsWorld.setGravity(new Ammo.btVector3(0, -60, 0));
+  physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
 
   //remember to destroy all 'new' Ammo stuff at the end
 }
@@ -197,45 +208,29 @@ function renderFrame() {
 
   requestAnimationFrame(renderFrame);
 
-  if (
-    Math.abs(
-      ballObject.position.getComponent(0) -
-        collectible1Object.position.getComponent(0)
-    ) <= 2 &&
-    Math.abs(
-      ballObject.position.getComponent(2) -
-        collectible1Object.position.getComponent(2)
-    ) <= 2
-  ) {
-    //change
-    scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape.
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) ){ //change
+    scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+    physicsWorld.removeRigidBody( collectible1Object.userData.physicsBody );
     //physicsWorld.removeRigidBody(collectible1Object);
     //Ammo.destroy(collectible1Object.body);
     collectCounter++;
     console.log(collectCounter); //doesn't really work
+    
 
-    //createFont();
+  //   //createFont();
 
-    //may need to remove the object from rigidbodies array.
+  //   //may need to remove the object from rigidbodies array.
   }
 
-  if (
-    Math.abs(
-      ballObject.position.getComponent(0) -
-        collectible2Object.position.getComponent(0)
-    ) <= 2 &&
-    Math.abs(
-      ballObject.position.getComponent(2) -
-        collectible2Object.position.getComponent(2)
-    ) <= 2
-  ) {
-    scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape.
-    //make sound
-    //add to counter to collect however many collectibles there are
-    collectCounter++;
-    //createFont();
-    console.log(collectCounter);
-  }
+  // if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
+  //     scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+  //     physicsWorld.removeRigidBody( collectible2Object.userData.physicsBody );
+  //     //make sound
+  //     //add to counter to collect however many collectibles there are
+  //     collectCounter++;
+  //     //createFont();
+  //     console.log(collectCounter);
+  // }
 }
 
 function setupEventHandlers() {
@@ -288,14 +283,14 @@ function handleKeyDown(event) {
 
 
     case 32: //space bar
-      //console.log(charObject.position.getComponent(1));
-      if (ballObject.position.getComponent(1) <= 3) {
-        //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
-        moveDirection.up = 1;
-        break;
-      }
-      //PROBLEM if user holds space bad without letting go
-      break;
+    //console.log(charObject.position.getComponent(1));
+    //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
+      //moveDirection.up = 1
+     // break;
+    //}
+    //PROBLEM if user holds space bad without letting go
+    jump();
+    break;
   }
 }
 function handleKeyUp(event) {
@@ -383,7 +378,7 @@ function createBlock() {
 
   //threeJS Section
   const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
-  let blockPlane = new THREE.Mesh(
+  blockPlane = new THREE.Mesh(
     new THREE.BoxBufferGeometry(),
     new THREE.MeshPhongMaterial({ map: grass })
   );
@@ -395,6 +390,8 @@ function createBlock() {
   blockPlane.receiveShadow = true;
 
   scene.add(blockPlane);
+
+  blockPlane.userData.tag = "blockPlane";
 
   //Ammojs Section
   let transform = new Ammo.btTransform();
@@ -422,11 +419,13 @@ function createBlock() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(
-    body,
-    colGroupBlock,
-    colGroupBall | colGroupChar | colGroupCollectible
-  );
+  physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall|colGroupChar|colGroupCollectible);
+
+  body.threeObject = blockPlane;
+
+  blockPlane.userData.physicsBody = body;
+                        
+                  
 }
 
 function createBall() {
@@ -436,7 +435,7 @@ function createBall() {
   let mass = 1;
 
   //threeJS Section
-  let ball = (ballObject = new THREE.Mesh(
+  ball = (ballObject = new THREE.Mesh(
     new THREE.DodecahedronGeometry(radius),
     new THREE.MeshPhongMaterial({ color: 0xff0505 })
   ));
@@ -447,6 +446,8 @@ function createBall() {
   ball.receiveShadow = true;
 
   scene.add(ball);
+
+  ball.userData.tag = "ball";
 
   //Ammojs Section
   let transform = new Ammo.btTransform();
@@ -474,10 +475,11 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupCollectible);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
+  body.threeObject = ball;
 }
 
 function createTree(x, y) {
@@ -553,12 +555,13 @@ function createTree(x, y) {
       Ammo.destroy(vecB);
       Ammo.destroy(vecC);
 
-      const shape = new Ammo.btconvexTriangleMeshShape(
+      let colShape = new Ammo.btconvexTriangleMeshShape(
         triangle_mesh,
         (tree.geometry.verticesNeedUpdate = true)
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.getMargin(0.05);
+      
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -570,10 +573,10 @@ function createTree(x, y) {
       body.setFriction(4);
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body);
+      physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall);
 
       tree.userData.physicsBody = body;
-      rigidBodies.push(tree);
+      //rigidBodies.push(tree);
     },
     undefined,
     function (error) {
@@ -1620,7 +1623,7 @@ function createCollectible1() {
     new THREE.MeshPhongMaterial({ color: "blue" })
   ));
 
-  collectible1.position.set(pos.x, pos.y, pos.z);
+  collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
   collectible1.scale.set(scale.x, scale.y, scale.z);
 
   collectible1.castShadow = true;
@@ -1654,7 +1657,9 @@ function createCollectible1() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(body, colGroupCollectible, colGroupBlock);
+  collectible1.userData.physicsBody = body;
+
+  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBall);
 }
 
 function createCollectible2() {
@@ -1703,8 +1708,105 @@ function createCollectible2() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(body, colGroupCollectible, colGroupBlock);
+  //physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
+
 }
+
+function setupContactResultCallback(){
+
+  cbContactResult = new Ammo.ConcreteContactResultCallback();
+
+
+  // Our implementation of addSingleResult() is straight forward and understandable:
+  // Get distance from the contact point and exit if the distance is greater than zero.
+  // Obtain the participating physics objects.
+  // From them get their respective three.js objects.
+  // Bearing in mind we are just after the tiles, we check for the three.js object that is not the ball and assign variables appropriately.
+  // Finally, with some formatting, we log the information to the console.
+  cbContactResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+
+      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+
+      const distance = contactPoint.getDistance();
+
+      if( distance > 0 ) return;
+
+      let colWrapper0 = Ammo.wrapPointer( colObj0Wrap, Ammo.btCollisionObjectWrapper );
+      let rb0 = Ammo.castObject( colWrapper0.getCollisionObject(), Ammo.btRigidBody );
+
+      let colWrapper1 = Ammo.wrapPointer( colObj1Wrap, Ammo.btCollisionObjectWrapper );
+      let rb1 = Ammo.castObject( colWrapper1.getCollisionObject(), Ammo.btRigidBody );
+
+      let threeObject0 = rb0.threeObject;
+      let threeObject1 = rb1.threeObject;
+
+      let tag, localPos, worldPos
+
+      if( threeObject0.userData.tag != "ball" ){
+
+          tag = threeObject0.userData.tag;
+          localPos = contactPoint.get_m_localPointA();
+          worldPos = contactPoint.get_m_positionWorldOnA();
+
+      }
+      else{
+
+          tag = threeObject1.userData.tag;
+          localPos = contactPoint.get_m_localPointB();
+          worldPos = contactPoint.get_m_positionWorldOnB();
+
+      }
+
+      let localPosDisplay = {x: localPos.x(), y: localPos.y(), z: localPos.z()};
+      let worldPosDisplay = {x: worldPos.x(), y: worldPos.y(), z: worldPos.z()};
+
+      console.log( { tag, localPosDisplay, worldPosDisplay } );
+
+  }
+
+}
+
+function checkContact(){
+  physicsWorld.contactTest( ball.userData.physicsBody , cbContactResult );
+
+}
+
+
+function setupContactPairResultCallback(){
+
+  cbContactPairResult = new Ammo.ConcreteContactResultCallback();
+
+  cbContactPairResult.hasContact = false;
+
+  cbContactPairResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+
+      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+
+      const distance = contactPoint.getDistance();
+
+      if( distance > 0 ) return;
+
+      this.hasContact = true;
+
+  }
+
+}
+
+function jump(){
+
+  cbContactPairResult.hasContact = false;
+
+  physicsWorld.contactPairTest(ball.userData.physicsBody, blockPlane.userData.physicsBody, cbContactPairResult);
+
+  if( !cbContactPairResult.hasContact ) return;
+
+  let jumpImpulse = new Ammo.btVector3( 0, 15, 0 );
+
+  let physicsBody = ball.userData.physicsBody;
+  physicsBody.setLinearVelocity( jumpImpulse );
+
+}
+
 function moveHero() {
   //this goes in renderframe()
 
@@ -1722,6 +1824,7 @@ function moveHero() {
   let physicsBody = heroObject.userData.physicsBody;
   physicsBody.setLinearVelocity(resultantImpulse);
 }
+
 
 function updatePhysics(deltaTime) {
   // Step world
