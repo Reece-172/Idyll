@@ -9,23 +9,24 @@ let physicsWorld,
  * Orbital control
  * New models
  * Collision -> on new objects
-**/
+ **/
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
- //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
-
+//@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
 let collectible1Object = null, //put here if want to make the object global
-collectible2Object = null;
+  collectible2Object = null;
 
-let colGroupBall = 1, colGroupChar = 2, colGroupCollectible = 3, colGroupBlock = 4; //collision purposes
+let colGroupBall = 1,
+  colGroupChar = 2,
+  colGroupCollectible = 3,
+  colGroupBlock = 4; //collision purposes
 
 let collectCounter;
-
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -40,43 +41,34 @@ function start() {
   createBlock();
   createBall();
   loadCharacter();
-  for(var i=0;i<30;i++){
+  for (var i = 0; i < 20; i++) {
     createTree();
-    
-  }  
-  for(var i=0;i<5;i++){
+  }
+  for (var i = 0; i < 5; i++) {
     createRock();
-    
-  } 
-  for(var i=0;i<50;i++){
+  }
+  for (var i = 0; i < 30; i++) {
     createGrass();
-    
-  } 
-  for(var i=0;i<30;i++){
+  }
+  for (var i = 0; i < 60; i++) {
     createFlower_1();
-    
-  } 
-  for(var i=0;i<30;i++){
+  }
+  for (var i = 0; i < 60; i++) {
     createFlower_2();
-    
-  } 
-  for(var i=0;i<20;i++){
+  }
+  for (var i = 0; i < 20; i++) {
     createMushroom();
-    
-  } 
-  
-  for(var i=0;i<30;i++){
+  }
+
+  for (var i = 0; i < 50; i++) {
     createTree_2();
-    
-  } 
-  for(var i=0;i<30;i++){
+  }
+  for (var i = 0; i < 50; i++) {
     createTree_3();
-    
-  } 
-  for(var i=0;i<8;i++){
+  }
+  for (var i = 0; i < 8; i++) {
     createBush();
-    
-  } 
+  }
 
   //createFont();
 
@@ -85,11 +77,9 @@ function start() {
   createCollectible2();
   loadVolcano();
   //createHead();
-  for(var i=0;i<50;i++){
+  for (var i = 0; i < 50; i++) {
     createTree();
-  }  
-  
-
+  }
 
   setupEventHandlers();
   renderFrame();
@@ -118,7 +108,7 @@ function setupGraphics() {
 
   //create the scene
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog( 0xffffff, 0.015, 800); 
+  scene.fog = new THREE.Fog(0xffffff, 0.015, 1100);
   const loader = new THREE.CubeTextureLoader();
   const texture = loader.load([
     "./resources/skybox/posx.jpg", //left
@@ -168,7 +158,6 @@ function setupGraphics() {
   dirLight.shadow.camera.bottom = -d;
 
   dirLight.shadow.camera.far = 13500;
-  
 
   //Setup the renderer
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -195,8 +184,18 @@ function renderFrame() {
 
   requestAnimationFrame(renderFrame);
 
-  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) ){ //change
-    scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+  if (
+    Math.abs(
+      ballObject.position.getComponent(0) -
+        collectible1Object.position.getComponent(0)
+    ) <= 2 &&
+    Math.abs(
+      ballObject.position.getComponent(2) -
+        collectible1Object.position.getComponent(2)
+    ) <= 2
+  ) {
+    //change
+    scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape.
     //physicsWorld.removeRigidBody(collectible1Object);
     //Ammo.destroy(collectible1Object.body);
     collectCounter++;
@@ -207,13 +206,22 @@ function renderFrame() {
     //may need to remove the object from rigidbodies array.
   }
 
-  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
-      scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-      //make sound
-      //add to counter to collect however many collectibles there are
-      collectCounter++;
-      //createFont();
-      console.log(collectCounter);
+  if (
+    Math.abs(
+      ballObject.position.getComponent(0) -
+        collectible2Object.position.getComponent(0)
+    ) <= 2 &&
+    Math.abs(
+      ballObject.position.getComponent(2) -
+        collectible2Object.position.getComponent(2)
+    ) <= 2
+  ) {
+    scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape.
+    //make sound
+    //add to counter to collect however many collectibles there are
+    collectCounter++;
+    //createFont();
+    console.log(collectCounter);
   }
 }
 
@@ -247,13 +255,14 @@ function handleKeyDown(event) {
       break;
 
     case 32: //space bar
-    //console.log(charObject.position.getComponent(1));
-    if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
-      moveDirection.up = 1
+      //console.log(charObject.position.getComponent(1));
+      if (ballObject.position.getComponent(1) <= 10) {
+        //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
+        moveDirection.up = 1;
+        break;
+      }
+      //PROBLEM if user holds space bad without letting go
       break;
-    }
-    //PROBLEM if user holds space bad without letting go
-    break;
   }
 }
 function handleKeyUp(event) {
@@ -307,29 +316,27 @@ function createFont() {
   //   textMesh.position.y += -0.50
   //   scene.add(textMesh);
 
-
   // }
 
-  var text2 = document.createElement('div');
-  text2.style.position = 'absolute';
+  var text2 = document.createElement("div");
+  text2.style.position = "absolute";
   //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
   text2.style.width = 100;
   text2.style.height = 100;
   //text2.style.backgroundColor = "blue";
-  text2.innerHTML = '';
+  text2.innerHTML = "";
   text2.innerHTML = collectCounter;
-  text2.style.top = 200 + 'px';
-  text2.style.left = 200 + 'px';
+  text2.style.top = 200 + "px";
+  text2.style.left = 200 + "px";
   //document.body.innerHTML = '';
   document.body.appendChild(text2);
 }
 
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 500, y: 2, z: 500 };
+  let scale = { x: 1000, y: 2, z: 1000 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
-  
 
   //threeJS Section
   const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
@@ -372,7 +379,11 @@ function createBlock() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall|colGroupChar|colGroupCollectible);
+  physicsWorld.addRigidBody(
+    body,
+    colGroupBlock,
+    colGroupBall | colGroupChar | colGroupCollectible
+  );
 }
 
 function createBall() {
@@ -420,13 +431,13 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 }
 
-function createTree(x,y) {
+function createTree(x, y) {
   let pos = { x: x, y: y, z: 0 };
   let scale = { x: 2, y: 2, z: 2 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
@@ -436,10 +447,19 @@ function createTree(x,y) {
   loader.load(
     "./resources/models/Tree.glb",
     function (gltf) {
-      gltf.scene.scale.set(14,14,14);
-      gltf.scene.position.set(Math.floor(Math.random()*(250+20)),18,Math.floor(Math.random()*(250+20)));
+      gltf.scene.scale.set(14, 14, 14);
+      gltf.scene.position.set(
+        Math.floor(Math.random() * (300 + 100)),
+        18,
+        Math.floor(Math.random() * (300 + 100))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const tree = gltf.scene;
-      
+
       scene.add(tree);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -448,7 +468,7 @@ function createTree(x,y) {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -528,10 +548,19 @@ function createRock() {
   loader.load(
     "./resources/models/enchantedforest_rock_2.glb",
     function (gltf) {
-      gltf.scene.scale.set(4,4,4);
-      gltf.scene.position.set(Math.floor(Math.random()*(250+1)),Math.floor(Math.random()*(2+1)),Math.floor(Math.random()*(250+1)));
+      gltf.scene.scale.set(4, 4, 4);
+      gltf.scene.position.set(
+        Math.floor(Math.random() * (250 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        Math.floor(Math.random() * (250 + 1))
+      );
+        gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const rock = gltf.scene;
-      
+
       scene.add(rock);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -540,7 +569,7 @@ function createRock() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -621,10 +650,19 @@ function createFlower_1() {
   loader.load(
     "./resources/models/enchantedforest_flower_3.glb",
     function (gltf) {
-      gltf.scene.scale.set(5,5,5);
-      gltf.scene.position.set(-Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(5, 5, 5);
+      gltf.scene.position.set(
+        -Math.floor(Math.random() * (245 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        Math.floor(Math.random() * (245 + 1))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const flower = gltf.scene;
-      
+
       scene.add(flower);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -633,7 +671,7 @@ function createFlower_1() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -703,7 +741,8 @@ function createFlower_1() {
     }
   );
 }
-function createTree_3() {
+
+function createTree_2() {
   let pos = { x: 0, y: 0, z: 0 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
@@ -712,10 +751,19 @@ function createTree_3() {
   loader.load(
     "./resources/models/island_palm_2.glb",
     function (gltf) {
-      gltf.scene.scale.set(4,4,4);
-      gltf.scene.position.set(Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),-Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(4, 4, 4);
+      gltf.scene.position.set(
+        -Math.floor(Math.random() * (245 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        -Math.floor(Math.random() * (245 + 1))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const tree = gltf.scene;
-      
+
       scene.add(tree);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -724,7 +772,7 @@ function createTree_3() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -794,7 +842,7 @@ function createTree_3() {
     }
   );
 }
-function createTree_2() {
+function createTree_3() {
   let pos = { x: 0, y: 0, z: 0 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
@@ -803,10 +851,19 @@ function createTree_2() {
   loader.load(
     "./resources/models/enchantedforest_tree_4.glb",
     function (gltf) {
-      gltf.scene.scale.set(4,4,4);
-      gltf.scene.position.set(-Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),-Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(4, 4, 4);
+      gltf.scene.position.set(
+        Math.floor(Math.random() * (300 + 200)),
+        -1,
+        -Math.floor(Math.random() * (300 + 200))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const tree = gltf.scene;
-      
+
       scene.add(tree);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -815,98 +872,7 @@ function createTree_2() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
-      let motionState = new Ammo.btDefaultMotionState(transform);
 
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = tree.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (tree.geometry.verticesNeedUpdate = true)
-      );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      tree.userData.physicsBody = body;
-      rigidBodies.push(tree);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-function createTree_3() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/island_palm_2.glb",
-    function (gltf) {
-      gltf.scene.scale.set(4,4,4);
-      gltf.scene.position.set(Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),-Math.floor(Math.random()*(245+1)));
-      const tree = gltf.scene;
-      
-      scene.add(tree);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-    
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -985,10 +951,19 @@ function createBush() {
   loader.load(
     "./resources/models/island_bush_1.glb",
     function (gltf) {
-      gltf.scene.scale.set(4,4,4);
-      gltf.scene.position.set(-Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),-Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(4, 4, 4);
+      gltf.scene.position.set(
+        -Math.floor(Math.random() * (245 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        -Math.floor(Math.random() * (245 + 1))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const tree = gltf.scene;
-      
+
       scene.add(tree);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -997,7 +972,7 @@ function createBush() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -1076,10 +1051,19 @@ function createFlower_2() {
   loader.load(
     "./resources/models/enchantedforest_flower_5.glb",
     function (gltf) {
-      gltf.scene.scale.set(5,5,5);
-      gltf.scene.position.set(-Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(5, 5, 5);
+      gltf.scene.position.set(
+        -Math.floor(Math.random() * (245 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        Math.floor(Math.random() * (245 + 1))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const flower = gltf.scene;
-      
+
       scene.add(flower);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -1088,7 +1072,7 @@ function createFlower_2() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -1167,10 +1151,19 @@ function createMushroom() {
   loader.load(
     "./resources/models/enchantedforest_mushroom_3.glb",
     function (gltf) {
-      gltf.scene.scale.set(3,3,3);
-      gltf.scene.position.set(-Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),-Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(3, 3, 3);
+      gltf.scene.position.set(
+        -Math.floor(Math.random() * (245 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        -Math.floor(Math.random() * (245 + 1))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const mushroom = gltf.scene;
-      
+
       scene.add(mushroom);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -1179,7 +1172,7 @@ function createMushroom() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -1258,10 +1251,19 @@ function createGrass() {
   loader.load(
     "./resources/models/enchantedforest_grass_2.glb",
     function (gltf) {
-      gltf.scene.scale.set(4,4,4);
-      gltf.scene.position.set(Math.floor(Math.random()*(245+1)),Math.floor(Math.random()*(2+1)),Math.floor(Math.random()*(245+1)));
+      gltf.scene.scale.set(4, 4, 4);
+      gltf.scene.position.set(
+        Math.floor(Math.random() * (245 + 1)),
+        Math.floor(Math.random() * (2 + 1)),
+        Math.floor(Math.random() * (245 + 1))
+      );
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const grass = gltf.scene;
-      
+
       scene.add(grass);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -1270,7 +1272,7 @@ function createGrass() {
       transform.setRotation(
         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
       );
-    
+
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
@@ -1352,10 +1354,13 @@ function loadCharacter() {
     function (gltf) {
       gltf.scene.scale.set(10, 10, 10);
       gltf.scene.translateY(1);
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const yasuo = gltf.scene;
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      yasuo.castShadow = true;
-      yasuo.receiveShadow = true;
       heroObject = new THREE.Mesh(yasuo.geomerty, yasuo.material);
       scene.add(yasuo);
       //Ammojs Section -> physics section
@@ -1425,7 +1430,11 @@ function loadCharacter() {
 
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body, colGroupChar, colGroupBall|colGroupBlock);
+      physicsWorld.addRigidBody(
+        body,
+        colGroupChar,
+        colGroupBall | colGroupBlock
+      );
 
       yasuo.userData.physicsBody = body;
       rigidBodies.push(yasuo);
@@ -1446,12 +1455,17 @@ function loadVolcano() {
   loader.load(
     "./resources/models/Volcano.glb",
     function (gltf) {
-      gltf.scene.scale.set(300, 300, 300);
-      gltf.scene.translateX(300);
-      gltf.scene.translateZ(-300);
+      gltf.scene.scale.set(400, 400, 400);
+      gltf.scene.translateX(600);
+      gltf.scene.translateZ(-600);
       gltf.scene.translateY(0);
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+        }
+      });
       const model = gltf.scene;
-      
+
       model.castShadow = true;
       model.receiveShadow = true;
       scene.add(model);
@@ -1540,7 +1554,7 @@ function moveBall() {
 
   let moveX = moveDirection.right - moveDirection.left;
   let moveZ = moveDirection.back - moveDirection.forward;
-  let moveY =  moveDirection.up - moveDirection.down*2;
+  let moveY = moveDirection.up - moveDirection.down * 2;
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
@@ -1552,15 +1566,17 @@ function moveBall() {
 }
 
 //collectible items (make a class in future)
-function createCollectible1(){
-    
-  let pos = {x: -20, y: 6, z: 20};
-  let scale = {x: 1, y: 1, z: 1};
-  let quat = {x: 0, y: 0, z: 0, w: 1};
+function createCollectible1() {
+  let pos = { x: -20, y: 6, z: 20 };
+  let scale = { x: 1, y: 1, z: 1 };
+  let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
-  let collectible1 = collectible1Object = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: "blue"}));
+  let collectible1 = (collectible1Object = new THREE.Mesh(
+    new THREE.BoxBufferGeometry(),
+    new THREE.MeshPhongMaterial({ color: "blue" })
+  ));
 
   collectible1.position.set(pos.x, pos.y, pos.z);
   collectible1.scale.set(scale.x, scale.y, scale.z);
@@ -1570,38 +1586,46 @@ function createCollectible1(){
 
   scene.add(collectible1);
 
-
   //Ammojs Section
   let transform = new Ammo.btTransform();
   transform.setIdentity();
-  transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
-  transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
-  let motionState = new Ammo.btDefaultMotionState( transform );
+  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+  transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+  let motionState = new Ammo.btDefaultMotionState(transform);
 
-  let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
-  colShape.setMargin( 0.05 );
+  let colShape = new Ammo.btBoxShape(
+    new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
+  );
+  colShape.setMargin(0.05);
 
-  let localInertia = new Ammo.btVector3( 0, 0, 0 );
-  colShape.calculateLocalInertia( mass, localInertia );
+  let localInertia = new Ammo.btVector3(0, 0, 0);
+  colShape.calculateLocalInertia(mass, localInertia);
 
-  let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
-  let body = new Ammo.btRigidBody( rbInfo );
+  let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+    mass,
+    motionState,
+    colShape,
+    localInertia
+  );
+  let body = new Ammo.btRigidBody(rbInfo);
 
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
+  physicsWorld.addRigidBody(body, colGroupCollectible, colGroupBlock);
 }
 
-function createCollectible2(){
-  
-  let pos = {x: 15, y: 3, z: 40};
-  let scale = {x: 1, y: 1, z: 1};
-  let quat = {x: 0, y: 0, z: 0, w: 1};
+function createCollectible2() {
+  let pos = { x: 15, y: 3, z: 40 };
+  let scale = { x: 1, y: 1, z: 1 };
+  let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
-  let collectible2 = collectible2Object = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: "blue"}));
+  let collectible2 = (collectible2Object = new THREE.Mesh(
+    new THREE.BoxBufferGeometry(),
+    new THREE.MeshPhongMaterial({ color: "blue" })
+  ));
 
   collectible2.position.set(pos.x, pos.y, pos.z);
   collectible2.scale.set(scale.x, scale.y, scale.z);
@@ -1611,28 +1635,33 @@ function createCollectible2(){
 
   scene.add(collectible2);
 
-
   //Ammojs Section
   let transform = new Ammo.btTransform();
   transform.setIdentity();
-  transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
-  transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
-  let motionState = new Ammo.btDefaultMotionState( transform );
+  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+  transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+  let motionState = new Ammo.btDefaultMotionState(transform);
 
-  let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
-  colShape.setMargin( 0.05 );
+  let colShape = new Ammo.btBoxShape(
+    new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
+  );
+  colShape.setMargin(0.05);
 
-  let localInertia = new Ammo.btVector3( 0, 0, 0 );
-  colShape.calculateLocalInertia( mass, localInertia );
+  let localInertia = new Ammo.btVector3(0, 0, 0);
+  colShape.calculateLocalInertia(mass, localInertia);
 
-  let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
-  let body = new Ammo.btRigidBody( rbInfo );
+  let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+    mass,
+    motionState,
+    colShape,
+    localInertia
+  );
+  let body = new Ammo.btRigidBody(rbInfo);
 
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
-
+  physicsWorld.addRigidBody(body, colGroupCollectible, colGroupBlock);
 }
 function moveHero() {
   //this goes in renderframe()
