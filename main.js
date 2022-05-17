@@ -11,18 +11,28 @@ let physicsWorld,
  * Collision -> on new objects
 **/
 let ballObject = null,
-  moveDirection = { left: 0, right: 0, forward: 0, back: 0 }; //used to hold the respective directional key (WASD)
+  moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
  //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
+
+let collectible1Object = null, //put here if want to make the object global
+collectible2Object = null;
+
+let colGroupBall = 1, colGroupChar = 2, colGroupCollectible = 3, colGroupBlock = 4; //collision purposes
+
+let collectCounter;
+
+
 //Ammojs Initialization
 Ammo().then(start);
 
 function start() {
   tmpTrans = new Ammo.btTransform();
+  collectCounter = 0;
 
   setupPhysicsWorld();
 
@@ -30,7 +40,13 @@ function start() {
   createBlock();
   createBall();
   loadCharacter();
-  loadTree();
+  //loadTree();
+
+  //createFont();
+
+  //use for-loop for collectibles
+  createCollectible1();
+  createCollectible2();
 
   setupEventHandlers();
   renderFrame();
@@ -48,7 +64,9 @@ function setupPhysicsWorld() {
     solver,
     collisionConfiguration
   );
-  physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+  physicsWorld.setGravity(new Ammo.btVector3(0, -20, 0));
+
+  //remember to destroy all 'new' Ammo stuff at the end
 }
 
 function setupGraphics() {
@@ -122,7 +140,7 @@ function setupGraphics() {
 
 function renderFrame() {
   let deltaTime = clock.getDelta();
-
+  //createFont();
   moveBall();
 
   camera.lookAt(ballObject.position);
@@ -131,6 +149,27 @@ function renderFrame() {
   renderer.render(scene, camera);
 
   requestAnimationFrame(renderFrame);
+
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) ){ //change
+    scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+    //physicsWorld.removeRigidBody(collectible1Object);
+    //Ammo.destroy(collectible1Object.body);
+    collectCounter++;
+    console.log(collectCounter); //doesn't really work
+
+    //createFont();
+
+    //may need to remove the object from rigidbodies array.
+  }
+
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
+      scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+      //make sound
+      //add to counter to collect however many collectibles there are
+      collectCounter++;
+      //createFont();
+      console.log(collectCounter);
+  }
 }
 
 function setupEventHandlers() {
@@ -157,6 +196,15 @@ function handleKeyDown(event) {
     case 68: //D: RIGHT
       moveDirection.right = 1;
       break;
+
+    case 32: //space bar
+    //console.log(charObject.position.getComponent(1));
+    if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
+      moveDirection.up = 1
+      break;
+    }
+    //PROBLEM if user holds space bad without letting go
+    break;
   }
 }
 function handleKeyUp(event) {
@@ -178,7 +226,49 @@ function handleKeyUp(event) {
     case 68: //RIGHT
       moveDirection.right = 0;
       break;
+
+    case 32: //space bar
+      moveDirection.up = 0;
   }
+}
+
+function createFont() {
+  // const loader = new THREE.FontLoader();
+  // loader.load('./fonts/Merriweather Sans_Regular.json', function (font: THREE.Font)){
+  //   const geometry = new THREE.TextGeometry("testing", {
+  //     font: font,
+  //     size: 6,
+  //     height: 2,
+
+  //   })
+
+  //   const textMesh = new THREE.Mesh(geometry, [
+  //     new THREE.MeshPhongMaterial({color: 0xad4000}), //front
+  //     new THREE.MeshPhongMaterial({color:0x5c2301}) //side
+  //   ])
+
+  //   textMesh.castShadow = true;
+  //   textMesh.position.y += 15
+  //   textMesh.position.z -= 40
+  //   textMesh.position.x = -8
+  //   textMesh.position.y += -0.50
+  //   scene.add(textMesh);
+
+
+  // }
+
+  var text2 = document.createElement('div');
+  text2.style.position = 'absolute';
+  //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+  text2.style.width = 100;
+  text2.style.height = 100;
+  //text2.style.backgroundColor = "blue";
+  text2.innerHTML = '';
+  text2.innerHTML = collectCounter;
+  text2.style.top = 200 + 'px';
+  text2.style.left = 200 + 'px';
+  //document.body.innerHTML = '';
+  document.body.appendChild(text2);
 }
 
 function createBlock() {
@@ -186,6 +276,7 @@ function createBlock() {
   let scale = { x: 500, y: 2, z: 500 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
+  
 
   //threeJS Section
   const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
@@ -228,7 +319,7 @@ function createBlock() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(body);
+  physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall|colGroupChar|colGroupCollectible);
 }
 
 function createBall() {
@@ -276,14 +367,14 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 }
 
 function loadCharacter() {
-  let pos = { x: 0, y: 0, z: 0 };
+  let pos = { x: 10, y: 0, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
@@ -294,6 +385,7 @@ function loadCharacter() {
       gltf.scene.scale.set(10, 10, 10);
       gltf.scene.translateY(1);
       const yasuo = gltf.scene;
+      yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
       yasuo.castShadow = true;
       yasuo.receiveShadow = true;
       scene.add(yasuo);
@@ -364,7 +456,7 @@ function loadCharacter() {
 
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body);
+      physicsWorld.addRigidBody(body, colGroupChar, colGroupBall|colGroupBlock);
 
       yasuo.userData.physicsBody = body;
       rigidBodies.push(yasuo);
@@ -479,7 +571,7 @@ function moveBall() {
 
   let moveX = moveDirection.right - moveDirection.left;
   let moveZ = moveDirection.back - moveDirection.forward;
-  let moveY = 0; //0 because we not doing up-down movement
+  let moveY =  moveDirection.up - moveDirection.down*2;
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
@@ -488,6 +580,89 @@ function moveBall() {
 
   let physicsBody = ballObject.userData.physicsBody;
   physicsBody.setLinearVelocity(resultantImpulse);
+}
+
+//collectible items (make a class in future)
+function createCollectible1(){
+    
+  let pos = {x: -20, y: 6, z: 20};
+  let scale = {x: 1, y: 1, z: 1};
+  let quat = {x: 0, y: 0, z: 0, w: 1};
+  let mass = 0;
+
+  //threeJS Section
+  let collectible1 = collectible1Object = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: "blue"}));
+
+  collectible1.position.set(pos.x, pos.y, pos.z);
+  collectible1.scale.set(scale.x, scale.y, scale.z);
+
+  collectible1.castShadow = true;
+  collectible1.receiveShadow = true;
+
+  scene.add(collectible1);
+
+
+  //Ammojs Section
+  let transform = new Ammo.btTransform();
+  transform.setIdentity();
+  transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+  transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+  let motionState = new Ammo.btDefaultMotionState( transform );
+
+  let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
+  colShape.setMargin( 0.05 );
+
+  let localInertia = new Ammo.btVector3( 0, 0, 0 );
+  colShape.calculateLocalInertia( mass, localInertia );
+
+  let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+  let body = new Ammo.btRigidBody( rbInfo );
+
+  body.setFriction(4);
+  body.setRollingFriction(10);
+
+  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
+}
+
+function createCollectible2(){
+  
+  let pos = {x: 15, y: 3, z: 40};
+  let scale = {x: 1, y: 1, z: 1};
+  let quat = {x: 0, y: 0, z: 0, w: 1};
+  let mass = 0;
+
+  //threeJS Section
+  let collectible2 = collectible2Object = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: "blue"}));
+
+  collectible2.position.set(pos.x, pos.y, pos.z);
+  collectible2.scale.set(scale.x, scale.y, scale.z);
+
+  collectible2.castShadow = true;
+  collectible2.receiveShadow = true;
+
+  scene.add(collectible2);
+
+
+  //Ammojs Section
+  let transform = new Ammo.btTransform();
+  transform.setIdentity();
+  transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+  transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
+  let motionState = new Ammo.btDefaultMotionState( transform );
+
+  let colShape = new Ammo.btBoxShape( new Ammo.btVector3( scale.x * 0.5, scale.y * 0.5, scale.z * 0.5 ) );
+  colShape.setMargin( 0.05 );
+
+  let localInertia = new Ammo.btVector3( 0, 0, 0 );
+  colShape.calculateLocalInertia( mass, localInertia );
+
+  let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+  let body = new Ammo.btRigidBody( rbInfo );
+
+  body.setFriction(4);
+  body.setRollingFriction(10);
+
+  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
 }
 
 function updatePhysics(deltaTime) {
