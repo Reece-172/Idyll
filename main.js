@@ -44,7 +44,7 @@ function start() {
   setupPhysicsWorld();
   setupGraphics();
   
-  for(var i=0;i<15;i++){
+  for(var i=0;i<70;i++){
     createCollectible1();
   } 
 
@@ -112,7 +112,7 @@ function setupPhysicsWorld() {
     solver,
     collisionConfiguration
   );
-  physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+  physicsWorld.setGravity(new Ammo.btVector3(0, -25, 0));
 
   //remember to destroy all 'new' Ammo stuff at the end
 }
@@ -1623,7 +1623,7 @@ function createCollectible1() {
     new THREE.MeshPhongMaterial({ color: "blue" })
   ));
 
-  collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
+  collectible1.position.set(Math.floor(Math.random()*(400)),2,-Math.floor(Math.random()*(400)));
   collectible1.scale.set(scale.x, scale.y, scale.z);
 
   collectible1.castShadow = true;
