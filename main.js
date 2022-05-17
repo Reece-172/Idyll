@@ -1740,25 +1740,53 @@ function updatePhysics(deltaTime) {
       objThree.position.set(p.x(), p.y(), p.z());
       objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
 
+      // First Person
       if(firstPerson == true){
-        camera.position.set(p.x(),p.y() + 5,p.z() + 10);
+
+        // Perspective from objects eyes
+        camera.position.set(p.x(), p.y(), p.z());
+
+        // Look 100 units ahead
+        camera.lookAt(p.x(), p.y(), p.z() - 100);
+        
+        // Temporarily change camera view (still in first person)
+        if(lookLeft == true){
+          camera.lookAt(p.x() - 100, p.y() , p.z());
+          }else
+          if(lookRight == true){
+            camera.lookAt(p.x() + 100, p.y(), p.z());
+          }else
+          if(lookBack == true){
+            camera.lookAt(p.x(), p.y(), p.z() +  100);
+          }
+
+        }
+
+        // Third Person
+        else {
+
+        // Perspective from behind object and slightly above
+        camera.position.set(p.x(),p.y() + 8,p.z() + 15);
+
+        // Look slightly above object
         camera.lookAt(p.x(), p.y() + 5, p.z());
 
+        // Temporarily change camera view (still in first person)
         if(lookLeft == true){
         camera.position.set(p.x() + 10,p.y() + 5,p.z());
         camera.lookAt(p.x() - 100, p.y() , p.z());
-        }else
+        }
+        else
         if(lookRight == true){
           camera.position.set(p.x() - 10,p.y() + 5,p.z());
           camera.lookAt(p.x() + 100, p.y(), p.z());
-        }else
+        }
+        else
         if(lookBack == true){
           camera.position.set(p.x(),p.y() + 5,p.z() - 10);
           camera.lookAt(p.x(), p.y(), p.z() +  100);
         }
-
-      }else{
-        camera.position.set(0, 15, 50);
+        
       }
       
     }
