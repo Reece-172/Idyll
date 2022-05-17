@@ -13,6 +13,10 @@ let physicsWorld,
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
+// Variable to store first person / third person state
+let firstPerson = false;
+let lookLeft = false, lookRight = false, lookBack = false;
+
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
@@ -128,7 +132,7 @@ function setupGraphics() {
     0.2,
     5000
   );
-  camera.position.set(0, 15, 30);
+  camera.position.set(0, 15, 50);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   //Add hemisphere light
@@ -165,6 +169,15 @@ function setupGraphics() {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
+
+
+
+  // // Orbit Control (Mouse Rotation and Zoom)
+  //   // Orbit Controls
+  //   const controls = new THREE.OrbitControls(
+  //     camera, renderer.domElement);
+  //   controls.target.set(0, 20, 0);
+  //   controls.update();
 
   renderer.gammaInput = true;
   renderer.gammaOutput = true;
@@ -254,6 +267,26 @@ function handleKeyDown(event) {
       HeroMoveDirection.forward = 1;
       break;
 
+    case 70: //F: Toggle First Person
+      if(firstPerson == false){
+        firstPerson = true;
+      }else{
+        firstPerson = false;
+      }
+      break;  
+      
+      case 37:
+        lookLeft = true;
+        break;
+      case 39:
+        lookRight = true;
+        break;
+      case 40:
+        lookBack = true;
+        break;
+        
+
+
     case 32: //space bar
       //console.log(charObject.position.getComponent(1));
       if (ballObject.position.getComponent(1) <= 10) {
@@ -288,6 +321,16 @@ function handleKeyUp(event) {
       moveDirection.right = 0;
       HeroMoveDirection.forward = 0;
       break;
+
+      case 37:
+        lookLeft = false;
+        break;
+      case 39:
+        lookRight = false;
+        break;
+      case 40:
+        lookBack = false;
+        break;
 
     case 32: //space bar
       moveDirection.up = 0;
@@ -1696,6 +1739,28 @@ function updatePhysics(deltaTime) {
       let q = tmpTrans.getRotation();
       objThree.position.set(p.x(), p.y(), p.z());
       objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+
+      if(firstPerson == true){
+        camera.position.set(p.x(),p.y() + 5,p.z() + 10);
+        camera.lookAt(p.x(), p.y() + 5, p.z());
+
+        if(lookLeft == true){
+        camera.position.set(p.x() + 10,p.y() + 5,p.z());
+        camera.lookAt(p.x() - 100, p.y() , p.z());
+        }else
+        if(lookRight == true){
+          camera.position.set(p.x() - 10,p.y() + 5,p.z());
+          camera.lookAt(p.x() + 100, p.y(), p.z());
+        }else
+        if(lookBack == true){
+          camera.position.set(p.x(),p.y() + 5,p.z() - 10);
+          camera.lookAt(p.x(), p.y(), p.z() +  100);
+        }
+
+      }else{
+        camera.position.set(0, 15, 50);
+      }
+      
     }
   }
 }
