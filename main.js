@@ -13,7 +13,7 @@ let physicsWorld,
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
-// Variable to store first person / third person state
+// Variable to store first person / third person state 
 let firstPerson = false;
 let lookLeft = false, lookRight = false, lookBack = false;
 
