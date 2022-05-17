@@ -44,9 +44,17 @@ function start() {
   setupPhysicsWorld();
   setupGraphics();
   
+<<<<<<< HEAD
   for(var i=0;i<70;i++){
     createCollectible1();
   } 
+=======
+  // for(var i=0;i<15;i++){
+  //   createCollectible1();
+  // } 
+  createCollectible1();
+  createCollectible2();
+>>>>>>> 66b688445ca18150d33b03aca522bc1b0bab9fef
 
   
   createBlock();
@@ -81,11 +89,7 @@ function start() {
     createBush();
   }
 
-  //createFont();
 
-  //use for-loop for collectibles
-  //createCollectible1();
-  //createCollectible2();
   loadVolcano();
   //createHead();
   for (var i = 0; i < 50; i++) {
@@ -200,7 +204,7 @@ function renderFrame() {
   let deltaTime = clock.getDelta();
   //createFont();
   moveBall();
-  // moveHero();
+  //moveHero();
   camera.lookAt(ballObject.position);
   updatePhysics(deltaTime);
 
@@ -211,26 +215,23 @@ function renderFrame() {
   if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) ){ //change
     scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
     physicsWorld.removeRigidBody( collectible1Object.userData.physicsBody );
-    //physicsWorld.removeRigidBody(collectible1Object);
-    //Ammo.destroy(collectible1Object.body);
     collectCounter++;
-    console.log(collectCounter); //doesn't really work
-    
+    console.log(collectCounter); //kinda works
 
   //   //createFont();
 
   //   //may need to remove the object from rigidbodies array.
   }
 
-  // if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
-  //     scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-  //     physicsWorld.removeRigidBody( collectible2Object.userData.physicsBody );
-  //     //make sound
-  //     //add to counter to collect however many collectibles there are
-  //     collectCounter++;
-  //     //createFont();
-  //     console.log(collectCounter);
-  // }
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
+      scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+      physicsWorld.removeRigidBody( collectible2Object.userData.physicsBody );
+      //make sound
+      //add to counter to collect however many collectibles there are
+      collectCounter++;
+      //createFont();
+      console.log(collectCounter);
+  }
 }
 
 function setupEventHandlers() {
@@ -283,14 +284,16 @@ function handleKeyDown(event) {
 
 
     case 32: //space bar
-    //console.log(charObject.position.getComponent(1));
     //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
-      //moveDirection.up = 1
+      //moveDirection.up = 1 //infinitely goes up if key is pressed and held
      // break;
     //}
-    //PROBLEM if user holds space bad without letting go
-    jump();
-    break;
+      jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
+      break;
+
+    case 77: //m
+      checkContact();//shows what the ball collides with
+      break;
   }
 }
 function handleKeyUp(event) {
@@ -1623,7 +1626,12 @@ function createCollectible1() {
     new THREE.MeshPhongMaterial({ color: "blue" })
   ));
 
+<<<<<<< HEAD
   collectible1.position.set(Math.floor(Math.random()*(400)),2,-Math.floor(Math.random()*(400)));
+=======
+  collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
+  //collectible1.position.set(pos.x, pos.y, pos.z);
+>>>>>>> 66b688445ca18150d33b03aca522bc1b0bab9fef
   collectible1.scale.set(scale.x, scale.y, scale.z);
 
   collectible1.castShadow = true;
