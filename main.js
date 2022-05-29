@@ -44,17 +44,14 @@ function start() {
   setupPhysicsWorld();
   setupGraphics();
   
-<<<<<<< HEAD
   for(var i=0;i<70;i++){
     createCollectible1();
   } 
-=======
   // for(var i=0;i<15;i++){
   //   createCollectible1();
   // } 
   createCollectible1();
   createCollectible2();
->>>>>>> 66b688445ca18150d33b03aca522bc1b0bab9fef
 
   
   createBlock();
@@ -1626,12 +1623,9 @@ function createCollectible1() {
     new THREE.MeshPhongMaterial({ color: "blue" })
   ));
 
-<<<<<<< HEAD
   collectible1.position.set(Math.floor(Math.random()*(400)),2,-Math.floor(Math.random()*(400)));
-=======
   collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
   //collectible1.position.set(pos.x, pos.y, pos.z);
->>>>>>> 66b688445ca18150d33b03aca522bc1b0bab9fef
   collectible1.scale.set(scale.x, scale.y, scale.z);
 
   collectible1.castShadow = true;
