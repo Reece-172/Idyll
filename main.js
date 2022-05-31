@@ -31,6 +31,7 @@ let collectCounter;
 
 let cbContactPairResult, blockPlane, ball;
 let cbContactResult;
+let isCollection1Present, isCollection2Present;
 
 
 
@@ -49,6 +50,8 @@ function start() {
   // } 
   createCollectible1();
   createCollectible2();
+  isCollection1Present = true;
+  isCollection2Present = true;
 
   
   createBlock();
@@ -110,7 +113,7 @@ function setupPhysicsWorld() {
     solver,
     collisionConfiguration
   );
-  physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+  physicsWorld.setGravity(new Ammo.btVector3(0, -20, 0));
 
   //remember to destroy all 'new' Ammo stuff at the end
 }
@@ -206,18 +209,19 @@ function renderFrame() {
 
   requestAnimationFrame(renderFrame);
 
-  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) ){ //change
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) && isCollection1Present){ //change
     scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
     physicsWorld.removeRigidBody( collectible1Object.userData.physicsBody );
     collectCounter++;
     console.log(collectCounter); //kinda works
+    isCollection1Present = false;
 
   //   //createFont();
 
   //   //may need to remove the object from rigidbodies array.
   }
 
-  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) ){ 
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) && isCollection2Present){ 
       scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
       physicsWorld.removeRigidBody( collectible2Object.userData.physicsBody );
       //make sound
@@ -225,6 +229,7 @@ function renderFrame() {
       collectCounter++;
       //createFont();
       console.log(collectCounter);
+      isCollection2Present = false;
   }
 }
 
@@ -908,6 +913,8 @@ function createTree_3() {
       const tree = gltf.scene;
 
       scene.add(tree);
+      tree.userData.tag = "dark tree";
+
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
       transform.setIdentity();
@@ -1387,7 +1394,7 @@ function createGrass() {
 }
 
 function loadCharacter() {
-  let pos = { x: 10, y: 0, z: -50 };
+  let pos = { x: 10, y: 1, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
