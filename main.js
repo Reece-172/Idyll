@@ -25,7 +25,7 @@ const STATE = { DISABLE_DEACTIVATION: 4 };
 let collectible1Object = null, //put here if want to make the object global
   collectible2Object = null;
 
-let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4; //collision purposes
+let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel=6; //collision purposes
 
 let collectCounter;
 
@@ -60,31 +60,31 @@ function start() {
   createBlock();
   createBall();
   loadCharacter();
-  for (var i = 0; i < 20; i++) {
-    createTree();
-  }
+  // for (var i = 0; i < 20; i++) {
+  //   createTree();
+  // }
   for (var i = 0; i < 5; i++) {
     createRock();
   }
-  for (var i = 0; i < 30; i++) {
-    createGrass();
-  }
-  for (var i = 0; i < 60; i++) {
-    createFlower_1();
-  }
-  for (var i = 0; i < 60; i++) {
-    createFlower_2();
-  }
-  for (var i = 0; i < 20; i++) {
-    createMushroom();
-  }
+  // for (var i = 0; i < 30; i++) {
+  //   createGrass();
+  // }
+  // for (var i = 0; i < 60; i++) {
+  //   createFlower_1();
+  // }
+  // for (var i = 0; i < 60; i++) {
+  //   createFlower_2();
+  // }
+  // for (var i = 0; i < 20; i++) {
+  //   createMushroom();
+  // }
 
-  for (var i = 0; i < 50; i++) {
-    createTree_2();
-  }
-  for (var i = 0; i < 50; i++) {
-    createTree_3();
-  }
+  // for (var i = 0; i < 50; i++) {
+  //   createTree_2();
+  // }
+  // for (var i = 0; i < 50; i++) {
+  //   createTree_3();
+  // }
   for (var i = 0; i < 8; i++) {
     createBush();
   }
@@ -92,9 +92,9 @@ function start() {
 
   loadVolcano();
   //createHead();
-  for (var i = 0; i < 50; i++) {
-    createTree();
-  }  
+  // for (var i = 0; i < 50; i++) {
+  //   createTree();
+  // }  
 
   setupContactResultCallback();   
   setupContactPairResultCallback();
@@ -405,7 +405,7 @@ function createBlock() {
   transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
   let motionState = new Ammo.btDefaultMotionState(transform);
 
-  let colShape = new Ammo.btBoxShape(
+  const colShape = new Ammo.btBoxShape(
     new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
   );
   colShape.setMargin(0.05);
@@ -480,7 +480,7 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupCollectible);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupCollectible|colGroupModel);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
@@ -522,47 +522,9 @@ function createTree(x, y) {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = tree.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      let colShape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (tree.geometry.verticesNeedUpdate = true)
+      
+      const colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(tree.scale.x * 0.5, tree.scale.y * 0.5, tree.scale.z * 0.5) //this is the size of the box around the model. May need to adjust
       );
       colShape.getMargin(0.05);
       
@@ -578,10 +540,10 @@ function createTree(x, y) {
       body.setFriction(4);
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall);
+      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
 
       tree.userData.physicsBody = body;
-      //rigidBodies.push(tree);
+      rigidBodies.push(tree);
     },
     undefined,
     function (error) {
@@ -624,50 +586,13 @@ function createRock() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = rock.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (rock.geometry.verticesNeedUpdate = true)
+      
+      const colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(rock.scale.x * 0.6, rock.scale.y, rock.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
+
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -679,9 +604,9 @@ function createRock() {
       body.setFriction(4);
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body);
+      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
 
-      tree.userData.physicsBody = body;
+      rock.userData.physicsBody = body;
       rigidBodies.push(rock);
     },
     undefined,
@@ -712,9 +637,9 @@ function createFlower_1() {
           node.castShadow = true;
         }
       });
-      const flower = gltf.scene;
+      const flower1 = gltf.scene;
 
-      scene.add(flower);
+      scene.add(flower1);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
       transform.setIdentity();
@@ -726,50 +651,12 @@ function createFlower_1() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = flower.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (flower.geometry.verticesNeedUpdate = true)
+      
+      let colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(flower1.scale.x * 0.5, flower1.scale.y * 0.5, flower1.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -783,8 +670,8 @@ function createFlower_1() {
 
       physicsWorld.addRigidBody(body);
 
-      flower.userData.physicsBody = body;
-      rigidBodies.push(flower);
+      flower1.userData.physicsBody = body;
+      rigidBodies.push(flower1);
     },
     undefined,
     function (error) {
@@ -813,9 +700,9 @@ function createTree_2() {
           node.castShadow = true;
         }
       });
-      const tree = gltf.scene;
+      const tree2 = gltf.scene;
 
-      scene.add(tree);
+      scene.add(tree2);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
       transform.setIdentity();
@@ -827,50 +714,12 @@ function createTree_2() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = tree.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (tree.geometry.verticesNeedUpdate = true)
+      
+      const colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(tree2.scale.x * 0.5, tree2.scale.y * 0.5, tree2.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -882,10 +731,10 @@ function createTree_2() {
       body.setFriction(4);
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body);
+      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
 
-      tree.userData.physicsBody = body;
-      rigidBodies.push(tree);
+      tree2.userData.physicsBody = body;
+      rigidBodies.push(tree2);
     },
     undefined,
     function (error) {
@@ -929,50 +778,12 @@ function createTree_3() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = tree.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (tree.geometry.verticesNeedUpdate = true)
+      
+      let colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(tree.scale.x * 0.5, tree.scale.y * 0.5, tree.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -1015,9 +826,9 @@ function createBush() {
           node.castShadow = true;
         }
       });
-      const tree = gltf.scene;
+      const bush = gltf.scene;
 
-      scene.add(tree);
+      scene.add(bush);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
       transform.setIdentity();
@@ -1029,50 +840,58 @@ function createBush() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = tree.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
 
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
+      // const geometry = new THREE.BoxBufferGeometry();
+      // let verticesPos = geometry.getAttribute('position');
+  
+      // let triangles = [];
+      // for (let i = 0; i < verticesPos.length; i += 3) {
+      //   triangles.push({
+      //     x: verticesPos[i],
+      //     y: verticesPos[i + 2],
+      //     z: verticesPos[i + 3],
+      //   });
+      // }
 
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
+      // let triangle,
+      //   triangle_mesh = new Ammo.btTriangleMesh();
 
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
+      // let vecA = new Ammo.btVector3(0, 0, 0);
+      // let vecB = new Ammo.btVector3(0, 0, 0);
+      // let vecC = new Ammo.btVector3(0, 0, 0);
 
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
+      // for (let i = 0; i < triangles.length - 3; i += 3) {
+      //   vecA.setX(triangles[i].x);
+      //   vecA.setY(triangles[i].y);
+      //   vecA.setZ(triangles[i].z);
 
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
+      //   vecB.setX(triangles[i + 1].x);
+      //   vecB.setY(triangles[i + 1].y);
+      //   vecB.setZ(triangles[i + 1].z);
 
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
+      //   vecC.setX(triangles[i + 2].x);
+      //   vecC.setY(triangles[i + 2].y);
+      //   vecC.setZ(triangles[i + 2].z);
 
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
+      //   triangle_mesh.addTriangle(vecA, vecB, vecC, true);
+      // }
 
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (tree.geometry.verticesNeedUpdate = true)
+      // Ammo.destroy(vecA);
+      // Ammo.destroy(vecB);
+      // Ammo.destroy(vecC);
+
+      // let colShape = new Ammo.btConvexTriangleMeshShape(
+      //   triangle_mesh,
+      //   (geometry.verticesNeedUpdate = true)
+      // );
+
+      let colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(bush.scale.x * 0.5, bush.scale.y * 0.5, bush.scale.z * 0.5)
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+
+      //colShape.getMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -1082,12 +901,13 @@ function createBush() {
       let body = new Ammo.btRigidBody(rbInfo);
 
       body.setFriction(4);
+      body.setRollingFriction(10)
       body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-      physicsWorld.addRigidBody(body);
+      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
 
-      tree.userData.physicsBody = body;
-      rigidBodies.push(tree);
+      bush.userData.physicsBody = body;
+      rigidBodies.push(bush);
     },
     undefined,
     function (error) {
@@ -1129,50 +949,12 @@ function createFlower_2() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = flower.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
 
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (flower.geometry.verticesNeedUpdate = true)
+      let colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(flower.scale.x * 0.5, flower.scale.y * 0.5, flower.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -1229,50 +1011,12 @@ function createMushroom() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = mushroom.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (mushroom.geometry.verticesNeedUpdate = true)
+      
+      let colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(mushroom.scale.x * 0.5, mushroom.scale.y * 0.5, mushroom.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.setMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -1413,7 +1157,7 @@ function loadCharacter() {
       });
       const yasuo = gltf.scene;
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      heroObject = new THREE.Mesh(yasuo.geomerty, yasuo.material);
+      heroObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
       scene.add(yasuo);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -1426,50 +1170,12 @@ function loadCharacter() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = yasuo.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
 
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (yasuo.geometry.verticesNeedUpdate = true)
+      const colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(yasuo.scale.x * 0.3, yasuo.scale.y * 2, yasuo.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.getMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
