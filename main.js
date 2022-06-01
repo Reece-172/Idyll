@@ -149,6 +149,8 @@ function setupGraphics() {
   );
   camera.position.set(0, 15, 50);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
+  const PointsEl=document.querySelector('#PointsEl');
+  console.log(PointsEl);
 
   //Add hemisphere light
   let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
