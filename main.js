@@ -33,8 +33,6 @@ let cbContactPairResult, blockPlane, ball;
 let cbContactResult;
 let isCollection1Present, isCollection2Present;
 
-
-
 //Ammojs Initialization
 Ammo().then(start);
 
@@ -60,12 +58,22 @@ function start() {
   createBlock();
   createBall();
   loadCharacter();
-  // for (var i = 0; i < 20; i++) {
-  //   createTree();
-  // }
-  for (var i = 0; i < 5; i++) {
-    createRock();
+
+  Tree = new StaticModel("./resources/models/Tree.glb");
+  
+  for (var i = 0; i < 20; i++) {
+    Tree.createModel({scaleY: 10, posY:10, colShapeScaleY: 3});
   }
+  // for (var i = 0; i < 5; i++) {
+  //   createRock()
+  // }
+
+  Bush = new StaticModel("./resources/models/island_bush_1.glb");
+
+  for (var i = 0; i < 8; i++) {
+    Bush.createModel();
+  }
+
   // for (var i = 0; i < 30; i++) {
   //   createGrass();
   // }
@@ -80,14 +88,12 @@ function start() {
   // }
 
   // for (var i = 0; i < 50; i++) {
-  //   createTree_2();
+  // createTree_2();
   // }
   // for (var i = 0; i < 50; i++) {
   //   createTree_3();
   // }
-  for (var i = 0; i < 8; i++) {
-    createBush();
-  }
+  
 
 
   loadVolcano();
@@ -298,6 +304,7 @@ function handleKeyDown(event) {
       break;
   }
 }
+
 function handleKeyUp(event) {
   let keyCode = event.keyCode;
 
@@ -487,558 +494,6 @@ function createBall() {
   body.threeObject = ball;
 }
 
-function createTree(x, y) {
-  let pos = { x: x, y: y, z: 0 };
-  let scale = { x: 2, y: 2, z: 2 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/Tree.glb",
-    function (gltf) {
-      gltf.scene.scale.set(14, 14, 14);
-      gltf.scene.position.set(
-        Math.floor(Math.random() * (300 + 100)),
-        18,
-        Math.floor(Math.random() * (300 + 100))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const tree = gltf.scene;
-
-      scene.add(tree);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      
-      const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(tree.scale.x * 0.5, tree.scale.y * 0.5, tree.scale.z * 0.5) //this is the size of the box around the model. May need to adjust
-      );
-      colShape.getMargin(0.05);
-      
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
-
-      tree.userData.physicsBody = body;
-      rigidBodies.push(tree);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-function createRock() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 2, y: 2, z: 2 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/enchantedforest_rock_2.glb",
-    function (gltf) {
-      gltf.scene.scale.set(4, 4, 4);
-      gltf.scene.position.set(
-        Math.floor(Math.random() * (250 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        Math.floor(Math.random() * (250 + 1))
-      );
-        gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const rock = gltf.scene;
-
-      scene.add(rock);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      
-      const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(rock.scale.x * 0.6, rock.scale.y, rock.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.setMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
-
-      rock.userData.physicsBody = body;
-      rigidBodies.push(rock);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-
-function createFlower_1() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 2, y: 2, z: 2 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/enchantedforest_flower_3.glb",
-    function (gltf) {
-      gltf.scene.scale.set(5, 5, 5);
-      gltf.scene.position.set(
-        -Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        Math.floor(Math.random() * (245 + 1))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const flower1 = gltf.scene;
-
-      scene.add(flower1);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      
-      let colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(flower1.scale.x * 0.5, flower1.scale.y * 0.5, flower1.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.setMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      flower1.userData.physicsBody = body;
-      rigidBodies.push(flower1);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-
-function createTree_2() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/island_palm_2.glb",
-    function (gltf) {
-      gltf.scene.scale.set(4, 4, 4);
-      gltf.scene.position.set(
-        -Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        -Math.floor(Math.random() * (245 + 1))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const tree2 = gltf.scene;
-
-      scene.add(tree2);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      
-      const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(tree2.scale.x * 0.5, tree2.scale.y * 0.5, tree2.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.setMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
-
-      tree2.userData.physicsBody = body;
-      rigidBodies.push(tree2);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-function createTree_3() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/enchantedforest_tree_4.glb",
-    function (gltf) {
-      gltf.scene.scale.set(4, 4, 4);
-      gltf.scene.position.set(
-        Math.floor(Math.random() * (300 + 200)),
-        -1,
-        -Math.floor(Math.random() * (300 + 200))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const tree = gltf.scene;
-
-      scene.add(tree);
-      tree.userData.tag = "dark tree";
-
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      
-      let colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(tree.scale.x * 0.5, tree.scale.y * 0.5, tree.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.setMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      tree.userData.physicsBody = body;
-      rigidBodies.push(tree);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-function createBush() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/island_bush_1.glb",
-    function (gltf) {
-      gltf.scene.scale.set(4, 4, 4);
-      gltf.scene.position.set(
-        -Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        -Math.floor(Math.random() * (245 + 1))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const bush = gltf.scene;
-
-      scene.add(bush);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-
-      // const geometry = new THREE.BoxBufferGeometry();
-      // let verticesPos = geometry.getAttribute('position');
-  
-      // let triangles = [];
-      // for (let i = 0; i < verticesPos.length; i += 3) {
-      //   triangles.push({
-      //     x: verticesPos[i],
-      //     y: verticesPos[i + 2],
-      //     z: verticesPos[i + 3],
-      //   });
-      // }
-
-      // let triangle,
-      //   triangle_mesh = new Ammo.btTriangleMesh();
-
-      // let vecA = new Ammo.btVector3(0, 0, 0);
-      // let vecB = new Ammo.btVector3(0, 0, 0);
-      // let vecC = new Ammo.btVector3(0, 0, 0);
-
-      // for (let i = 0; i < triangles.length - 3; i += 3) {
-      //   vecA.setX(triangles[i].x);
-      //   vecA.setY(triangles[i].y);
-      //   vecA.setZ(triangles[i].z);
-
-      //   vecB.setX(triangles[i + 1].x);
-      //   vecB.setY(triangles[i + 1].y);
-      //   vecB.setZ(triangles[i + 1].z);
-
-      //   vecC.setX(triangles[i + 2].x);
-      //   vecC.setY(triangles[i + 2].y);
-      //   vecC.setZ(triangles[i + 2].z);
-
-      //   triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      // }
-
-      // Ammo.destroy(vecA);
-      // Ammo.destroy(vecB);
-      // Ammo.destroy(vecC);
-
-      // let colShape = new Ammo.btConvexTriangleMeshShape(
-      //   triangle_mesh,
-      //   (geometry.verticesNeedUpdate = true)
-      // );
-
-      let colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(bush.scale.x * 0.5, bush.scale.y * 0.5, bush.scale.z * 0.5)
-      );
-      colShape.setMargin(0.05);
-
-      //colShape.getMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setRollingFriction(10)
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body, colGroupModel, colGroupBall);
-
-      bush.userData.physicsBody = body;
-      rigidBodies.push(bush);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-function createFlower_2() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/enchantedforest_flower_5.glb",
-    function (gltf) {
-      gltf.scene.scale.set(5, 5, 5);
-      gltf.scene.position.set(
-        -Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        Math.floor(Math.random() * (245 + 1))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const flower = gltf.scene;
-
-      scene.add(flower);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-
-      let colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(flower.scale.x * 0.5, flower.scale.y * 0.5, flower.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.setMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      flower.userData.physicsBody = body;
-      rigidBodies.push(flower);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-function createMushroom() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/enchantedforest_mushroom_3.glb",
-    function (gltf) {
-      gltf.scene.scale.set(3, 3, 3);
-      gltf.scene.position.set(
-        -Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        -Math.floor(Math.random() * (245 + 1))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const mushroom = gltf.scene;
-
-      scene.add(mushroom);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      
-      let colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(mushroom.scale.x * 0.5, mushroom.scale.y * 0.5, mushroom.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.setMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      mushroom.userData.physicsBody = body;
-      rigidBodies.push(mushroom);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
 function createGrass() {
   let pos = { x: 0, y: 0, z: 0 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
@@ -1485,7 +940,6 @@ function checkContact(){
   physicsWorld.contactTest( ball.userData.physicsBody , cbContactResult );
 
 }
-
 
 function setupContactPairResultCallback(){
 
