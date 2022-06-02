@@ -3,7 +3,11 @@ class StaticModel{
         this.path = path;
     }
 
-    createModel({posX = Math.random() * (245 + 1), posY = Math.random() * (2 + 1), posZ = Math.random() * (245 + 1), scaleX = 4, scaleY = 4, scaleZ = 4, colShapeScaleX = 0.5, colShapeScaleY = 0.5, colShapeScaleZ = 0.5} = {}){ 
+    createModel({posX =  Math.ceil(Math.random()*500) * (Math.round(Math.random()) ? 1: -1),
+         posY = Math.random() * (2 + 1), 
+         posZ =  Math.ceil(Math.random()*500) * (Math.round(Math.random()) ? 1: -1), 
+         scaleX = 4, scaleY = 4, scaleZ = 4, 
+         colShapeScaleX = 0.5, colShapeScaleY = 0.5, colShapeScaleZ = 0.5} = {}){ 
         //parameters of this function are in curly brackets to allow for selective parameters to be modified when calling. 
         //example of how to call this function -> Tree.createModel({scaleY: 10, posY:10, colShapeScaleY: 3}) . This specifies scaleY, posY, colShapeScaleY. Everything else will be default value
 
