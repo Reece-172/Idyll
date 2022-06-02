@@ -166,6 +166,22 @@ function setupGraphics() {
   //get the ball object x and y coord
   mapCamera.lookAt(new THREE.Vector3(0, -1, 0));
   camera.add(mapCamera);
+  
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+
+  
+  const loadAudio = new THREE.AudioLoader();
+
+  const audio = new THREE.Audio(listener);
+
+  loadAudio.load("./resources/idyll.mp3", function (buffer) {
+    audio.setBuffer(buffer);
+    audio.setLoop(true); 
+    audio.setVolume(0.4); 
+    audio.play(); 
+  });
+  scene.add(audio);
 
   scene.add(camera);
 
@@ -1367,7 +1383,7 @@ function createGrass() {
       gltf.scene.scale.set(4, 4, 4);
       gltf.scene.position.set(
         Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
+          2,
         Math.floor(Math.random() * (245 + 1))
       );
       gltf.scene.traverse(function (node) {
