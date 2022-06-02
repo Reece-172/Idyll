@@ -7,8 +7,8 @@ class StaticModel{
         //parameters of this function are in curly brackets to allow for selective parameters to be modified when calling. 
         //example of how to call this function -> Tree.createModel({scaleY: 10, posY:10, colShapeScaleY: 3}) . This specifies scaleY, posY, colShapeScaleY. Everything else will be default value
 
-        let pos = { x: 0, y: 0, z: 0 };
-        let quat = { x: 0, y: 0, z: 0, w: 1 };
+        // let pos = { x: 0, y: 0, z: 0 };
+        // let quat = { x: 0, y: 0, z: 0, w: 1 };
         let mass = 0;
 
         var loader = new THREE.GLTFLoader();
@@ -29,13 +29,19 @@ class StaticModel{
             const myObj = gltf.scene;
 
             scene.add(myObj);
+
+            // const tagName = this.path.split("/") //split the path name to get what object this is
+            // myObj.userData.tag = tagName[tagName.length - 1]; //useful when checking what collides with what
+
+
+
             //Ammojs Section -> physics section
             let transform = new Ammo.btTransform();
             transform.setIdentity();
             transform.setOrigin(new Ammo.btVector3(myObj.position.x, myObj.position.y, myObj.position.z)); 
-            transform.setRotation(
-                new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-            );
+            // transform.setRotation(
+            //     new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+            // );
 
             let motionState = new Ammo.btDefaultMotionState(transform);
 
