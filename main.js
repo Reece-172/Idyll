@@ -62,21 +62,7 @@ function start() {
   createBlock();
   createBall();
   loadCharacter();
-
-  Tree = new StaticModel("./resources/models/Tree.glb");
-  
-  for (var i = 0; i < 20; i++) {
-    Tree.createModel({posY:5, colShapeScaleY: 3});
-  }
-  // for (var i = 0; i < 5; i++) {
-  //   createRock()
-  // }
-
-  Bush = new StaticModel("./resources/models/island_bush_1.glb");
-
-  for (var i = 0; i < 8; i++) {
-    Bush.createModel();
-  }
+  createWorld();
 
   // for (var i = 0; i < 30; i++) {
   //   createGrass();
