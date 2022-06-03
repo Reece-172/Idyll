@@ -1058,8 +1058,8 @@ function isCollect(){
 
   if( !cbContactPairResult.hasContact ) return;
 
-  scene.remove(collectible1); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-  physicsWorld.removeRigidBody( collectible1.userData.physicsBody );
+  // scene.remove(collectible1); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+  // physicsWorld.removeRigidBody( collectible1.userData.physicsBody );
   collectCounter++;
   console.log(collectCounter);
 
