@@ -8,6 +8,8 @@ function createWorld() {
       scaleY: 20,
       scaleZ: 20,
       colShapeScaleY: 1,
+      colShapeScaleX: 0.1,
+      colShapeScaleZ: 0.1,
     });
   }
 
@@ -19,7 +21,7 @@ function createWorld() {
     scaleX: 10,
     scaleY: 10,
     scaleZ: 10,
-    colShapeScaleY: 1,
+    //colShapeScaleY: 1,
   });
   // for (var i = 0; i < 5; i++) {
   //   createRock()

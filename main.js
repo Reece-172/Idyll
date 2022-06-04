@@ -24,8 +24,8 @@ let heroObject = null,
 const STATE = { DISABLE_DEACTIVATION: 4 };
 //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
-let collectible1Object = null, //put here if want to make the object global
-  collectible2Object = null;
+// let collectible1Object = null, //put here if want to make the object global
+//   collectible2Object = null;
 
 let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel=6; //collision purposes
 
@@ -34,6 +34,7 @@ let collectCounter;
 let cbContactPairResult, blockPlane, ball, collectible1;
 let cbContactResult;
 let isCollection1Present, isCollection2Present;
+let collectibles = [];
 
 var mapCamera,
   mapWidth = 240,
@@ -48,8 +49,10 @@ function start() {
   setupPhysicsWorld();
   setupGraphics();
 
-  for (var i = 0; i < 70; i++) {
-    createCollectible1();
+  for (var i = 0; i < 70; i++) { //add high and low collectibles so user has to jump
+    collectible1 = new Collectible();
+    collectible1.createCollectible();
+    collectibles.push(collectible1);
   }
   // for(var i=0;i<15;i++){
   //   createCollectible1();
@@ -234,7 +237,13 @@ function renderFrame() {
   updatePhysics(deltaTime);
 
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-  isCollect(); //handles cllectibles
+
+  //handles collectibles
+  if (collectibles.length !== 0){
+    isCollect(); 
+  }
+
+
   renderer.render(scene, camera);
 
   renderer.clearDepth();
@@ -260,14 +269,15 @@ function renderFrame() {
   // if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) && isCollection1Present){ //change
   //   scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
   //   physicsWorld.removeRigidBody( collectible1Object.userData.physicsBody );
+  //   // rigidBodies = arrayRemove(rigidBodies, collectible1);
   //   collectCounter++;
   //   console.log(collectCounter); //kinda works
   //   isCollection1Present = false;
 
-  // //   //createFont();
+  //   //createFont();
 
-  // //   //may need to remove the object from rigidbodies array.
-  // }
+  //   //may need to remove the object from rigidbodies array.
+  //}
 
   // if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) && isCollection2Present){ 
   //     scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
@@ -529,7 +539,7 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupCollectible|colGroupModel);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupModel);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
@@ -822,7 +832,7 @@ function moveBall() {
 
 //collectible items (make a class in future)
 function createCollectible1() {
-  let pos = { x: 0, y: 2, z: 0 };
+  //let pos = { x: 6, y: 2, z: 0 };
   let scale = { x: 1, y: 1, z: 1 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
@@ -847,7 +857,7 @@ function createCollectible1() {
   //Ammojs Section
   let transform = new Ammo.btTransform();
   transform.setIdentity();
-  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+  transform.setOrigin(new Ammo.btVector3(collectible1.position.x, collectible1.position.y, collectible1.position.z));
   transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
   let motionState = new Ammo.btDefaultMotionState(transform);
 
@@ -877,54 +887,6 @@ function createCollectible1() {
   body.threeObject = collectible1;
 }
 
-function createCollectible2() {
-  let pos = { x: 15, y: 3, z: 40 };
-  let scale = { x: 1, y: 1, z: 1 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  //threeJS Section
-  let collectible2 = (collectible2Object = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(),
-    new THREE.MeshPhongMaterial({ color: "blue" })
-  ));
-
-  collectible2.position.set(pos.x, pos.y, pos.z);
-  collectible2.scale.set(scale.x, scale.y, scale.z);
-
-  collectible2.castShadow = true;
-  collectible2.receiveShadow = true;
-
-  scene.add(collectible2);
-
-  //Ammojs Section
-  let transform = new Ammo.btTransform();
-  transform.setIdentity();
-  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-  transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-  let motionState = new Ammo.btDefaultMotionState(transform);
-
-  let colShape = new Ammo.btBoxShape(
-    new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
-  );
-  colShape.setMargin(0.05);
-
-  let localInertia = new Ammo.btVector3(0, 0, 0);
-  colShape.calculateLocalInertia(mass, localInertia);
-
-  let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-    mass,
-    motionState,
-    colShape,
-    localInertia
-  );
-  let body = new Ammo.btRigidBody(rbInfo);
-
-  body.setFriction(4);
-  body.setRollingFriction(10);
-
-  //physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
-}
 
 function setupContactResultCallback() {
   cbContactResult = new Ammo.ConcreteContactResultCallback();
@@ -1036,18 +998,32 @@ function jump() {
   physicsBody.setLinearVelocity(jumpImpulse);
 }
 
-function isCollect(){
+function isCollect(){ //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
 
-  cbContactPairResult.hasContact = false;
+  let i = 0;
 
-  physicsWorld.contactPairTest(ball.userData.physicsBody, collectible1.userData.physicsBody, cbContactPairResult);
 
-  if( !cbContactPairResult.hasContact ) return;
+  while (true){ 
+    cbContactPairResult.hasContact = false;
+    if (i >= collectibles.length) return;
+    physicsWorld.contactPairTest(ball.userData.physicsBody, collectibles[i].getCollectibleObject().userData.physicsBody, cbContactPairResult); //perform a test to see if there is contact 
+    if(cbContactPairResult.hasContact) { //if there is contact between the ball and collectible object
 
-  // scene.remove(collectible1); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-  // physicsWorld.removeRigidBody( collectible1.userData.physicsBody );
-  collectCounter++;
-  console.log(collectCounter);
+      collectCounter++;
+      physicsWorld.removeRigidBody(  collectibles[i].getCollectibleObject().userData.physicsBody ); //remove this rigid body from the physics world
+      scene.remove( collectibles[i].getCollectibleObject()); //remove from scene
+      rigidBodies = arrayRemove(rigidBodies,  collectibles[i].getCollectibleObject()); //remove from rigidbodies array
+      collectibles.splice(i, 1); //delete element from collectibles array
+      
+      console.log(collectCounter);
+      return;
+    }
+
+      i++;
+
+  }
+
+  
 
 }
 
@@ -1127,4 +1103,11 @@ function updatePhysics(deltaTime) {
       }
     }
   //}
+}
+
+function arrayRemove(arr, value) { 
+    
+  return arr.filter(function(element){ 
+      return element != value; //creates a new array, without the specific element
+  });
 }
