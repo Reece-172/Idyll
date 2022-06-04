@@ -17,6 +17,13 @@ let ballObject = null,
 let firstPerson = false;
 let lookLeft = false, lookRight = false, lookBack = false;
 
+
+// Control Temp data
+var orbitControls;
+walkDirection = new THREE.Vector3();
+rotateAngle = new THREE.Vector3(0, 1, 0);
+
+
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
@@ -44,10 +51,10 @@ function start() {
 
   setupPhysicsWorld();
   setupGraphics();
-  
-  for(var i=0;i<70;i++){
+
+  for (var i = 0; i < 70; i++) {
     createCollectible1();
-  } 
+  }
   // for(var i=0;i<15;i++){
   //   createCollectible1();
   // } 
@@ -56,7 +63,7 @@ function start() {
   isCollection1Present = true;
   isCollection2Present = true;
 
-  
+
   createBlock();
   createBall();
   loadCharacter();
@@ -94,9 +101,9 @@ function start() {
   //createHead();
   for (var i = 0; i < 50; i++) {
     createTree();
-  }  
+  }
 
-  setupContactResultCallback();   
+  setupContactResultCallback();
   setupContactPairResultCallback();
 
 
@@ -147,8 +154,8 @@ function setupGraphics() {
     0.2,
     5000
   );
-  camera.position.set(0, 15, 50);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  camera.position.set(0, 20, 50);
+  camera.lookAt(new THREE.Vector3(0, 20, 20));
 
   //Add hemisphere light
   let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
@@ -187,12 +194,13 @@ function setupGraphics() {
 
 
 
-  // // Orbit Control (Mouse Rotation and Zoom)
-  //   // Orbit Controls
-  //   const controls = new THREE.OrbitControls(
-  //     camera, renderer.domElement);
-  //   controls.target.set(0, 20, 0);
-  //   controls.update();
+  // Controls
+  orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+  orbitControls.minDistance = 15;
+  orbitControls.maxDistance = 20;
+  orbitControls.enablePan = false;
+  orbitControls.maxPolarAngle = Math.PI / 2 - 0.05;
+  orbitControls.update();
 
   renderer.gammaInput = true;
   renderer.gammaOutput = true;
@@ -205,34 +213,34 @@ function renderFrame() {
   //createFont();
   moveBall();
   //moveHero();
-  camera.lookAt(ballObject.position);
+  // camera.lookAt(ballObject.position);
   updatePhysics(deltaTime);
 
   renderer.render(scene, camera);
 
   requestAnimationFrame(renderFrame);
 
-  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <=2) && isCollection1Present){ //change
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible1Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible1Object.position.getComponent(2)) <= 2) && isCollection1Present) { //change
     scene.remove(collectible1Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-    physicsWorld.removeRigidBody( collectible1Object.userData.physicsBody );
+    physicsWorld.removeRigidBody(collectible1Object.userData.physicsBody);
     collectCounter++;
     console.log(collectCounter); //kinda works
     isCollection1Present = false;
 
-  //   //createFont();
+    //   //createFont();
 
-  //   //may need to remove the object from rigidbodies array.
+    //   //may need to remove the object from rigidbodies array.
   }
 
-  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <=2) && isCollection2Present){ 
-      scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
-      physicsWorld.removeRigidBody( collectible2Object.userData.physicsBody );
-      //make sound
-      //add to counter to collect however many collectibles there are
-      collectCounter++;
-      //createFont();
-      console.log(collectCounter);
-      isCollection2Present = false;
+  if ((Math.abs(ballObject.position.getComponent(0) - collectible2Object.position.getComponent(0)) <= 2) && (Math.abs(ballObject.position.getComponent(2) - collectible2Object.position.getComponent(2)) <= 2) && isCollection2Present) {
+    scene.remove(collectible2Object); //PROBLEM: shape is still there, just hidden. probably not deleting collision shape that is wrapped around shape. 
+    physicsWorld.removeRigidBody(collectible2Object.userData.physicsBody);
+    //make sound
+    //add to counter to collect however many collectibles there are
+    collectCounter++;
+    //createFont();
+    console.log(collectCounter);
+    isCollection2Present = false;
   }
 }
 
@@ -266,30 +274,30 @@ function handleKeyDown(event) {
       break;
 
     case 70: //F: Toggle First Person
-      if(firstPerson == false){
+      if (firstPerson == false) {
         firstPerson = true;
-      }else{
+      } else {
         firstPerson = false;
       }
-      break;  
-      
-      case 37:
-        lookLeft = true;
-        break;
-      case 39:
-        lookRight = true;
-        break;
-      case 40:
-        lookBack = true;
-        break;
-        
+      break;
+
+    case 37:
+      lookLeft = true;
+      break;
+    case 39:
+      lookRight = true;
+      break;
+    case 40:
+      lookBack = true;
+      break;
+
 
 
     case 32: //space bar
-    //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
+      //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
       //moveDirection.up = 1 //infinitely goes up if key is pressed and held
-     // break;
-    //}
+      // break;
+      //}
       jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
       break;
 
@@ -322,15 +330,15 @@ function handleKeyUp(event) {
       HeroMoveDirection.forward = 0;
       break;
 
-      case 37:
-        lookLeft = false;
-        break;
-      case 39:
-        lookRight = false;
-        break;
-      case 40:
-        lookBack = false;
-        break;
+    case 37:
+      lookLeft = false;
+      break;
+    case 39:
+      lookRight = false;
+      break;
+    case 40:
+      lookBack = false;
+      break;
 
     case 32: //space bar
       moveDirection.up = 0;
@@ -424,13 +432,13 @@ function createBlock() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall|colGroupChar|colGroupCollectible);
+  physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall | colGroupChar | colGroupCollectible);
 
   body.threeObject = blockPlane;
 
   blockPlane.userData.physicsBody = body;
-                        
-                  
+
+
 }
 
 function createBall() {
@@ -480,7 +488,7 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupCollectible);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock | colGroupTree | colGroupCollectible);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
@@ -565,7 +573,7 @@ function createTree(x, y) {
         (tree.geometry.verticesNeedUpdate = true)
       );
       colShape.getMargin(0.05);
-      
+
       colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
@@ -605,7 +613,7 @@ function createRock() {
         Math.floor(Math.random() * (2 + 1)),
         Math.floor(Math.random() * (250 + 1))
       );
-        gltf.scene.traverse(function (node) {
+      gltf.scene.traverse(function (node) {
         if (node.isMesh) {
           node.castShadow = true;
         }
@@ -1610,7 +1618,15 @@ function moveBall() {
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
-  let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
+
+  var dirOffset = directionOffset();
+
+  camera.getWorldDirection(walkDirection);
+  walkDirection.y = 0;
+  walkDirection.normalize();
+  walkDirection.applyAxisAngle(rotateAngle, dirOffset);
+
+  let resultantImpulse = new Ammo.btVector3(walkDirection.x,0,walkDirection.z);
   resultantImpulse.op_mul(scalingFactor);
 
   let physicsBody = ballObject.userData.physicsBody;
@@ -1630,8 +1646,8 @@ function createCollectible1() {
     new THREE.MeshPhongMaterial({ color: "blue" })
   ));
 
-  collectible1.position.set(Math.floor(Math.random()*(400)),2,-Math.floor(Math.random()*(400)));
-  collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
+  collectible1.position.set(Math.floor(Math.random() * (400)), 2, -Math.floor(Math.random() * (400)));
+  collectible1.position.set(Math.floor(Math.random() * (100)), 3, Math.floor(Math.random() * (100)));
   //collectible1.position.set(pos.x, pos.y, pos.z);
   collectible1.scale.set(scale.x, scale.y, scale.z);
 
@@ -1668,7 +1684,7 @@ function createCollectible1() {
 
   collectible1.userData.physicsBody = body;
 
-  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBall);
+  physicsWorld.addRigidBody(body, colGroupCollectible, colGroupBall);
 }
 
 function createCollectible2() {
@@ -1721,7 +1737,7 @@ function createCollectible2() {
 
 }
 
-function setupContactResultCallback(){
+function setupContactResultCallback() {
 
   cbContactResult = new Ammo.ConcreteContactResultCallback();
 
@@ -1732,87 +1748,87 @@ function setupContactResultCallback(){
   // From them get their respective three.js objects.
   // Bearing in mind we are just after the tiles, we check for the three.js object that is not the ball and assign variables appropriately.
   // Finally, with some formatting, we log the information to the console.
-  cbContactResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+  cbContactResult.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1) {
 
-      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+    let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
-      const distance = contactPoint.getDistance();
+    const distance = contactPoint.getDistance();
 
-      if( distance > 0 ) return;
+    if (distance > 0) return;
 
-      let colWrapper0 = Ammo.wrapPointer( colObj0Wrap, Ammo.btCollisionObjectWrapper );
-      let rb0 = Ammo.castObject( colWrapper0.getCollisionObject(), Ammo.btRigidBody );
+    let colWrapper0 = Ammo.wrapPointer(colObj0Wrap, Ammo.btCollisionObjectWrapper);
+    let rb0 = Ammo.castObject(colWrapper0.getCollisionObject(), Ammo.btRigidBody);
 
-      let colWrapper1 = Ammo.wrapPointer( colObj1Wrap, Ammo.btCollisionObjectWrapper );
-      let rb1 = Ammo.castObject( colWrapper1.getCollisionObject(), Ammo.btRigidBody );
+    let colWrapper1 = Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper);
+    let rb1 = Ammo.castObject(colWrapper1.getCollisionObject(), Ammo.btRigidBody);
 
-      let threeObject0 = rb0.threeObject;
-      let threeObject1 = rb1.threeObject;
+    let threeObject0 = rb0.threeObject;
+    let threeObject1 = rb1.threeObject;
 
-      let tag, localPos, worldPos
+    let tag, localPos, worldPos
 
-      if( threeObject0.userData.tag != "ball" ){
+    if (threeObject0.userData.tag != "ball") {
 
-          tag = threeObject0.userData.tag;
-          localPos = contactPoint.get_m_localPointA();
-          worldPos = contactPoint.get_m_positionWorldOnA();
+      tag = threeObject0.userData.tag;
+      localPos = contactPoint.get_m_localPointA();
+      worldPos = contactPoint.get_m_positionWorldOnA();
 
-      }
-      else{
+    }
+    else {
 
-          tag = threeObject1.userData.tag;
-          localPos = contactPoint.get_m_localPointB();
-          worldPos = contactPoint.get_m_positionWorldOnB();
+      tag = threeObject1.userData.tag;
+      localPos = contactPoint.get_m_localPointB();
+      worldPos = contactPoint.get_m_positionWorldOnB();
 
-      }
+    }
 
-      let localPosDisplay = {x: localPos.x(), y: localPos.y(), z: localPos.z()};
-      let worldPosDisplay = {x: worldPos.x(), y: worldPos.y(), z: worldPos.z()};
+    let localPosDisplay = { x: localPos.x(), y: localPos.y(), z: localPos.z() };
+    let worldPosDisplay = { x: worldPos.x(), y: worldPos.y(), z: worldPos.z() };
 
-      console.log( { tag, localPosDisplay, worldPosDisplay } );
+    console.log({ tag, localPosDisplay, worldPosDisplay });
 
   }
 
 }
 
-function checkContact(){
-  physicsWorld.contactTest( ball.userData.physicsBody , cbContactResult );
+function checkContact() {
+  physicsWorld.contactTest(ball.userData.physicsBody, cbContactResult);
 
 }
 
 
-function setupContactPairResultCallback(){
+function setupContactPairResultCallback() {
 
   cbContactPairResult = new Ammo.ConcreteContactResultCallback();
 
   cbContactPairResult.hasContact = false;
 
-  cbContactPairResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+  cbContactPairResult.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1) {
 
-      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+    let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
-      const distance = contactPoint.getDistance();
+    const distance = contactPoint.getDistance();
 
-      if( distance > 0 ) return;
+    if (distance > 0) return;
 
-      this.hasContact = true;
+    this.hasContact = true;
 
   }
 
 }
 
-function jump(){
+function jump() {
 
   cbContactPairResult.hasContact = false;
 
   physicsWorld.contactPairTest(ball.userData.physicsBody, blockPlane.userData.physicsBody, cbContactPairResult);
 
-  if( !cbContactPairResult.hasContact ) return;
+  if (!cbContactPairResult.hasContact) return;
 
-  let jumpImpulse = new Ammo.btVector3( 0, 15, 0 );
+  let jumpImpulse = new Ammo.btVector3(0, 15, 0);
 
   let physicsBody = ball.userData.physicsBody;
-  physicsBody.setLinearVelocity( jumpImpulse );
+  physicsBody.setLinearVelocity(jumpImpulse);
 
 }
 
@@ -1834,6 +1850,32 @@ function moveHero() {
   physicsBody.setLinearVelocity(resultantImpulse);
 }
 
+function directionOffset() {
+  var directionOffset = 0;
+
+  if (moveDirection.forward) {
+    if (moveDirection.left) {
+      directionOffset = Math.PI / 4;
+    } else if (moveDirection.right) {
+      directionOffset = - Math.PI / 4;
+    }
+  } else if (moveDirection.back) {
+    if (moveDirection.left) {
+      directionOffset = Math.PI / 4 + Math.PI / 2;
+    } else if (moveDirection.right) {
+      directionOffset = - Math.PI / 4 - Math.PI / 2;
+    } else {
+      directionOffset = Math.PI
+    }
+  } else if (moveDirection.left) {
+    directionOffset = Math.PI / 2;
+  } else if (moveDirection.right) {
+    directionOffset = - Math.PI / 2;
+  }
+
+  return directionOffset;
+
+}
 
 function updatePhysics(deltaTime) {
   // Step world
@@ -1848,58 +1890,66 @@ function updatePhysics(deltaTime) {
       ms.getWorldTransform(tmpTrans);
       let p = tmpTrans.getOrigin();
       let q = tmpTrans.getRotation();
+
+      camera.position.x += (p.x() - objThree.position.x);
+      camera.position.y += (p.y() - objThree.position.y);
+      camera.position.z += (p.z() - objThree.position.z);
+      
+      orbitControls.target = new THREE.Vector3(ballObject.position.x,ballObject.position.y, ballObject.position.z);
+
+
       objThree.position.set(p.x(), p.y(), p.z());
       objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
 
-      // First Person
-      if(firstPerson == true){
+      // // First Person
+      // if(firstPerson == true){
 
-        // Perspective from objects eyes
-        camera.position.set(p.x(), p.y(), p.z());
+      //   // Perspective from objects eyes
+      //   camera.position.set(p.x(), p.y(), p.z());
 
-        // Look 100 units ahead
-        camera.lookAt(p.x(), p.y(), p.z() - 100);
-        
-        // Temporarily change camera view (still in first person)
-        if(lookLeft == true){
-          camera.lookAt(p.x() - 100, p.y() , p.z());
-          }else
-          if(lookRight == true){
-            camera.lookAt(p.x() + 100, p.y(), p.z());
-          }else
-          if(lookBack == true){
-            camera.lookAt(p.x(), p.y(), p.z() +  100);
-          }
+      //   // Look 100 units ahead
+      //   camera.lookAt(p.x(), p.y(), p.z() - 100);
 
-        }
+      //   // Temporarily change camera view (still in first person)
+      //   if(lookLeft == true){
+      //     camera.lookAt(p.x() - 100, p.y() , p.z());
+      //     }else
+      //     if(lookRight == true){
+      //       camera.lookAt(p.x() + 100, p.y(), p.z());
+      //     }else
+      //     if(lookBack == true){
+      //       camera.lookAt(p.x(), p.y(), p.z() +  100);
+      //     }
 
-        // Third Person
-        else {
+      //   }
 
-        // Perspective from behind object and slightly above
-        camera.position.set(p.x(),p.y() + 8,p.z() + 15);
+      //   // Third Person
+      //   else {
 
-        // Look slightly above object
-        camera.lookAt(p.x(), p.y() + 5, p.z());
+      //   // Perspective from behind object and slightly above
+      //   camera.position.set(p.x(),p.y() + 8,p.z() + 15);
 
-        // Temporarily change camera view (still in first person)
-        if(lookLeft == true){
-        camera.position.set(p.x() + 10,p.y() + 5,p.z());
-        camera.lookAt(p.x() - 100, p.y() , p.z());
-        }
-        else
-        if(lookRight == true){
-          camera.position.set(p.x() - 10,p.y() + 5,p.z());
-          camera.lookAt(p.x() + 100, p.y(), p.z());
-        }
-        else
-        if(lookBack == true){
-          camera.position.set(p.x(),p.y() + 5,p.z() - 10);
-          camera.lookAt(p.x(), p.y(), p.z() +  100);
-        }
-        
-      }
-      
+      //   // Look slightly above object
+      //   camera.lookAt(p.x(), p.y() + 5, p.z());
+
+      //   // Temporarily change camera view (still in first person)
+      //   if(lookLeft == true){
+      //   camera.position.set(p.x() + 10,p.y() + 5,p.z());
+      //   camera.lookAt(p.x() - 100, p.y() , p.z());
+      //   }
+      //   else
+      //   if(lookRight == true){
+      //     camera.position.set(p.x() - 10,p.y() + 5,p.z());
+      //     camera.lookAt(p.x() + 100, p.y(), p.z());
+      //   }
+      //   else
+      //   if(lookBack == true){
+      //     camera.position.set(p.x(),p.y() + 5,p.z() - 10);
+      //     camera.lookAt(p.x(), p.y(), p.z() +  100);
+      //   }
+
+      // }
+
     }
   }
 }
