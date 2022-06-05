@@ -19,6 +19,12 @@ let lookLeft = false,
   lookRight = false,
   lookBack = false;
 
+// Control Temp data
+var orbitControls;
+walkDirection = new THREE.Vector3();
+rotateAngle = new THREE.Vector3(0, 1, 0);
+
+
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
@@ -144,8 +150,8 @@ function setupGraphics() {
     0.2,
     5000
   );
-  camera.position.set(0, 15, 50);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  camera.position.set(0, 20, 50);
+  camera.lookAt(new THREE.Vector3(0, 20, 20));
 
   mapCamera = new THREE.OrthographicCamera(
     window.innerWidth / -10, // Left
@@ -158,7 +164,9 @@ function setupGraphics() {
   mapCamera.up = new THREE.Vector3(0, 0, -1);
   //get the ball object x and y coord
   mapCamera.lookAt(new THREE.Vector3(0, -1, 0));
-  camera.add(mapCamera);
+  // Removed the mapCamera from being a sub-object of camera
+  // to avoid rotation problem
+  // camera.add(mapCamera);
 
   const listener = new THREE.AudioListener();
   camera.add(listener);
@@ -214,12 +222,13 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // // Orbit Control (Mouse Rotation and Zoom)
-  //   // Orbit Controls
-  //   const controls = new THREE.OrbitControls(
-  //     camera, renderer.domElement);
-  //   controls.target.set(0, 20, 0);
-  //   controls.update();
+  // Controls
+  orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+  orbitControls.minDistance = 15;
+  orbitControls.maxDistance = 20;
+  orbitControls.enablePan = false;
+  orbitControls.maxPolarAngle = Math.PI / 2 - 0.05;
+  orbitControls.update();
 
   renderer.gammaInput = true;
   renderer.gammaOutput = true;
@@ -811,6 +820,33 @@ function loadVolcano() {
   );
 }
 
+function directionOffset() {
+  var directionOffset = 0;
+
+  if (moveDirection.forward) {
+    if (moveDirection.left) {
+      directionOffset = Math.PI / 4;
+    } else if (moveDirection.right) {
+      directionOffset = - Math.PI / 4;
+    }
+  } else if (moveDirection.back) {
+    if (moveDirection.left) {
+      directionOffset = Math.PI / 4 + Math.PI / 2;
+    } else if (moveDirection.right) {
+      directionOffset = - Math.PI / 4 - Math.PI / 2;
+    } else {
+      directionOffset = Math.PI
+    }
+  } else if (moveDirection.left) {
+    directionOffset = Math.PI / 2;
+  } else if (moveDirection.right) {
+    directionOffset = - Math.PI / 2;
+  }
+
+  return directionOffset;
+
+}
+
 function moveBall() {
   //this goes in renderframe()
 
@@ -822,7 +858,14 @@ function moveBall() {
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
-  let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
+  var dirOffset = directionOffset();
+
+  camera.getWorldDirection(walkDirection);
+  walkDirection.y = 0;
+  walkDirection.normalize();
+  walkDirection.applyAxisAngle(rotateAngle, dirOffset);
+
+  let resultantImpulse = new Ammo.btVector3(walkDirection.x, 0, walkDirection.z);
   resultantImpulse.op_mul(scalingFactor);
 
   let physicsBody = ballObject.userData.physicsBody;
@@ -1059,49 +1102,23 @@ function updatePhysics(deltaTime) {
     ms.getWorldTransform(tmpTrans);
     let p = tmpTrans.getOrigin();
     let q = tmpTrans.getRotation();
+
+    camera.position.x += (p.x() - objThree.position.x);
+    camera.position.y += (p.y() - objThree.position.y);
+    camera.position.z += (p.z() - objThree.position.z);
+
+    // Removed the mapCamera from being a sub-object of camera
+    // to avoid rotation problem
+    mapCamera.position.x = objThree.position.x;
+    mapCamera.position.z = objThree.position.z;
+
+    orbitControls.target = new THREE.Vector3(ballObject.position.x, ballObject.position.y, ballObject.position.z);
+
+
     objThree.position.set(p.x(), p.y(), p.z());
     objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
 
-    // First Person
-    if (firstPerson == true) {
-      // Perspective from objects eyes
-      camera.position.set(p.x(), p.y(), p.z());
-
-      // Look 100 units ahead
-      camera.lookAt(p.x(), p.y(), p.z() - 100);
-
-      // Temporarily change camera view (still in first person)
-      if (lookLeft == true) {
-        camera.lookAt(p.x() - 100, p.y(), p.z());
-      } else if (lookRight == true) {
-        camera.lookAt(p.x() + 100, p.y(), p.z());
-      } else if (lookBack == true) {
-        camera.lookAt(p.x(), p.y(), p.z() + 100);
-      }
-    }
-
-    // Third Person
-    else {
-      // Perspective from behind object and slightly above
-      camera.position.set(p.x(), p.y() + 8, p.z() + 15);
-
-      // Look slightly above object
-      camera.lookAt(p.x(), p.y() + 5, p.z());
-
-      // Temporarily change camera view (still in first person)
-      if (lookLeft == true) {
-        camera.position.set(p.x() + 10, p.y() + 5, p.z());
-        camera.lookAt(p.x() - 100, p.y(), p.z());
-      } else if (lookRight == true) {
-        camera.position.set(p.x() - 10, p.y() + 5, p.z());
-        camera.lookAt(p.x() + 100, p.y(), p.z());
-      } else if (lookBack == true) {
-        camera.position.set(p.x(), p.y() + 5, p.z() - 10);
-        camera.lookAt(p.x(), p.y(), p.z() + 100);
-      }
-    }
   }
-  //}
 }
 
 function arrayRemove(arr, value) {
