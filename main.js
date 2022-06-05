@@ -27,7 +27,7 @@ const STATE = { DISABLE_DEACTIVATION: 4 };
 // let collectible1Object = null, //put here if want to make the object global
 //   collectible2Object = null;
 
-let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel=6; //collision purposes
+let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6; //collision purposes
 
 let collectCounter;
 
@@ -80,7 +80,7 @@ function start() {
   // for (var i = 0; i < 50; i++) {
   //   createTree_3();
   // }
-  
+
 
   loadVolcano();
   //createHead();
@@ -153,20 +153,20 @@ function setupGraphics() {
   //get the ball object x and y coord
   mapCamera.lookAt(new THREE.Vector3(0, -1, 0));
   camera.add(mapCamera);
-  
+
   const listener = new THREE.AudioListener();
   camera.add(listener);
 
-  
+
   const loadAudio = new THREE.AudioLoader();
 
   const audio = new THREE.Audio(listener);
 
   loadAudio.load("./resources/idyll.mp3", function (buffer) {
     audio.setBuffer(buffer);
-    audio.setLoop(true); 
-    audio.setVolume(0.4); 
-    audio.play(); 
+    audio.setLoop(true);
+    audio.setVolume(0.4);
+    audio.play();
   });
   scene.add(audio);
 
@@ -233,8 +233,8 @@ function renderFrame() {
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
 
   //handles collectibles
-  if (collectibles.length !== 0){
-    isCollect(); 
+  if (collectibles.length !== 0) {
+    isCollect();
   }
 
   const points = document.getElementById('PointsEl'); 
@@ -511,7 +511,7 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupModel);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock | colGroupTree | colGroupModel);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
@@ -530,7 +530,7 @@ function createGrass() {
       gltf.scene.scale.set(4, 4, 4);
       gltf.scene.position.set(
         Math.floor(Math.random() * (245 + 1)),
-          2,
+        2,
         Math.floor(Math.random() * (245 + 1))
       );
       gltf.scene.traverse(function (node) {
@@ -717,8 +717,7 @@ function loadVolcano() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = model.geometry.getAttribute("position"),
-        array;
+      let verticesPos = model.geometry.getAttribute("position").array;
       let triangles = [];
       for (let i = 0; i < verticesPos.length; i += 3) {
         triangle.push({
@@ -871,7 +870,7 @@ function checkContact() {
   physicsWorld.contactTest(ball.userData.physicsBody, cbContactResult);
 }
 
-function setupContactPairResultCallback(){
+function setupContactPairResultCallback() {
 
   cbContactPairResult = new Ammo.ConcreteContactResultCallback();
 
@@ -913,32 +912,32 @@ function jump() {
   physicsBody.setLinearVelocity(jumpImpulse);
 }
 
-function isCollect(){ //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
+function isCollect() { //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
 
   let i = 0;
 
 
-  while (true){ 
+  while (true) {
     cbContactPairResult.hasContact = false;
     if (i >= collectibles.length) return;
     physicsWorld.contactPairTest(ball.userData.physicsBody, collectibles[i].getCollectibleObject().userData.physicsBody, cbContactPairResult); //perform a test to see if there is contact 
-    if(cbContactPairResult.hasContact) { //if there is contact between the ball and collectible object
+    if (cbContactPairResult.hasContact) { //if there is contact between the ball and collectible object
 
       collectCounter++;
-      physicsWorld.removeRigidBody(  collectibles[i].getCollectibleObject().userData.physicsBody ); //remove this rigid body from the physics world
-      scene.remove( collectibles[i].getCollectibleObject()); //remove from scene
-      rigidBodies = arrayRemove(rigidBodies,  collectibles[i].getCollectibleObject()); //remove from rigidbodies array
+      physicsWorld.removeRigidBody(collectibles[i].getCollectibleObject().userData.physicsBody); //remove this rigid body from the physics world
+      scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
+      rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
       collectibles.splice(i, 1); //delete element from collectibles array
       
       //console.log(collectCounter);
       return;
     }
 
-      i++;
+    i++;
 
   }
 
-  
+
 
 }
 
@@ -966,63 +965,63 @@ function updatePhysics(deltaTime) {
 
   // Update rigid bodies
   //for (let i = 0; i < rigidBodies.length; i++) {
-    //console.log(rigidBodies);
-    //let objThree = rigidBodies[i];
-    let objThree = ballObject;
-    let objAmmo = objThree.userData.physicsBody;
-    let ms = objAmmo.getMotionState();
-    if (ms) {
-      ms.getWorldTransform(tmpTrans);
-      let p = tmpTrans.getOrigin();
-      let q = tmpTrans.getRotation();
-      objThree.position.set(p.x(), p.y(), p.z());
-      objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+  //console.log(rigidBodies);
+  //let objThree = rigidBodies[i];
+  let objThree = ballObject;
+  let objAmmo = objThree.userData.physicsBody;
+  let ms = objAmmo.getMotionState();
+  if (ms) {
+    ms.getWorldTransform(tmpTrans);
+    let p = tmpTrans.getOrigin();
+    let q = tmpTrans.getRotation();
+    objThree.position.set(p.x(), p.y(), p.z());
+    objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
 
-      // First Person
-      if (firstPerson == true) {
-        // Perspective from objects eyes
-        camera.position.set(p.x(), p.y(), p.z());
+    // First Person
+    if (firstPerson == true) {
+      // Perspective from objects eyes
+      camera.position.set(p.x(), p.y(), p.z());
 
-        // Look 100 units ahead
-        camera.lookAt(p.x(), p.y(), p.z() - 100);
+      // Look 100 units ahead
+      camera.lookAt(p.x(), p.y(), p.z() - 100);
 
-        // Temporarily change camera view (still in first person)
-        if (lookLeft == true) {
-          camera.lookAt(p.x() - 100, p.y(), p.z());
-        } else if (lookRight == true) {
-          camera.lookAt(p.x() + 100, p.y(), p.z());
-        } else if (lookBack == true) {
-          camera.lookAt(p.x(), p.y(), p.z() + 100);
-        }
-      }
-
-      // Third Person
-      else {
-        // Perspective from behind object and slightly above
-        camera.position.set(p.x(), p.y() + 8, p.z() + 15);
-
-        // Look slightly above object
-        camera.lookAt(p.x(), p.y() + 5, p.z());
-
-        // Temporarily change camera view (still in first person)
-        if (lookLeft == true) {
-          camera.position.set(p.x() + 10, p.y() + 5, p.z());
-          camera.lookAt(p.x() - 100, p.y(), p.z());
-        } else if (lookRight == true) {
-          camera.position.set(p.x() - 10, p.y() + 5, p.z());
-          camera.lookAt(p.x() + 100, p.y(), p.z());
-        } else if (lookBack == true) {
-          camera.position.set(p.x(), p.y() + 5, p.z() - 10);
-          camera.lookAt(p.x(), p.y(), p.z() + 100);
-        }
+      // Temporarily change camera view (still in first person)
+      if (lookLeft == true) {
+        camera.lookAt(p.x() - 100, p.y(), p.z());
+      } else if (lookRight == true) {
+        camera.lookAt(p.x() + 100, p.y(), p.z());
+      } else if (lookBack == true) {
+        camera.lookAt(p.x(), p.y(), p.z() + 100);
       }
     }
+
+    // Third Person
+    else {
+      // Perspective from behind object and slightly above
+      camera.position.set(p.x(), p.y() + 8, p.z() + 15);
+
+      // Look slightly above object
+      camera.lookAt(p.x(), p.y() + 5, p.z());
+
+      // Temporarily change camera view (still in first person)
+      if (lookLeft == true) {
+        camera.position.set(p.x() + 10, p.y() + 5, p.z());
+        camera.lookAt(p.x() - 100, p.y(), p.z());
+      } else if (lookRight == true) {
+        camera.position.set(p.x() - 10, p.y() + 5, p.z());
+        camera.lookAt(p.x() + 100, p.y(), p.z());
+      } else if (lookBack == true) {
+        camera.position.set(p.x(), p.y() + 5, p.z() - 10);
+        camera.lookAt(p.x(), p.y(), p.z() + 100);
+      }
+    }
+  }
   //}
 }
 
-function arrayRemove(arr, value) { 
-    
-  return arr.filter(function(element){ 
-      return element != value; //creates a new array, without the specific element
+function arrayRemove(arr, value) {
+
+  return arr.filter(function (element) {
+    return element != value; //creates a new array, without the specific element
   });
 }

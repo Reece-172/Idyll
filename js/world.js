@@ -40,7 +40,7 @@ function createWorld() {
   Grass = new StaticModel("./resources/models/enchantedforest_grass_2.glb");
   for (var i = 0; i < 200; i++) {
     Grass.createModel({
-      posY:1,
+      posY: 1,
       scaleX: 3,
       scaleY: 4,
       scaleZ: 3,
@@ -51,8 +51,19 @@ function createWorld() {
   }
   Bush = new StaticModel("./resources/models/island_bush_1.glb");
   for (var i = 0; i < 30; i++) {
-    Bush.createModel(
-      {posY: 0}
-    );
+    Bush.createModel({ posY: 0 });
+  }
+
+  Cloud = new StaticModel("./resources/models/Clouds.glb");
+  for (var i = 0; i < 50; i++) {
+    Cloud.createModel({
+      posY: 500,
+      scaleX: 200,
+      scaleY: 200,
+      scaleZ: 200,
+      colShapeScaleX: 0,
+      colShapeScaleY: 0,
+      colShapeScaleZ: 0,
+    });
   }
 }
