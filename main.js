@@ -332,15 +332,15 @@ function handleKeyUp(event) {
   }
 }
 function loadNPC() {
-  let pos = { x: 10, y: 1, z: -50 };
+  let pos = { x: 10, y: 0, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 1;
 
   var loader = new THREE.GLTFLoader();
   loader.load(
-    "./resources/models/Yasuo.glb",
+    "./resources/models/Platformer Character.glb",
     function (gltf) {
-      gltf.scene.scale.set(10, 10, 10);
+      gltf.scene.scale.set(-5, 5, -5);
       gltf.scene.traverse(function (node) {
         if (node.isMesh) {
           node.castShadow = true;
@@ -363,7 +363,7 @@ function loadNPC() {
       let localInertia = new Ammo.btVector3(0, 0, 0);
 
       const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(yasuo.scale.x * 0.3, yasuo.scale.y * 2, yasuo.scale.z * 0.5) //this is the size of the box around the model
+        new Ammo.btVector3(yasuo.scale.x , yasuo.scale.y - 1, yasuo.scale.z) //this is the size of the box around the model
       );
       colShape.getMargin(0.05);
       colShape.calculateLocalInertia(mass, localInertia);
@@ -545,7 +545,7 @@ function updatePhysics(deltaTime) { // update physics world
         else {
 
         // Perspective from behind object and slightly above
-        camera.position.set(p.x(), p.y() + 18,p.z() + 40);
+        camera.position.set(p.x(), p.y() + 18,p.z() + 60);
 
         // Look slightly above object
         camera.lookAt(p.x(), p.y() + 18, p.z());
