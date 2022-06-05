@@ -1063,20 +1063,3 @@ function createBlock() {
     );
   }
   
-  function moveBall() {
-    //this goes in renderframe()
-  
-    let scalingFactor = 20;
-  
-    let moveX = moveDirection.right - moveDirection.left;
-    let moveZ = moveDirection.back - moveDirection.forward;
-    let moveY = moveDirection.up - moveDirection.down * 2;
-  
-    if (moveX == 0 && moveY == 0 && moveZ == 0) return;
-  
-    let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
-    resultantImpulse.op_mul(scalingFactor);
-  
-    let physicsBody = ballObject.userData.physicsBody;
-    physicsBody.setLinearVelocity(resultantImpulse);
-  }
