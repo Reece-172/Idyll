@@ -5,6 +5,8 @@ let physicsWorld,
   renderer,
   rigidBodies = [],
   tmpTrans = null;
+  
+
 /**TO-DO
  * Orbital control
  * New models
@@ -31,6 +33,19 @@ let collectCounter;
 
 let cbContactPairResult, blockPlane, ball;
 let cbContactResult;
+const GAMESTATE={
+  PAUSED:0,
+  RUNNING:1,
+  MENU:2,
+  GAMEOVER:3
+};//for loading screen
+window.addEventListener('load',function(){
+  var loadingScreen=document.getElementById('loadingScreen');
+  document.body.removeChild(loadingScreen);
+});
+//for fps display
+(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+
 
 
 
@@ -40,7 +55,10 @@ Ammo().then(start);
 function start() {
   tmpTrans = new Ammo.btTransform();
   collectCounter = 0;
+  this.gamestate=GAMESTATE.RUNNING;
 
+ 
+  
   setupPhysicsWorld();
   setupGraphics();
   
@@ -92,6 +110,7 @@ function start() {
   for (var i = 0; i < 50; i++) {
     createTree();
   }  
+  
 
   setupContactResultCallback();   
   setupContactPairResultCallback();
@@ -146,7 +165,7 @@ function setupGraphics() {
   );
   camera.position.set(0, 15, 50);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
-
+  const PointsEl=document.querySelector('#PointsEl');
   //Add hemisphere light
   let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
   hemiLight.color.setHSL(0.6, 0.6, 0.6);
@@ -195,16 +214,25 @@ function setupGraphics() {
   renderer.gammaOutput = true;
 
   renderer.shadowMap.enabled = true;
+
+  
 }
 
 function renderFrame() {
   let deltaTime = clock.getDelta();
   //createFont();
-  moveBall();
+  
+    moveBall();
+  
   //moveHero();
   camera.lookAt(ballObject.position);
   updatePhysics(deltaTime);
-
+  if(this.gamestate===GAMESTATE.PAUSED){
+    document.getElementById("Game Paused").style.visibility="visible";
+  }
+  else{
+    document.getElementById("Game Paused").style.visibility="hidden";
+  }
   renderer.render(scene, camera);
 
   requestAnimationFrame(renderFrame);
@@ -291,6 +319,9 @@ function handleKeyDown(event) {
     case 77: //m
       checkContact();//shows what the ball collides with
       break;
+
+    case 80:
+      TogglePause(); 
   }
 }
 function handleKeyUp(event) {
@@ -390,6 +421,9 @@ function checkContact(){//check if ball is in contact with collectible
   physicsWorld.contactTest( ball.userData.physicsBody , cbContactResult );
 }
 function jump(){
+  if(this.gamestate===GAMESTATE.PAUSED){
+    return;
+  }
   cbContactPairResult.hasContact = false;
 
   physicsWorld.contactPairTest(ball.userData.physicsBody, blockPlane.userData.physicsBody, cbContactPairResult);
@@ -400,6 +434,45 @@ function jump(){
 
   let physicsBody = ball.userData.physicsBody;
   physicsBody.setLinearVelocity( jumpImpulse );
+}
+function TogglePause(){
+  if(this.gamestate===GAMESTATE.PAUSED){
+    this.gamestate=GAMESTATE.RUNNING;
+
+  }
+  else{
+    this.gamestate=GAMESTATE.PAUSED;
+
+
+  }
+}
+
+function Menu(){
+  //window.location.href = "menu.html";
+  // var menu_div=document.createElement('div');
+  // menu_div.className='flex text-align-center text-lg fixed absolute font-serif text-white select-none';
+  // var menu_ul=document.createElement('ul');
+  // var menu_li=document.createElement('li');
+  // menu_div.style.left='45%';
+  // menu_div.style.top='35%';
+
+
+  document.getElementById("Menu_Buttons").style.visibility="visible";
+
+}
+function Resume(){
+  //window.location.href="index.html";
+  document.getElementById("Menu_Buttons").style.visibility="hidden";
+
+}
+function Controls(){
+  document.getElementById("Menu_Buttons").style.visibility="hidden";
+  //set controls div to visible
+
+}
+function Quit(){
+ location.reload();
+
 }
 
 function setupContactPairResultCallback(){ //this is for the ball and the block
@@ -425,7 +498,10 @@ function setupContactPairResultCallback(){ //this is for the ball and the block
 function updatePhysics(deltaTime) { // update physics world
   // Step world
   physicsWorld.stepSimulation(deltaTime, 10);
-
+  if(this.gamestate===GAMESTATE.PAUSED || this.gamestate===GAMESTATE.MENU){
+    return;
+  }
+  
   // Update rigid bodies
   for (let i = 0; i < rigidBodies.length; i++) {
     let objThree = rigidBodies[i];

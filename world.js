@@ -1065,7 +1065,9 @@ function createBlock() {
   
   function moveBall() {
     //this goes in renderframe()
-  
+    if(this.gamestate===GAMESTATE.PAUSED){
+      return;
+    }
     let scalingFactor = 20;
   
     let moveX = moveDirection.right - moveDirection.left;
