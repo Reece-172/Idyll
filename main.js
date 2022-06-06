@@ -13,23 +13,36 @@ let physicsWorld,
 let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
-// Variable to store first person / third person state 
-let firstPerson = false;
-let lookLeft = false, lookRight = false, lookBack = false;
+// Variable to store first person / third person state
+// Handling "firstPersonPressed" differently from firstPerson so
+// camera change can be applied immediately using "orbitControls.update()"
+// in "updatePhysics()". If left out, change only happens on mouse click.
+// If treated depending on firstPerson variable, then "orbitControls.update()"
+// is run on every "updatePhysics()" call, which causes erratic camera / character movement
+let firstPerson = false, firstPersonPressed = false;
+let lookLeft = false,
+  lookRight = false,
+  lookBack = false;
+
+// Control Temp data
+var orbitControls;
+walkDirection = new THREE.Vector3();
+rotateAngle = new THREE.Vector3(0, 1, 0);
+
 
 let heroObject = null,
   HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
 //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
-let collectible1Object = null, //put here if want to make the object global
-  collectible2Object = null;
+// let collectible1Object = null, //put here if want to make the object global
+//   collectible2Object = null;
 
-let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4; //collision purposes
+let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6; //collision purposes
 
 let collectCounter;
 
-let cbContactPairResult, blockPlane, ball;
+let cbContactPairResult, blockPlane, ball, collectible1;
 let cbContactResult;
 const GAMESTATE={
   PAUSED:0,
@@ -44,9 +57,14 @@ window.addEventListener('load',function(){
 //for fps display
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
+let isCollection1Present, isCollection2Present;
+let collectibles = [];
 
+let npcContact = false; //boolean to check if player made contact with NPC
 
-
+var mapCamera,
+  mapWidth = 240,
+  mapHeight = 160;
 //Ammojs Initialization
 Ammo().then(start);
 
@@ -60,25 +78,18 @@ function start() {
   setupPhysicsWorld();
   setupGraphics();
 
-  for(var i=0;i<70;i++){
-    createCollectible1();
-  } 
-  // for(var i=0;i<15;i++){
-  //   createCollectible1();
-  // } 
-  createCollectible1();
-  createCollectible2();
+  for (var i = 0; i < 70; i++) { //add high and low collectibles so user has to jump
+    collectible1 = new Collectible();
+    collectible1.createCollectible();
+    collectibles.push(collectible1);
+  }
 
-  
+
   createBlock();
   createBall();
-  //loadNPC();
-  // for (var i = 0; i < 20; i++) {
-  //   createTree();
-  // }
-  // for (var i = 0; i < 5; i++) {
-  //   createRock();
-  // }
+  loadCharacter();
+  createWorld();
+
   // for (var i = 0; i < 30; i++) {
   //   createGrass();
   // }
@@ -93,25 +104,21 @@ function start() {
   // }
 
   // for (var i = 0; i < 50; i++) {
-  //   createTree_2();
+  // createTree_2();
   // }
   // for (var i = 0; i < 50; i++) {
   //   createTree_3();
   // }
-  // for (var i = 0; i < 8; i++) {
-  //   createBush();
-  // }
 
 
-  // loadVolcano();
-  // //createHead();
+  loadVolcano();
+  //createHead();
   // for (var i = 0; i < 50; i++) {
   //   createTree();
   // }  
 
-  setupContactResultCallback();   
+  setupContactResultCallback();
   setupContactPairResultCallback();
-
 
   setupEventHandlers();
   renderFrame();
@@ -160,9 +167,45 @@ function setupGraphics() {
     0.2,
     5000
   );
-  camera.position.set(0, 15, 50);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
-  const PointsEl=document.querySelector('#PointsEl');
+  camera.position.set(0, 20, 50);
+  camera.lookAt(new THREE.Vector3(0, 20, 20));
+
+  mapCamera = new THREE.OrthographicCamera(
+    window.innerWidth / -10, // Left
+    window.innerWidth / 10, // Right
+    window.innerHeight / 10, // Top
+    window.innerHeight / -10, // Bottom
+    -5000, // Near
+    10000
+  ); // Far
+  mapCamera.up = new THREE.Vector3(0, 0, -1);
+  //get the ball object x and y coord
+  mapCamera.lookAt(new THREE.Vector3(0, -1, 0));
+  // Removed the mapCamera from being a sub-object of camera
+  // to avoid rotation problem
+  // camera.add(mapCamera);
+
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+
+
+  const loadAudio = new THREE.AudioLoader();
+
+  const audio = new THREE.Audio(listener);
+
+  loadAudio.load("./resources/idyll.mp3", function (buffer) {
+    audio.setBuffer(buffer);
+    audio.setLoop(true);
+    audio.setVolume(0.4);
+    audio.play();
+  });
+  scene.add(audio);
+
+  scene.add(camera);
+
+  const PointsEl = document.querySelector("#PointsEl");
+  console.log(PointsEl);
+
   //Add hemisphere light
   let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
   hemiLight.color.setHSL(0.6, 0.6, 0.6);
@@ -182,7 +225,7 @@ function setupGraphics() {
   dirLight.shadow.mapSize.width = 4098;
   dirLight.shadow.mapSize.height = 4098;
 
-  let d = 200;
+  let d = 200; //adjust
 
   dirLight.shadow.camera.left = -d;
   dirLight.shadow.camera.right = d;
@@ -191,21 +234,18 @@ function setupGraphics() {
 
   dirLight.shadow.camera.far = 13500;
 
-  //Setup the renderer
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setClearColor(0x000, 0);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-
-
-  // // Orbit Control (Mouse Rotation and Zoom)
-  //   // Orbit Controls
-  //   const controls = new THREE.OrbitControls(
-  //     camera, renderer.domElement);
-  //   controls.target.set(0, 20, 0);
-  //   controls.update();
+  // Controls
+  orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+  orbitControls.enablePan = false;
+  orbitControls.minDistance = 15;
+  orbitControls.maxDistance = 20;
+  orbitControls.maxPolarAngle = Math.PI / 2 - 0.05;
+  orbitControls.update();
 
   renderer.gammaInput = true;
   renderer.gammaOutput = true;
@@ -214,13 +254,19 @@ function setupGraphics() {
 }
 
 function renderFrame() {
+  requestAnimationFrame(renderFrame);
   let deltaTime = clock.getDelta();
   //createFont();
   
     moveBall();
   
   //moveHero();
-  camera.lookAt(ballObject.position);
+
+  if (firstPerson == true) {
+    camera.lookAt(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
+  } else {
+    camera.lookAt(ballObject.position);
+  }
   updatePhysics(deltaTime);
   if(this.gamestate===GAMESTATE.PAUSED){
     document.getElementById("Game Paused").style.visibility="visible";
@@ -228,20 +274,37 @@ function renderFrame() {
   else{
     document.getElementById("Game Paused").style.visibility="hidden";
   }
+
+  renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+
+  //handles collectibles
+  if (collectibles.length !== 0) {
+    isCollect();
+  }
+  const points = document.getElementById('PointsEl'); 
+  points.innerHTML = collectCounter; //updates points on screen
+
   renderer.render(scene, camera);
 
-  requestAnimationFrame(renderFrame);
+  renderer.clearDepth();
+  renderer.setScissorTest(true);
+  renderer.setScissor(
+    window.innerWidth - mapWidth - 16,
+    window.innerHeight - mapHeight - 16,
+    mapWidth,
+    mapHeight
+  );
+  renderer.setViewport(
+    window.innerWidth - mapWidth - 16,
+    window.innerHeight - mapHeight - 16,
+    mapWidth,
+    mapHeight
+  );
 
+  renderer.render(scene, mapCamera);
+  renderer.setScissorTest(false);
 
-
-
-  //   //createFont();
-
-  //   //may need to remove the object from rigidbodies array.
-  }
-
-
-
+}
 
 function setupEventHandlers() {
   window.addEventListener("keydown", handleKeyDown, false);
@@ -273,41 +336,44 @@ function handleKeyDown(event) {
       break;
 
     case 70: //F: Toggle First Person
-      if(firstPerson == false){
+      if (firstPerson == false) {
         firstPerson = true;
-      }else{
+      } else {
         firstPerson = false;
       }
-      break;  
-      
-      case 37:
-        lookLeft = true;
-        break;
-      case 39:
-        lookRight = true;
-        break;
-      case 40:
-        lookBack = true;
-        break;
-        
+      firstPersonPressed = true;
+      break;
 
+    case 37:
+      lookLeft = true;
+      break;
+    case 39:
+      lookRight = true;
+      break;
+    case 40:
+      lookBack = true;
+      break;
 
     case 32: //space bar
-    //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
+      //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
       //moveDirection.up = 1 //infinitely goes up if key is pressed and held
-     // break;
-    //}
-      jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
+      // break;
+      //}
+      // jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
+      moveDirection.up = true;
       break;
 
     case 77: //m
-      checkContact();//shows what the ball collides with
+      checkContact(); //shows what the ball collides with
       break;
 
     case 80:
       TogglePause(); 
+    // case 67: //c
+    //   isCollect();
   }
 }
+
 function handleKeyUp(event) {
   let keyCode = event.keyCode;
 
@@ -332,15 +398,19 @@ function handleKeyUp(event) {
       HeroMoveDirection.forward = 0;
       break;
 
-      case 37:
-        lookLeft = false;
-        break;
-      case 39:
-        lookRight = false;
-        break;
-      case 40:
-        lookBack = false;
-        break;
+    case 70: // (First Person Button, "F", Pressed --> Change Camera)
+      firstPersonPressed = false;
+      break;
+
+    case 37:
+      lookLeft = false;
+      break;
+    case 39:
+      lookRight = false;
+      break;
+    case 40:
+      lookBack = false;
+      break;
 
     case 32: //space bar
       moveDirection.up = 0;
@@ -379,7 +449,7 @@ function createBlock() {
   transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
   let motionState = new Ammo.btDefaultMotionState(transform);
 
-  let colShape = new Ammo.btBoxShape(
+  const colShape = new Ammo.btBoxShape(
     new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
   );
   colShape.setMargin(0.05);
@@ -398,13 +468,15 @@ function createBlock() {
   body.setFriction(4);
   body.setRollingFriction(10);
 
-  physicsWorld.addRigidBody(body, colGroupBlock, colGroupBall|colGroupChar|colGroupCollectible);
+  physicsWorld.addRigidBody(
+    body,
+    colGroupBlock,
+    colGroupBall | colGroupChar | colGroupCollectible
+  );
 
   body.threeObject = blockPlane;
 
   blockPlane.userData.physicsBody = body;
-                        
-                  
 }
 
 function createBall() {
@@ -414,10 +486,10 @@ function createBall() {
   let mass = 1;
 
   //threeJS Section
-  ball = (ballObject = new THREE.Mesh(
+  ball = ballObject = new THREE.Mesh(
     new THREE.DodecahedronGeometry(radius),
     new THREE.MeshPhongMaterial({ color: 0xff0505 })
-  ));
+  );
 
   ball.position.set(pos.x, pos.y, pos.z);
 
@@ -454,113 +526,14 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar|colGroupBlock|colGroupTree|colGroupCollectible);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock | colGroupTree | colGroupModel);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
   body.threeObject = ball;
 }
 
-function createGrass() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
 
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/enchantedforest_grass_2.glb",
-    function (gltf) {
-      gltf.scene.scale.set(4, 4, 4);
-      gltf.scene.position.set(
-        Math.floor(Math.random() * (245 + 1)),
-        Math.floor(Math.random() * (2 + 1)),
-        Math.floor(Math.random() * (245 + 1))
-      );
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const grass = gltf.scene;
-
-      scene.add(grass);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = grass.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (grass.geometry.verticesNeedUpdate = true)
-      );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      grass.userData.physicsBody = body;
-      rigidBodies.push(grass);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
 
 function loadCharacter() {
   let pos = { x: 10, y: 1, z: -50 };
@@ -579,7 +552,7 @@ function loadCharacter() {
       });
       const yasuo = gltf.scene;
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      heroObject = new THREE.Mesh(yasuo.geomerty, yasuo.material);
+      heroObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
       scene.add(yasuo);
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
@@ -592,50 +565,12 @@ function loadCharacter() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = yasuo.geometry.getAttribute("position"),
-        array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
 
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (yasuo.geometry.verticesNeedUpdate = true)
+      const colShape = new Ammo.btBoxShape(
+        new Ammo.btVector3(yasuo.scale.x * 0.3, yasuo.scale.y * 2, yasuo.scale.z * 0.5) //this is the size of the box around the model
       );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
+      colShape.getMargin(0.05);
+      colShape.calculateLocalInertia(mass, localInertia);
       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
         mass,
         motionState,
@@ -698,8 +633,7 @@ function loadVolcano() {
       let motionState = new Ammo.btDefaultMotionState(transform);
 
       let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = model.geometry.getAttribute("position"),
-        array;
+      let verticesPos = model.geometry.getAttribute("position").array;
       let triangles = [];
       for (let i = 0; i < verticesPos.length; i += 3) {
         triangle.push({
@@ -765,116 +699,76 @@ function loadVolcano() {
   );
 }
 
+function directionOffset() {
+  var directionOffset = 0;
 
+  if (moveDirection.forward) {
+    if (moveDirection.left) {
+      directionOffset = Math.PI / 4;
+    } else if (moveDirection.right) {
+      directionOffset = - Math.PI / 4;
+    }
+  } else if (moveDirection.back) {
+    if (moveDirection.left) {
+      directionOffset = Math.PI / 4 + Math.PI / 2;
+    } else if (moveDirection.right) {
+      directionOffset = - Math.PI / 4 - Math.PI / 2;
+    } else {
+      directionOffset = Math.PI
+    }
+  } else if (moveDirection.left) {
+    directionOffset = Math.PI / 2;
+  } else if (moveDirection.right) {
+    directionOffset = - Math.PI / 2;
+  }
 
-//collectible items (make a class in future)
-function createCollectible1() {
-  let pos = { x: -20, y: 6, z: 20 };
-  let scale = { x: 1, y: 1, z: 1 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  //threeJS Section
-  let collectible1 = (collectible1Object = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(),
-    new THREE.MeshPhongMaterial({ color: "blue" })
-  ));
-
-  collectible1.position.set(Math.floor(Math.random()*(400)),2,-Math.floor(Math.random()*(400)));
-  collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
-  //collectible1.position.set(pos.x, pos.y, pos.z);
-  collectible1.scale.set(scale.x, scale.y, scale.z);
-
-  collectible1.castShadow = true;
-  collectible1.receiveShadow = true;
-
-  scene.add(collectible1);
-
-  //Ammojs Section
-  let transform = new Ammo.btTransform();
-  transform.setIdentity();
-  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-  transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-  let motionState = new Ammo.btDefaultMotionState(transform);
-
-  let colShape = new Ammo.btBoxShape(
-    new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
-  );
-  colShape.setMargin(0.05);
-
-  let localInertia = new Ammo.btVector3(0, 0, 0);
-  colShape.calculateLocalInertia(mass, localInertia);
-
-  let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-    mass,
-    motionState,
-    colShape,
-    localInertia
-  );
-  let body = new Ammo.btRigidBody(rbInfo);
-
-  body.setFriction(4);
-  body.setRollingFriction(10);
-
-  collectible1.userData.physicsBody = body;
-
-  physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBall);
-}
-
-function createCollectible2() {
-  let pos = { x: 15, y: 3, z: 40 };
-  let scale = { x: 1, y: 1, z: 1 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  //threeJS Section
-  let collectible2 = (collectible2Object = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(),
-    new THREE.MeshPhongMaterial({ color: "blue" })
-  ));
-
-  collectible2.position.set(pos.x, pos.y, pos.z);
-  collectible2.scale.set(scale.x, scale.y, scale.z);
-
-  collectible2.castShadow = true;
-  collectible2.receiveShadow = true;
-
-  scene.add(collectible2);
-
-  //Ammojs Section
-  let transform = new Ammo.btTransform();
-  transform.setIdentity();
-  transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-  transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-  let motionState = new Ammo.btDefaultMotionState(transform);
-
-  let colShape = new Ammo.btBoxShape(
-    new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5)
-  );
-  colShape.setMargin(0.05);
-
-  let localInertia = new Ammo.btVector3(0, 0, 0);
-  colShape.calculateLocalInertia(mass, localInertia);
-
-  let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-    mass,
-    motionState,
-    colShape,
-    localInertia
-  );
-  let body = new Ammo.btRigidBody(rbInfo);
-
-  body.setFriction(4);
-  body.setRollingFriction(10);
-
-  //physicsWorld.addRigidBody( body, colGroupCollectible, colGroupBlock);
+  return directionOffset;
 
 }
 
-function setupContactResultCallback(){
+function moveBall() {
+  //this goes in renderframe()
+  if(this.gamestate===GAMESTATE.PAUSED){
+    return;
+  }
+  let scalingFactor = 20;
 
+  let moveX = moveDirection.right - moveDirection.left;
+  let moveZ = moveDirection.back - moveDirection.forward;
+  let moveY = moveDirection.up - moveDirection.down * 2;
+
+  if (moveX == 0 && moveY == 0 && moveZ == 0) return;
+
+  var dirOffset = directionOffset();
+  var jumpOffset = (Math.PI / 4);
+
+
+  camera.getWorldDirection(walkDirection);
+  walkDirection.y = 0;
+  walkDirection.normalize();
+
+  if (moveDirection.up == true) {
+    tempDirection = new THREE.Vector3();
+    tempDirection = walkDirection.applyAxisAngle(rotateAngle, dirOffset);
+    tempDirection.normalize();
+    walkDirection.applyAxisAngle(tempDirection, jumpOffset);
+    console.log("{1} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+
+  } else {
+    walkDirection.applyAxisAngle(rotateAngle, dirOffset);
+    console.log("{2} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+  }
+
+  let resultantImpulse = new Ammo.btVector3(walkDirection.x, walkDirection.y, walkDirection.z);
+  resultantImpulse.op_mul(scalingFactor);
+
+  let physicsBody = ballObject.userData.physicsBody;
+  physicsBody.setLinearVelocity(resultantImpulse);
+}
+
+
+function setupContactResultCallback() {
   cbContactResult = new Ammo.ConcreteContactResultCallback();
-
 
   // Our implementation of addSingleResult() is straight forward and understandable:
   // Get distance from the contact point and exit if the distance is greater than zero.
@@ -882,67 +776,113 @@ function setupContactResultCallback(){
   // From them get their respective three.js objects.
   // Bearing in mind we are just after the tiles, we check for the three.js object that is not the ball and assign variables appropriately.
   // Finally, with some formatting, we log the information to the console.
-  cbContactResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+  cbContactResult.addSingleResult = function (
+    cp,
+    colObj0Wrap,
+    partId0,
+    index0,
+    colObj1Wrap,
+    partId1,
+    index1
+  ) {
+    let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
-      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+    const distance = contactPoint.getDistance();
 
-      const distance = contactPoint.getDistance();
+    if (distance > 0) return;
 
-      if( distance > 0 ) return;
+    let colWrapper0 = Ammo.wrapPointer(
+      colObj0Wrap,
+      Ammo.btCollisionObjectWrapper
+    );
+    let rb0 = Ammo.castObject(
+      colWrapper0.getCollisionObject(),
+      Ammo.btRigidBody
+    );
 
-      let colWrapper0 = Ammo.wrapPointer( colObj0Wrap, Ammo.btCollisionObjectWrapper );
-      let rb0 = Ammo.castObject( colWrapper0.getCollisionObject(), Ammo.btRigidBody );
+    let colWrapper1 = Ammo.wrapPointer(
+      colObj1Wrap,
+      Ammo.btCollisionObjectWrapper
+    );
+    let rb1 = Ammo.castObject(
+      colWrapper1.getCollisionObject(),
+      Ammo.btRigidBody
+    );
 
-      let colWrapper1 = Ammo.wrapPointer( colObj1Wrap, Ammo.btCollisionObjectWrapper );
-      let rb1 = Ammo.castObject( colWrapper1.getCollisionObject(), Ammo.btRigidBody );
+    let threeObject0 = rb0.threeObject;
+    let threeObject1 = rb1.threeObject;
 
-      let threeObject0 = rb0.threeObject;
-      let threeObject1 = rb1.threeObject;
+    let tag, localPos, worldPos;
 
-      let tag, localPos, worldPos
+    if (threeObject0.userData.tag != "ball") {
+      tag = threeObject0.userData.tag;
+      localPos = contactPoint.get_m_localPointA();
+      worldPos = contactPoint.get_m_positionWorldOnA();
+    } else {
+      tag = threeObject1.userData.tag;
+      localPos = contactPoint.get_m_localPointB();
+      worldPos = contactPoint.get_m_positionWorldOnB();
+    }
 
-      if( threeObject0.userData.tag != "ball" ){
+    let localPosDisplay = { x: localPos.x(), y: localPos.y(), z: localPos.z() };
+    let worldPosDisplay = { x: worldPos.x(), y: worldPos.y(), z: worldPos.z() };
 
-          tag = threeObject0.userData.tag;
-          localPos = contactPoint.get_m_localPointA();
-          worldPos = contactPoint.get_m_positionWorldOnA();
-
-      }
-      else{
-
-          tag = threeObject1.userData.tag;
-          localPos = contactPoint.get_m_localPointB();
-          worldPos = contactPoint.get_m_positionWorldOnB();
-
-      }
-
-      let localPosDisplay = {x: localPos.x(), y: localPos.y(), z: localPos.z()};
-      let worldPosDisplay = {x: worldPos.x(), y: worldPos.y(), z: worldPos.z()};
-
-      console.log( { tag, localPosDisplay, worldPosDisplay } );
-
-  }
-
+    console.log({ tag, localPosDisplay, worldPosDisplay });
+  };
 }
 
-function checkContact(){//check if ball is in contact with collectible
-  physicsWorld.contactTest( ball.userData.physicsBody , cbContactResult );
+function checkContact() {
+  physicsWorld.contactTest(ball.userData.physicsBody, cbContactResult);
 }
-function jump(){
+
+function jump() {
   if(this.gamestate===GAMESTATE.PAUSED){
     return;
   }
   cbContactPairResult.hasContact = false;
 
-  physicsWorld.contactPairTest(ball.userData.physicsBody, blockPlane.userData.physicsBody, cbContactPairResult);
+  physicsWorld.contactPairTest(
+    ball.userData.physicsBody,
+    blockPlane.userData.physicsBody,
+    cbContactPairResult
+  );
 
-  if( !cbContactPairResult.hasContact ) return;
+  if (!cbContactPairResult.hasContact) return;
 
-  let jumpImpulse = new Ammo.btVector3( 0, 15, 0 );
+  let jumpImpulse = new Ammo.btVector3(0, 15, 0);
 
   let physicsBody = ball.userData.physicsBody;
-  physicsBody.setLinearVelocity( jumpImpulse );
+  physicsBody.setLinearVelocity(jumpImpulse);
 }
+
+  
+
+function isCollect() { //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
+
+  let i = 0;
+
+
+  while (true) {
+    cbContactPairResult.hasContact = false;
+    if (i >= collectibles.length) return;
+    physicsWorld.contactPairTest(ball.userData.physicsBody, collectibles[i].getCollectibleObject().userData.physicsBody, cbContactPairResult); //perform a test to see if there is contact 
+    if (cbContactPairResult.hasContact) { //if there is contact between the ball and collectible object
+
+      collectCounter++;
+      physicsWorld.removeRigidBody(collectibles[i].getCollectibleObject().userData.physicsBody); //remove this rigid body from the physics world
+      scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
+      rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
+      collectibles.splice(i, 1); //delete element from collectibles array
+
+      //console.log(collectCounter);
+      return;
+    }
+
+    i++;
+
+  }
+}
+
 function TogglePause(){
   if(this.gamestate===GAMESTATE.PAUSED){
     this.gamestate=GAMESTATE.RUNNING;
@@ -966,8 +906,8 @@ function Menu(){
 
 
   document.getElementById("Menu_Buttons").style.visibility="visible";
-
 }
+
 function Resume(){
   //window.location.href="index.html";
   document.getElementById("Menu_Buttons").style.visibility="hidden";
@@ -998,98 +938,85 @@ function setupContactPairResultCallback(){ //this is for the ball and the block
       if( distance > 0 ) return;
 
       this.hasContact = true;
-
-  }
-
+  };
 }
-function moveBall() {
-  //this goes in renderframe()
-  if(this.gamestate===GAMESTATE.PAUSED){
-    return;
-  }
-  let scalingFactor = 20;
+function isContactNPC() {
+  cbContactPairResult.hasContact = false;
 
-  let moveX = moveDirection.right - moveDirection.left;
-  let moveZ = moveDirection.back - moveDirection.forward;
-  let moveY = moveDirection.up - moveDirection.down * 2;
+  physicsWorld.contactPairTest(
+    ball.userData.physicsBody,
+    blockPlane.userData.physicsBody, //change this line
+    cbContactPairResult
+  );
 
-  if (moveX == 0 && moveY == 0 && moveZ == 0) return;
+  npcContact = false
 
-  let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
-  resultantImpulse.op_mul(scalingFactor);
+  if (!cbContactPairResult.hasContact) return;
 
-  let physicsBody = rigidBodies[rigidBodies.length - 1].userData.physicsBody;
-  physicsBody.setLinearVelocity(resultantImpulse);
+  //what to do if there is contact:
+    //press button
+    npcContact = true;
+
+      this.hasContact = true;
+
 }
 
 function updatePhysics(deltaTime) { // update physics world
   // Step world
   physicsWorld.stepSimulation(deltaTime, 10);
-  if(this.gamestate===GAMESTATE.PAUSED || this.gamestate===GAMESTATE.MENU){
-    return;
-  }
+  // if(this.gamestate===GAMESTATE.PAUSED || this.gamestate===GAMESTATE.MENU){
+  //   return;
+  // }
   
   // Update rigid bodies
-  // for (let i = 0; i < rigidBodies.length; i++) {
-    let objThree = rigidBodies[rigidBodies.length - 1]  ; 
-    let objAmmo = objThree.userData.physicsBody;
-    let ms = objAmmo.getMotionState();
-    if (ms) {
-      ms.getWorldTransform(tmpTrans);
-      let p = tmpTrans.getOrigin();
-      let q = tmpTrans.getRotation();
-      objThree.position.set(p.x(), p.y(), p.z());
-      objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+  //for (let i = 0; i < rigidBodies.length; i++) {
+  //console.log(rigidBodies);
+  //let objThree = rigidBodies[i];
+  let objThree = ballObject;
+  let objAmmo = objThree.userData.physicsBody;
+  let ms = objAmmo.getMotionState();
+  if (ms) {
+    ms.getWorldTransform(tmpTrans);
+    let p = tmpTrans.getOrigin();
+    let q = tmpTrans.getRotation();
 
-      // First Person
-      if(firstPerson == true){
+    camera.position.x += (p.x() - objThree.position.x);
+    camera.position.y += (p.y() - objThree.position.y);
+    camera.position.z += (p.z() - objThree.position.z);
 
-        // Perspective from objects eyes
-        camera.position.set(p.x(), p.y(), p.z());
+    // Removed the mapCamera from being a sub-object of camera
+    // to avoid rotation problem
+    mapCamera.position.x = objThree.position.x;
+    mapCamera.position.z = objThree.position.z;
 
-        // Look 100 units ahead
-        camera.lookAt(p.x(), p.y(), p.z() - 100);
-        
-        // Temporarily change camera view (still in first person)
-        if(lookLeft == true){
-          camera.lookAt(p.x() - 100, p.y() , p.z());
-          }else
-          if(lookRight == true){
-            camera.lookAt(p.x() + 100, p.y(), p.z());
-          }else
-          if(lookBack == true){
-            camera.lookAt(p.x(), p.y(), p.z() +  100);
-          }
 
-        }
-
-        // Third Person
-        else {
-
-        // Perspective from behind object and slightly above
-        camera.position.set(p.x(),p.y() + 8,p.z() + 15);
-
-        // Look slightly above object
-        camera.lookAt(p.x(), p.y() + 5, p.z());
-
-        // Temporarily change camera view (still in first person)
-        if(lookLeft == true){
-        camera.position.set(p.x() + 10,p.y() + 5,p.z());
-        camera.lookAt(p.x() - 100, p.y() , p.z());
-        }
-        else
-        if(lookRight == true){
-          camera.position.set(p.x() - 10,p.y() + 5,p.z());
-          camera.lookAt(p.x() + 100, p.y(), p.z());
-        }
-        else
-        if(lookBack == true){
-          camera.position.set(p.x(),p.y() + 5,p.z() - 10);
-          camera.lookAt(p.x(), p.y(), p.z() +  100);
-        }
-        
-      }
-      
+    if (firstPerson == true) {
+      orbitControls.enableZoom = false;
+      orbitControls.minDistance = 1;
+      orbitControls.maxDistance = 1;
+      orbitControls.maxPolarAngle = Math.PI / 1.5 - 0.05;
+      orbitControls.minPolarAngle = Math.PI / 3;
+      orbitControls.target = new THREE.Vector3(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
+    } else {
+      orbitControls.minDistance = 15;
+      orbitControls.maxDistance = 20;
+      orbitControls.maxPolarAngle = Math.PI / 2 - 0.05;
+      orbitControls.target = new THREE.Vector3(ballObject.position.x, ballObject.position.y, ballObject.position.z);
     }
-  // }
+
+    if (firstPersonPressed == true) {
+      orbitControls.update();
+    }
+
+    objThree.position.set(p.x(), p.y(), p.z());
+    objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+
+  }
+}
+
+function arrayRemove(arr, value) {
+
+  return arr.filter(function (element) {
+    return element != value; //creates a new array, without the specific element
+  });
 }
