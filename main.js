@@ -14,7 +14,12 @@ let ballObject = null,
   moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
 
 // Variable to store first person / third person state
-let firstPerson = false;
+// Handling "firstPersonPressed" differently from firstPerson so
+// camera change can be applied immediately using "orbitControls.update()"
+// in "updatePhysics()". If left out, change only happens on mouse click.
+// If treated depending on firstPerson variable, then "orbitControls.update()"
+// is run on every "updatePhysics()" call, which causes erratic camera / character movement
+let firstPerson = false, firstPersonPressed = false;
 let lookLeft = false,
   lookRight = false,
   lookBack = false;
@@ -60,7 +65,7 @@ function start() {
     collectible1.createCollectible();
     collectibles.push(collectible1);
   }
- 
+
 
   createBlock();
   createBall();
@@ -218,9 +223,9 @@ function setupGraphics() {
 
   // Controls
   orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+  orbitControls.enablePan = false;
   orbitControls.minDistance = 15;
   orbitControls.maxDistance = 20;
-  orbitControls.enablePan = false;
   orbitControls.maxPolarAngle = Math.PI / 2 - 0.05;
   orbitControls.update();
 
@@ -236,7 +241,12 @@ function renderFrame() {
   //createFont();
   moveBall();
   //moveHero();
-  camera.lookAt(ballObject.position);
+
+  if (firstPerson == true) {
+    camera.lookAt(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
+  } else {
+    camera.lookAt(ballObject.position);
+  }
   updatePhysics(deltaTime);
 
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
@@ -245,10 +255,8 @@ function renderFrame() {
   if (collectibles.length !== 0) {
     isCollect();
   }
-
   const points = document.getElementById('PointsEl'); 
   points.innerHTML = collectCounter; //updates points on screen
-
 
   renderer.render(scene, camera);
 
@@ -307,6 +315,7 @@ function handleKeyDown(event) {
       } else {
         firstPerson = false;
       }
+      firstPersonPressed = true;
       break;
 
     case 37:
@@ -324,7 +333,8 @@ function handleKeyDown(event) {
       //moveDirection.up = 1 //infinitely goes up if key is pressed and held
       // break;
       //}
-      jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
+      // jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
+      moveDirection.up = true;
       break;
 
     case 77: //m
@@ -358,6 +368,10 @@ function handleKeyUp(event) {
     case 68: //RIGHT
       moveDirection.right = 0;
       HeroMoveDirection.forward = 0;
+      break;
+
+    case 70: // (First Person Button, "F", Pressed --> Change Camera)
+      firstPersonPressed = false;
       break;
 
     case 37:
@@ -831,13 +845,26 @@ function moveBall() {
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
   var dirOffset = directionOffset();
+  var jumpOffset = (Math.PI / 4);
+
 
   camera.getWorldDirection(walkDirection);
   walkDirection.y = 0;
   walkDirection.normalize();
-  walkDirection.applyAxisAngle(rotateAngle, dirOffset);
 
-  let resultantImpulse = new Ammo.btVector3(walkDirection.x, 0, walkDirection.z);
+  if (moveDirection.up == true) {
+    tempDirection = new THREE.Vector3();
+    tempDirection = walkDirection.applyAxisAngle(rotateAngle, dirOffset);
+    tempDirection.normalize();
+    walkDirection.applyAxisAngle(tempDirection, jumpOffset);
+    console.log("{1} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+
+  } else {
+    walkDirection.applyAxisAngle(rotateAngle, dirOffset);
+    console.log("{2} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+  }
+
+  let resultantImpulse = new Ammo.btVector3(walkDirection.x, walkDirection.y, walkDirection.z);
   resultantImpulse.op_mul(scalingFactor);
 
   let physicsBody = ballObject.userData.physicsBody;
@@ -949,7 +976,7 @@ function jump() {
 
   if (!cbContactPairResult.hasContact) return;
 
-  let jumpImpulse = new Ammo.btVector3(0, 20, 0);
+  let jumpImpulse = new Ammo.btVector3(0, 15, 0);
 
   let physicsBody = ball.userData.physicsBody;
   physicsBody.setLinearVelocity(jumpImpulse);
@@ -971,7 +998,7 @@ function isCollect() { //checking the collectibles array if any of the collectib
       scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
       rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
       collectibles.splice(i, 1); //delete element from collectibles array
-      
+
       //console.log(collectCounter);
       return;
     }
@@ -1027,8 +1054,24 @@ function updatePhysics(deltaTime) {
     mapCamera.position.x = objThree.position.x;
     mapCamera.position.z = objThree.position.z;
 
-    orbitControls.target = new THREE.Vector3(ballObject.position.x, ballObject.position.y, ballObject.position.z);
 
+    if (firstPerson == true) {
+      orbitControls.enableZoom = false;
+      orbitControls.minDistance = 1;
+      orbitControls.maxDistance = 1;
+      orbitControls.maxPolarAngle = Math.PI / 1.5 - 0.05;
+      orbitControls.minPolarAngle = Math.PI / 3;
+      orbitControls.target = new THREE.Vector3(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
+    } else {
+      orbitControls.minDistance = 15;
+      orbitControls.maxDistance = 20;
+      orbitControls.maxPolarAngle = Math.PI / 2 - 0.05;
+      orbitControls.target = new THREE.Vector3(ballObject.position.x, ballObject.position.y, ballObject.position.z);
+    }
+
+    if (firstPersonPressed == true) {
+      orbitControls.update();
+    }
 
     objThree.position.set(p.x(), p.y(), p.z());
     objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
