@@ -42,6 +42,8 @@ let cbContactResult;
 let isCollection1Present, isCollection2Present;
 let collectibles = [];
 
+let npcContact = false; //boolean to check if player made contact with NPC
+
 var mapCamera,
   mapWidth = 240,
   mapHeight = 160;
@@ -979,8 +981,24 @@ function isCollect() { //checking the collectibles array if any of the collectib
     i++;
 
   }
+}
 
+function isContactNPC() {
+  cbContactPairResult.hasContact = false;
 
+  physicsWorld.contactPairTest(
+    ball.userData.physicsBody,
+    blockPlane.userData.physicsBody, //change this line
+    cbContactPairResult
+  );
+
+  npcContact = false
+
+  if (!cbContactPairResult.hasContact) return;
+
+  //what to do if there is contact:
+    //press button
+    npcContact = true;
 
 }
 
