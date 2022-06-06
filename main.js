@@ -61,7 +61,7 @@ function start() {
   
   setupPhysicsWorld();
   setupGraphics();
-  
+
   for(var i=0;i<70;i++){
     createCollectible1();
   } 
@@ -74,43 +74,42 @@ function start() {
   
   createBlock();
   createBall();
-  loadNPC();
-  for (var i = 0; i < 20; i++) {
-    createTree();
-  }
-  for (var i = 0; i < 5; i++) {
-    createRock();
-  }
-  for (var i = 0; i < 30; i++) {
-    createGrass();
-  }
-  for (var i = 0; i < 60; i++) {
-    createFlower_1();
-  }
-  for (var i = 0; i < 60; i++) {
-    createFlower_2();
-  }
-  for (var i = 0; i < 20; i++) {
-    createMushroom();
-  }
+  //loadNPC();
+  // for (var i = 0; i < 20; i++) {
+  //   createTree();
+  // }
+  // for (var i = 0; i < 5; i++) {
+  //   createRock();
+  // }
+  // for (var i = 0; i < 30; i++) {
+  //   createGrass();
+  // }
+  // for (var i = 0; i < 60; i++) {
+  //   createFlower_1();
+  // }
+  // for (var i = 0; i < 60; i++) {
+  //   createFlower_2();
+  // }
+  // for (var i = 0; i < 20; i++) {
+  //   createMushroom();
+  // }
 
-  for (var i = 0; i < 50; i++) {
-    createTree_2();
-  }
-  for (var i = 0; i < 50; i++) {
-    createTree_3();
-  }
-  for (var i = 0; i < 8; i++) {
-    createBush();
-  }
+  // for (var i = 0; i < 50; i++) {
+  //   createTree_2();
+  // }
+  // for (var i = 0; i < 50; i++) {
+  //   createTree_3();
+  // }
+  // for (var i = 0; i < 8; i++) {
+  //   createBush();
+  // }
 
 
-  loadVolcano();
-  //createHead();
-  for (var i = 0; i < 50; i++) {
-    createTree();
-  }  
-  
+  // loadVolcano();
+  // //createHead();
+  // for (var i = 0; i < 50; i++) {
+  //   createTree();
+  // }  
 
   setupContactResultCallback();   
   setupContactPairResultCallback();
@@ -362,6 +361,70 @@ function handleKeyUp(event) {
       moveDirection.up = 0;
   }
 }
+// function loadNPC() {
+//   let pos = { x: 10, y: 0, z: -50 };
+//   let quat = { x: 0, y: 0, z: 0, w: 1 };
+//   let mass = 1;
+
+//   var loader = new THREE.GLTFLoader();
+//   loader.load(
+//     "./resources/models/Platformer Character.glb",
+//     function (gltf) {
+//       gltf.scene.scale.set(-5, 5, -5);
+//       gltf.scene.traverse(function (node) {
+//         if (node.isMesh) {
+//           node.castShadow = true;
+//         }
+//       });
+//       let yasuo = gltf.scene;
+//       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
+//       heroObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
+//       scene.add(yasuo);
+//       //Ammojs Section -> physics section
+//       let transform = new Ammo.btTransform();
+//       transform.setIdentity();
+//       transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+//       transform.setRotation(
+//         new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+//       );
+
+//       let motionState = new Ammo.btDefaultMotionState(transform);
+
+//       let localInertia = new Ammo.btVector3(0, 0, 0);
+
+//       const colShape = new Ammo.btBoxShape(
+//         new Ammo.btVector3(yasuo.scale.x , yasuo.scale.y - 1, yasuo.scale.z) //this is the size of the box around the model
+//       );
+//       colShape.getMargin(0.05);
+//       colShape.calculateLocalInertia(mass, localInertia);
+//       let rbInfo = new Ammo.btRigidBodyConstructionInfo(
+//         mass,
+//         motionState,
+//         colShape,
+//         localInertia
+//       );
+//       let body = new Ammo.btRigidBody(rbInfo);
+
+//       body.setFriction(4);
+
+//       body.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+//       physicsWorld.addRigidBody(
+//         body,
+//         colGroupChar,
+//         colGroupBall | colGroupBlock
+//       );
+
+//       yasuo.userData.physicsBody = body;
+//       rigidBodies.push(yasuo);
+//       heroObject = yasuo;
+//     },
+//     undefined,
+//     function (error) {
+//       console.error(error);
+//     }
+//   );
+// }
 
 function setupContactResultCallback(){//this is for collision detection
 
@@ -494,6 +557,25 @@ function setupContactPairResultCallback(){ //this is for the ball and the block
   }
 
 }
+function moveBall() {
+  //this goes in renderframe()
+  if(this.gamestate===GAMESTATE.PAUSED){
+    return;
+  }
+  let scalingFactor = 20;
+
+  let moveX = moveDirection.right - moveDirection.left;
+  let moveZ = moveDirection.back - moveDirection.forward;
+  let moveY = moveDirection.up - moveDirection.down * 2;
+
+  if (moveX == 0 && moveY == 0 && moveZ == 0) return;
+
+  let resultantImpulse = new Ammo.btVector3(moveX, moveY, moveZ);
+  resultantImpulse.op_mul(scalingFactor);
+
+  let physicsBody = rigidBodies[rigidBodies.length - 1].userData.physicsBody;
+  physicsBody.setLinearVelocity(resultantImpulse);
+}
 
 function updatePhysics(deltaTime) { // update physics world
   // Step world
@@ -503,8 +585,8 @@ function updatePhysics(deltaTime) { // update physics world
   }
   
   // Update rigid bodies
-  for (let i = 0; i < rigidBodies.length; i++) {
-    let objThree = rigidBodies[i];
+  // for (let i = 0; i < rigidBodies.length; i++) {
+    let objThree = rigidBodies[rigidBodies.length - 1]  ; 
     let objAmmo = objThree.userData.physicsBody;
     let ms = objAmmo.getMotionState();
     if (ms) {
@@ -512,7 +594,7 @@ function updatePhysics(deltaTime) { // update physics world
       let p = tmpTrans.getOrigin();
       let q = tmpTrans.getRotation();
       objThree.position.set(p.x(), p.y(), p.z());
-      objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+      // objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
 
       // First Person
       if(firstPerson == true){
@@ -540,10 +622,10 @@ function updatePhysics(deltaTime) { // update physics world
         else {
 
         // Perspective from behind object and slightly above
-        camera.position.set(p.x(),p.y() + 8,p.z() + 15);
+        camera.position.set(p.x(), p.y() + 18,p.z() + 60);
 
         // Look slightly above object
-        camera.lookAt(p.x(), p.y() + 5, p.z());
+        camera.lookAt(p.x(), p.y() + 18, p.z());
 
         // Temporarily change camera view (still in first person)
         if(lookLeft == true){
@@ -564,5 +646,5 @@ function updatePhysics(deltaTime) { // update physics world
       }
       
     }
-  }
+  // }
 }
