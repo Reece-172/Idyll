@@ -1,39 +1,120 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Idyll</title>
+        <title>Move JS 3D Physics</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
             body { margin: 0; }
-            button {
-                position: absolute;
-                display: block;
-                z-index: 99;
-                left: 0%;
-                top: 0%;
+            
+            ul{
+                position: relative;
+                transform: skewY(-15deg);
+               
             }
-           
+            ul li{
+                position: relative;
+                list-style: none;
+                width: 200px;
+                background:#3e3f46;
+                padding: 15px;
+                z-index: var(--i);
+                transition: 0.5s;
+            }
+            ul li:hover{
+                transform: translateX(-25px);
+            }
+            ul li::before{
+                content: '';
+                position: absolute;
+                width: 40px;
+                height: 100%;
+                top:0;
+                left:-40px;
+                background: #2e3133;
+                transform-origin: right;
+                transform: skewY(45deg);
+                transition: 0.5s;
+
+            }
+            ul li::after{
+                content: '';
+                position: absolute;
+                width: 100%;
+                height: 40px;
+                top:-40px;
+                left:0;
+                background: #2e3133;
+                transform-origin: bottom;
+                transform: skewX(45deg);
+                transition: 0.5s;
+            }
+
+            ul li button{
+                text-decoration: none;
+                color: #999;
+                display: block;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                transition: 0.5s;
+            }
+            ul li:hover button{
+                color: #fff;
+
+            }
+            ul li:last-child::after{
+                box-shadow: -120px 120px 20px rgba(0,0,0, 0.25);
+            }
+
+            @keyframes cloud {
+                from{
+                    transform: translateY(0px);
+                }
+                to{
+                    transform: translateY(50px);
+                }
+            }
             
         </style>
     </head>
     <body>
+        <div id='loadingScreen' class="loadingScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#77b3d4; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">
+            <img class="cloud" src="./resources/cloud v2.png" alt="cloud" style="height: 200px; position: absolute;">
+            <h3 style="position: absolute; top: 75%; transform: translateY(-75%); color: #fff; font-family: serif;">Loading...</h3>
+        </div> 
+
+      
         <script src="js/three.min.js"></script>
         <script src="js/ammo.js"></script>
         <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.118/examples/js/controls/OrbitControls.js"></script>
-        <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/jsm/loaders/FontLoader.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js"></script>
+        <script src="world.js"></script>
+        <script src="player.js"></script>
+        <script src ="collectibles.js"></script>
+        <script src="move.js"></script>
         <script src="main.js"></script>
-        
-            <div id="Points" class="fixed font-serif text-white  ml-2 mt-1 select-none"><span>Points: </span><span id="PointsEl">0</span></div>
+
+        <div id="Points" class="fixed absolute m-auto font-serif text-white  ml-2 mt-1 select-none"><span>Points: </span><span id="PointsEl">0</span></div>
             <!-- <button id="ref-button"
             onclick="alert('1. https://github.com/simondevyoutube/](https://github.com/simondevyoutube/)\n2. https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5](https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5)\n3. Volcano by Poly by Google [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/dwSigTeSMCo)\n4. Bonfire by Quaternius [[CC0]](https://creativecommons.org/publicdomain/zero/1.0/), via [Poly Pizza](https://poly.pizza/m/k1e0cOzi8A)\n5. Adventurer by madtrollstudio [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/w0OIUlEgcF)\n6.LowPolyMegapackfree by QuaterniusDev [[CC0]]https://creativecommons.org/publicdomain/zero/1.0/,via https://www.reddit.com/user/QuaterniusDev/');">References</button>  -->
-            <div class="fixed absolute bottom-0 right-0 h-16 w-16 text-white">
+            <div class="fixed absolute bottom-0 left-0 h-16 w-16 text-white">
                 
-                <button class="border px-4 py-2 rounded-lg text-sm font-serif hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]  inline block">
+                <button id="menu" onclick="Menu()" class="border px-4 py-2 rounded-lg text-sm font-serif hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]  inline block" >
                     Menu
                 </button>
             </div>
+        <div id="Game Paused"class=" text-align-center text-lg fixed font-serif text-white select-none" style="left:50%; top:50%; visibility: hidden;">
+            Game Paused 
+        </div>
+
+        <div id="Menu_Buttons"class=" flex text-align-center text-lg fixed absolute font-serif text-white select-none" style="left:45%; top:35%; visibility: hidden;">
+            <ul>
+                <li id="Resume_Button" onclick="Resume()" style="--i:4;"><button> Resume  </button></li>
+                <li id="Controls_Button" style="--i:3;"><button > Controls  </button></li>
+                <li id="Quit_Button" onclick="Quit()" style="--i:2;"><button> Quit </button></li>
+                <li id="Credits_Button" style="--i:1;"><button> Credits  </button></li>
+            </ul> 
+        </div>
         
     </body>
 </html>
