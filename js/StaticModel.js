@@ -3,9 +3,9 @@ class StaticModel{
         this.path = path;
     }
 
-    createModel({posX =  Math.ceil(Math.random()*500) * (Math.round(Math.random()) ? 1: -1),
+    createModel({posX =  Math.ceil(Math.random()*350) * (Math.round(Math.random()) ? 1: -1),
          posY = Math.random() * (2 + 1), 
-         posZ =  Math.ceil(Math.random()*500) * (Math.round(Math.random()) ? 1: -1), 
+         posZ =  Math.ceil(Math.random()*350) * (Math.round(Math.random()) ? 1: -1), 
          scaleX = 4, scaleY = 4, scaleZ = 4, 
          colShapeScaleX = 0.5, colShapeScaleY = 0.5, colShapeScaleZ = 0.5} = {}){ 
         //parameters of this function are in curly brackets to allow for selective parameters to be modified when calling. 
