@@ -36,6 +36,7 @@ let platforms = [];
 let levels_completed = { one: false, two: false, three: false };
 let mission_active = 0;
 
+
 // Array of NPC's where the level is equivalent to NPC index + 1
 let NPCs = [];
 
@@ -462,6 +463,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
         // Update Level Completion Array
         levels_completed.one = true;
+        mission_active = 0;
 
         isTimeOut = true;
         console.log("you have won");
@@ -529,7 +531,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         btnOk.innerHTML = "retry";
         btnOk.onclick = function () { 
           console.log("retry mission");
-          startMission();
+          startMission(mission_active);
         
           document.body.removeChild(task); 
 
@@ -1156,7 +1158,8 @@ function isContactNPC() {
     npcContact = true;
 
     if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      startMission((i+1));
+      mission_active = i+1;
+      startMission(mission_active);
     }
     else {
       console.log("you have not completed the mission yet"); //make this display on screen
@@ -1250,7 +1253,28 @@ function startMission(mission_level) {
 function Mission() {
 
   this.missionstate = MISSIONSTATE.MISSION;
-  startTimer(10);
+
+  let mission_timer = 10;
+
+  switch(mission_active){
+
+    case 1:
+    mission_timer = 60;
+      break;
+
+    case 2:
+    mission_timer = 90;
+      break;
+
+    case 3:
+    mission_timer = 120;
+      break;
+
+  }
+
+
+
+  startTimer(mission_timer);
   console.log("currently in a mission");
 
   //window.onload = function () { //this is how you set the timer
