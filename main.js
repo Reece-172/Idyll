@@ -95,7 +95,7 @@ function start() {
   setupGraphics();
 
   // Load level (Create Platforms and Collectibles)
-  loadLevel_3_Objective();
+  // loadLevel_3_Objective();
 
 
   createBlock();
@@ -423,6 +423,8 @@ function handleKeyUp(event) {
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
 
+  let gameWon = false;
+  let gameLost = false;
   
   display = document.querySelector('#time');
   function timer() {
@@ -465,6 +467,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         btnOk.onclick = function () { 
           freeroam();
           document.body.removeChild(task); 
+        
           
 
         }
@@ -535,8 +538,6 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
   
 }
-
-
 
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
@@ -1151,22 +1152,23 @@ function startMission(){
    
     collectCounter = 0; //reset counter 
 
-    let numCollectibles = 1;
+    // let numCollectibles = 1;
 
-    for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
-      collectible1 = new Collectible();
-      collectible1.createCollectible();
-      collectibles.push(collectible1);
-    }
+    // for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
+    //   collectible1 = new Collectible();
+    //   collectible1.createCollectible();
+    //   collectibles.push(collectible1);
+    // }
+    loadLevel_1_Objective();
 
     var totalTime = 20; //in seconds
     startTimer(totalTime);
 
     //display points counter
-
+    document.body.removeChild(task); 
     Mission();
 
-    document.body.removeChild(task); 
+    
     //start timer now 
   }
 
@@ -1358,6 +1360,20 @@ function freeroam(){
     }
 
   }
+
+  if (platforms.length > 0){
+    let i = 0; //don't have to keep increasing i because the 0th element will keep on being removed until array size is 0
+    while(platforms.length > 0){
+      physicsWorld.removeRigidBody(platforms[i].getPlatformObject().userData.physicsBody); //remove this rigid body from the physics world
+      scene.remove(platforms[i].getPlatformObject()); //remove from scene
+      rigidBodies = arrayRemove(rigidBodies, platforms[i].getPlatformObject()); //remove from rigidbodies array
+      platforms.splice(i, 1); //delete element from collectibles array
+    }
+
+  }
+
+
+  //delete platforms
 
   collectCounter = 0;
 
