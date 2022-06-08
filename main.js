@@ -926,6 +926,7 @@ function moveBall() {
   let moveZ = moveDirection.back - moveDirection.forward;
   let moveY = moveDirection.up;
 
+
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
   // ----- Check Contact before doing any move calculation (start) -----
@@ -1095,14 +1096,6 @@ function TogglePause() {
 }
 
 function Menu() {
-  //window.location.href = "menu.html";
-  // var menu_div=document.createElement('div');
-  // menu_div.className='flex text-align-center text-lg fixed absolute font-serif text-white select-none';
-  // var menu_ul=document.createElement('ul');
-  // var menu_li=document.createElement('li');
-  // menu_div.style.left='45%';
-  // menu_div.style.top='35%';
-
 
   document.getElementById("Menu_Buttons").style.display = 'flex';
 }
@@ -1127,13 +1120,13 @@ function Quit() {
   location.reload();
 
 }
-function Begin() {
-  const landing_page = document.getElementById('landingScreen');
-  landing_page.style.display = 'none';
-  const menu_button = document.getElementById('menu');
-  menu_button.style.display = 'flex';
-  const points = document.getElementById('Points');
-  points.style.display = 'flex';
+
+function Begin(){
+  const landing_page= document.getElementById('landingScreen');
+  landing_page.style.display='none';
+  const menu_button=document.getElementById('menu');
+  menu_button.style.display='flex';
+
 }
 
 function setupContactPairResultCallback() {
@@ -1189,30 +1182,32 @@ function isContactNPC() {
 
 }
 
-function startMission(mission_level) {
-
-
-
+function startMission(mission_level){
+  const quit_Button=document.getElementById('Quit_Mission_Button');
+  
+  
   //create a pop up to give player some story
-  var task = document.createElement('div');
-  task.style.position = 'absolute';
-  task.style.zIndex = 1;
-  task.style.width = 600;
-  task.style.height = 200;
-  task.style.backgroundColor = "#242424";
-  task.style.opacity = "0.9";
-  task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
-  task.style.color = "white";
-  task.style.top = 200 + 'px';
-  task.style.left = 200 + 'px';
+  const task = document.getElementById('task');
+  task.style.display='flex';
+  // task.style.position = 'absolute';
+  // task.style.zIndex = 1;  
+  // task.style.width = 600;
+  // task.style.height = 200;
+  // task.style.backgroundColor = "#242424";
+  // task.style.opacity = "0.9";
+  // task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
+  // task.style.color = "white";
+  // task.style.top = 200 + 'px';
+  // task.style.left = 200 + 'px';
 
   //button to confirm
-  var btnOk = document.createElement('button');
-  btnOk.style.backgroundColor = "red";
-  btnOk.innerHTML = "ok";
-  btnOk.onclick = function () {
+  var btnOk = document.getElementById('Accept');
+  btnOk.onclick = function () { 
     console.log("mission started");
+    quit_Button.style.display='flex';
+    document.getElementById('Points').style.display='flex';
 
+   
     collectCounter = 0; //reset counter 
 
     // let numCollectibles = 1;
@@ -1242,25 +1237,18 @@ function startMission(mission_level) {
     }
 
     //display points counter
-    document.body.removeChild(task);
     Mission();
 
-
+    task.style.display='none';
     //start timer now 
   }
 
   //button to not accept mission and go back to normal
-  var btnCancel = document.createElement('button');
-  btnCancel.style.backgroundColor = "yellow";
-  btnCancel.innerHTML = "no.";
-  btnCancel.onclick = function () {
-    document.body.removeChild(task);
+  var btnCancel = document.getElementById('Reject');
+  btnCancel.onclick = function () { 
+    task.style.display='none'; 
   }
 
-
-  task.appendChild(btnCancel)
-  task.appendChild(btnOk)
-  document.body.appendChild(task)
 
 
 
@@ -1334,45 +1322,32 @@ function quitMission() {
   this.gamestate = GAMESTATE.PAUSED; //pause game when dealing with popup
 
   //create a pop up to ask if user wants to quit mission
-  var text2 = document.createElement('div');
-  text2.style.position = 'absolute';
-  text2.style.zIndex = 1;
-  text2.style.width = 600;
-  text2.style.height = 200;
-  text2.style.backgroundColor = "#242424";
-  text2.style.opacity = "0.9";
-  text2.innerHTML = "Are you sure you want to abandon the mission?";
-  text2.style.color = "white";
-  text2.style.top = 200 + 'px';
-  text2.style.left = 200 + 'px';
+  var quitMission = document.getElementById('quitMission');
+  quitMission.style.display='flex';
+
 
   //button to confirm quit
-  var btnQuit = document.createElement('button');
-  btnQuit.style.backgroundColor = "red";
-  btnQuit.innerHTML = "yes";
+  var btnQuit = document.getElementById('Yes');
   btnQuit.onclick = function () { //if user wants to quit
     this.gamestate = GAMESTATE.RUNNING;
+    document.getElementById('Points').style.display='none';
     console.log("mission quit");
     freeroam(); //return to freeroam gameplay
-    document.body.removeChild(text2); //remove this popup
+    quitMission.style.display='none';
+    
   }
 
 
   //button to continue mission and ignore popup
-  var btnNoQuit = document.createElement('button');
-  btnNoQuit.style.backgroundColor = "blue";
-  btnNoQuit.innerHTML = "no";
+  var btnNoQuit = document.getElementById('No');
   btnNoQuit.onclick = function () { //if user doesn't want to quit, carry on with mission
     this.gamestate = GAMESTATE.RUNNING;
-
-    document.body.removeChild(text2);
+    
+    quitMission.style.display='none';
+    document.getElementById('Menu_Buttons').style.display='none';
     //continue timer
   }
 
-  text2.appendChild(btnQuit);
-  text2.appendChild(btnNoQuit);
-
-  document.body.appendChild(text2);
 
 
 
