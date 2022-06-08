@@ -112,7 +112,12 @@ function start() {
 
   createBlock();
   createBall();
-  loadNPC();
+  //loadNPC();
+
+  let NPC1 = new NPC("./resources/models/Yasuo.glb");
+  NPC1.createNPC();
+  NPCs.push(NPC1);
+
   createWorld();
 
 
@@ -1140,7 +1145,7 @@ function isContactNPC() {
 
     physicsWorld.contactPairTest(
       ball.userData.physicsBody,
-      NPCs[i].userData.physicsBody,
+      NPCs[i].getNPCObject.userData.physicsBody,
       cbContactPairResult
     );
 
