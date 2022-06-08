@@ -253,6 +253,12 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  window.addEventListener('resize',function(){
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+
   // Controls -> mouse movement
   orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
   orbitControls.enablePan = false;
@@ -470,30 +476,18 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         totalTime = 0;
         //clearInterval(myTimer);
         //create a pop up to give player some story
-        var task = document.createElement('div');
-        task.style.position = 'absolute';
-        task.style.zIndex = 1;
-        task.style.width = 600;
-        task.style.height = 200;
-        task.style.backgroundColor = "#242424";
-        task.style.opacity = "0.9";
-        task.innerHTML = "You have won<br><br>";
-        task.style.color = "white";
-        task.style.top = 200 + 'px';
-        task.style.left = 200 + 'px';
+        var task = document.getElementById('completedMission');
+        task.style.display='flex';
 
         //button to confirm
-        var btnOk = document.createElement('button');
-        btnOk.style.backgroundColor = "red";
-        btnOk.innerHTML = "yay";
+        var btnOk = document.getElementById('Okay');
+
         btnOk.onclick = function () {
           freeroam();
-          document.body.removeChild(task); 
+          task.style.display='none'; 
   
         }
 
-        task.appendChild(btnOk)
-        document.body.appendChild(task)
           
         return;
 
@@ -513,43 +507,29 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         freeroam();
 
         //create a pop up to give player some story
-        var task = document.createElement('div');
-        task.style.position = 'absolute';
-        task.style.zIndex = 1;
-        task.style.width = 600;
-        task.style.height = 200;
-        task.style.backgroundColor = "#242424";
-        task.style.opacity = "0.9";
-        task.innerHTML = "You have failed. Would you like to retry or quit mission?<br><br>";
-        task.style.color = "white";
-        task.style.top = 200 + 'px';
-        task.style.left = 200 + 'px';
+        var task = document.getElementById('failedMission');
+        task.style.display='flex';
+
 
         //button to retry
-        var btnOk = document.createElement('button');
-        btnOk.style.backgroundColor = "red";
-        btnOk.innerHTML = "retry";
+        var btnOk = document.getElementById('Retry');
         btnOk.onclick = function () { 
           console.log("retry mission");
           startMission(mission_active);
         
-          document.body.removeChild(task); 
+          task.style.display='none';
 
         }
 
         //button to quit mission and go back to normal
-        var btnCancel = document.createElement('button');
-        btnCancel.style.backgroundColor = "blue";
-        btnCancel.innerHTML = "quit mission";
+        var btnCancel = document.getElementById('Quit_Mission');
+
         btnCancel.onclick = function () {
           //freeroam(); 
-          document.body.removeChild(task);  
+          task.style.display='none' ;
         } 
 
 
-        task.appendChild(btnCancel)
-        task.appendChild(btnOk)
-        document.body.appendChild(task)
         
         return;
       }
@@ -1155,7 +1135,12 @@ function isContactNPC() {
       startMission(mission_active);
     }
     else {
-      console.log("you have not completed the mission yet"); //make this display on screen
+      const duringMission=document.getElementById('duringMission'); //make this display on screen
+      duringMission.style.display='flex'
+      var Okaybtn=document.getElementById('Ok');
+      Okaybtn.onclick = function () { 
+        duringMission.style.display='none'; 
+      }
     }
 
   }
