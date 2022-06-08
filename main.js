@@ -30,26 +30,36 @@ walkDirection = new THREE.Vector3();
 rotateAngle = new THREE.Vector3(0, 1, 0);
 
 
-let heroObject = null,
-  HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
+let NPCObject = null
+  //HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
 //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
 // let collectible1Object = null, //put here if want to make the object global
 //   collectible2Object = null;
 
-let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6; //collision purposes
+let colGroupBall = 2, colGroupNPC = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6; //collision purposes
 
 let collectCounter;
 
-let cbContactPairResult, blockPlane, ball, collectible1;
+let cbContactPairResult, blockPlane, ball, collectible1, yasuo;
 let cbContactResult;
 const GAMESTATE={
   PAUSED:0,
   RUNNING:1,
   MENU:2,
-  GAMEOVER:3
+  GAMEOVER:3,
 };//for loading screen
+
+
+const MISSIONSTATE = { //didn't put mission state under GAMESTATE because we need the game to be in state RUNNING to be in a mission
+  FREEROAM:0,
+  MISSION:1
+}
+
+let points; //object that displays the points 
+
+
 window.addEventListener('load',function(){
   var loadingScreen=document.getElementById('loadingScreen');
   document.body.removeChild(loadingScreen);
@@ -57,7 +67,6 @@ window.addEventListener('load',function(){
 //for fps display
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
-let isCollection1Present, isCollection2Present;
 let collectibles = [];
 
 let npcContact = false; //boolean to check if player made contact with NPC
@@ -73,49 +82,23 @@ function start() {
   collectCounter = 0;
   this.gamestate=GAMESTATE.RUNNING;
 
+  freeroam();
+
  
   
   setupPhysicsWorld();
   setupGraphics();
 
-  for (var i = 0; i < 70; i++) { //add high and low collectibles so user has to jump
-    collectible1 = new Collectible();
-    collectible1.createCollectible();
-    collectibles.push(collectible1);
-  }
+  
 
 
   createBlock();
   createBall();
-  loadCharacter();
+  loadNPC();
   createWorld();
 
-  // for (var i = 0; i < 30; i++) {
-  //   createGrass();
-  // }
-  // for (var i = 0; i < 60; i++) {
-  //   createFlower_1();
-  // }
-  // for (var i = 0; i < 60; i++) {
-  //   createFlower_2();
-  // }
-  // for (var i = 0; i < 20; i++) {
-  //   createMushroom();
-  // }
 
-  // for (var i = 0; i < 50; i++) {
-  // createTree_2();
-  // }
-  // for (var i = 0; i < 50; i++) {
-  //   createTree_3();
-  // }
-
-
-  loadVolcano();
-  //createHead();
-  // for (var i = 0; i < 50; i++) {
-  //   createTree();
-  // }  
+  loadVolcano(); 
 
   setupContactResultCallback();
   setupContactPairResultCallback();
@@ -258,9 +241,8 @@ function renderFrame() {
   let deltaTime = clock.getDelta();
   //createFont();
   
-    moveBall();
+  moveBall();
   
-  //moveHero();
 
   if (firstPerson == true) {
     camera.lookAt(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
@@ -268,6 +250,8 @@ function renderFrame() {
     camera.lookAt(ballObject.position);
   }
   updatePhysics(deltaTime);
+
+  //pause
   if(this.gamestate===GAMESTATE.PAUSED){
     document.getElementById("Game Paused").style.visibility="visible";
   }
@@ -277,12 +261,22 @@ function renderFrame() {
 
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
 
-  //handles collectibles
-  if (collectibles.length !== 0) {
+  //count collectibles
+  if (this.missionstate === MISSIONSTATE.MISSION){ //count and check collisions with collectibles only if the player is doing mission
+
+    //handles collectibles
+    if (collectibles.length !== 0) {
     isCollect();
+    }
+
+    points = document.getElementById('PointsEl'); 
+    points.innerHTML = collectCounter; //updates points on screen
   }
-  const points = document.getElementById('PointsEl'); 
-  points.innerHTML = collectCounter; //updates points on screen
+  
+  // if (this.missionstate === MISSIONSTATE.FREEROAM){
+  //   isContactNPC;
+  
+  // }
 
   renderer.render(scene, camera);
 
@@ -317,22 +311,22 @@ function handleKeyDown(event) {
   switch (keyCode) {
     case 87: //W: FORWARD
       moveDirection.forward = 1;
-      HeroMoveDirection.forward = 1;
+      //HeroMoveDirection.forward = 1;
       break;
 
     case 83: //S: BACK
       moveDirection.back = 1;
-      HeroMoveDirection.forward = 1;
+      //HeroMoveDirection.forward = 1;
       break;
 
     case 65: //A: LEFT
       moveDirection.left = 1;
-      HeroMoveDirection.forward = 1;
+      //HeroMoveDirection.forward = 1;
       break;
 
     case 68: //D: RIGHT
       moveDirection.right = 1;
-      HeroMoveDirection.forward = 1;
+      //HeroMoveDirection.forward = 1;
       break;
 
     case 70: //F: Toggle First Person
@@ -364,13 +358,27 @@ function handleKeyDown(event) {
       break;
 
     case 77: //m
-      checkContact(); //shows what the ball collides with
+      //checkContact(); //shows what the ball collides with
+      console.log(this.missionstate);
       break;
 
-    case 80:
+    case 80: //p
       TogglePause(); 
-    // case 67: //c
-    //   isCollect();
+      break;
+
+    case 66: //b
+      isContactNPC(); //checks contact with NPC
+      break;
+
+    case 75: //k. TEMPORARY. USED TO TEST QUITTING MISSION
+      
+      if (this.missionstate === MISSIONSTATE.MISSION){ //only if player is currently in a mission, then they can quit a mission
+        quitMission();
+      }
+
+      break;
+      
+    
   }
 }
 
@@ -380,22 +388,22 @@ function handleKeyUp(event) {
   switch (keyCode) {
     case 87: //FORWARD
       moveDirection.forward = 0;
-      HeroMoveDirection.forward = 0;
+      //HeroMoveDirection.forward = 0;
       break;
 
     case 83: //BACK
       moveDirection.back = 0;
-      HeroMoveDirection.forward = 0;
+      //HeroMoveDirection.forward = 0;
       break;
 
     case 65: //LEFT
       moveDirection.left = 0;
-      HeroMoveDirection.forward = 0;
+      //HeroMoveDirection.forward = 0;
       break;
 
     case 68: //RIGHT
       moveDirection.right = 0;
-      HeroMoveDirection.forward = 0;
+      //HeroMoveDirection.forward = 0;
       break;
 
     case 70: // (First Person Button, "F", Pressed --> Change Camera)
@@ -416,8 +424,6 @@ function handleKeyUp(event) {
       moveDirection.up = 0;
   }
 }
-
-
 
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
@@ -471,7 +477,7 @@ function createBlock() {
   physicsWorld.addRigidBody(
     body,
     colGroupBlock,
-    colGroupBall | colGroupChar | colGroupCollectible
+    colGroupBall | colGroupNPC | colGroupCollectible
   );
 
   body.threeObject = blockPlane;
@@ -526,16 +532,14 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock | colGroupTree | colGroupModel);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupNPC | colGroupBlock | colGroupTree | colGroupModel);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
   body.threeObject = ball;
 }
 
-
-
-function loadCharacter() {
+function loadNPC() {
   let pos = { x: 10, y: 1, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
@@ -550,17 +554,19 @@ function loadCharacter() {
           node.castShadow = true;
         }
       });
-      const yasuo = gltf.scene;
+      yasuo = gltf.scene;
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      heroObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
+      //NPCObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
+
       scene.add(yasuo);
+      yasuo.userData.tag = "NPCYasuo";
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
       transform.setIdentity();
       transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
+      // transform.setRotation(
+      //   new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+      // );
 
       let motionState = new Ammo.btDefaultMotionState(transform);
 
@@ -585,12 +591,13 @@ function loadCharacter() {
 
       physicsWorld.addRigidBody(
         body,
-        colGroupChar,
+        colGroupNPC,
         colGroupBall | colGroupBlock
       );
 
       yasuo.userData.physicsBody = body;
       rigidBodies.push(yasuo);
+      body.threeObject = yasuo; //using this to show the collisions with the ball (using in setupContactResultCallback)
     },
     undefined,
     function (error) {
@@ -752,11 +759,11 @@ function moveBall() {
     tempDirection = walkDirection.applyAxisAngle(rotateAngle, dirOffset);
     tempDirection.normalize();
     walkDirection.applyAxisAngle(tempDirection, jumpOffset);
-    console.log("{1} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+    //console.log("{1} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
 
   } else {
     walkDirection.applyAxisAngle(rotateAngle, dirOffset);
-    console.log("{2} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+    //console.log("{2} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
   }
 
   let resultantImpulse = new Ammo.btVector3(walkDirection.x, walkDirection.y, walkDirection.z);
@@ -765,7 +772,6 @@ function moveBall() {
   let physicsBody = ballObject.userData.physicsBody;
   physicsBody.setLinearVelocity(resultantImpulse);
 }
-
 
 function setupContactResultCallback() {
   cbContactResult = new Ammo.ConcreteContactResultCallback();
@@ -855,8 +861,6 @@ function jump() {
   physicsBody.setLinearVelocity(jumpImpulse);
 }
 
-  
-
 function isCollect() { //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
 
   let i = 0;
@@ -890,6 +894,7 @@ function TogglePause(){
   }
   else{
     this.gamestate=GAMESTATE.PAUSED;
+    //pause timer
 
 
   }
@@ -913,17 +918,19 @@ function Resume(){
   document.getElementById("Menu_Buttons").style.visibility="hidden";
 
 }
+
 function Controls(){
   document.getElementById("Menu_Buttons").style.visibility="hidden";
   //set controls div to visible
 
 }
+
 function Quit(){
  location.reload();
 
 }
 
-function setupContactPairResultCallback(){ //this is for the ball and the block
+function setupContactPairResultCallback(){ 
 
   cbContactPairResult = new Ammo.ConcreteContactResultCallback();
 
@@ -940,12 +947,13 @@ function setupContactPairResultCallback(){ //this is for the ball and the block
       this.hasContact = true;
   };
 }
+
 function isContactNPC() {
   cbContactPairResult.hasContact = false;
 
   physicsWorld.contactPairTest(
     ball.userData.physicsBody,
-    blockPlane.userData.physicsBody, //change this line
+    yasuo.userData.physicsBody,
     cbContactPairResult
   );
 
@@ -954,11 +962,139 @@ function isContactNPC() {
   if (!cbContactPairResult.hasContact) return;
 
   //what to do if there is contact:
-    //press button
+    //show prompt to press button
     npcContact = true;
+    //this.missionstate = MISSIONSTATE.MISSION;  
+    if (this.missionstate !== MISSIONSTATE.MISSION){ //if we are not in a mission, then start a mission
+      startMission();
+    }
+    else{
+      console.log("you have not completed the mission yet"); //make this display on screen
+    }
 
-      this.hasContact = true;
 
+}
+
+function startMission(){
+
+  
+
+  //create a pop up to give player some story
+  var task = document.createElement('div');
+  task.style.position = 'absolute';
+  task.style.zIndex = 1;  
+  task.style.width = 600;
+  task.style.height = 200;
+  task.style.backgroundColor = "#242424";
+  task.style.opacity = "0.9";
+  task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
+  task.style.color = "white";
+  task.style.top = 200 + 'px';
+  task.style.left = 200 + 'px';
+
+  //button to confirm
+  var btnOk = document.createElement('button');
+
+  
+  btnOk.style.backgroundColor = "red";
+  btnOk.innerHTML = "ok";
+  btnOk.onclick = function () { 
+    console.log("mission started");
+    Mission();
+
+    collectCounter = 0; //reset counter 
+
+    let numCollectibles = 30;
+
+    for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
+      collectible1 = new Collectible();
+      collectible1.createCollectible();
+      collectibles.push(collectible1);
+    }
+    document.body.removeChild(task); 
+    //start timer now 
+  }
+
+  //button to not accept mission and go back to normal
+  var btnCancel = document.createElement('button');
+  btnCancel.style.backgroundColor = "yellow";
+  btnCancel.innerHTML = "no.";
+  btnCancel.onclick = function () { 
+    document.body.removeChild(task);  
+  }
+
+
+  task.appendChild(btnCancel)
+  task.appendChild(btnOk)
+  document.body.appendChild(task)
+
+
+
+
+}
+
+function Mission(){
+  this.missionstate = MISSIONSTATE.MISSION;
+  console.log("currently in a mission");
+
+  
+}
+
+function quitMission(){
+
+
+  //console.log("you have quit the mission")
+
+  //pause timer
+
+  this.gamestate = GAMESTATE.PAUSED; //pause game when dealing with popup
+
+  //create a pop up to ask if user wants to quit mission
+  var text2 = document.createElement('div');
+  text2.style.position = 'absolute';
+  text2.style.zIndex = 1;  
+  text2.style.width = 600;
+  text2.style.height = 200;
+  text2.style.backgroundColor = "#242424";
+  text2.style.opacity = "0.9";
+  text2.innerHTML = "Are you sure you want to abandon the mission?";
+  text2.style.color = "white";
+  text2.style.top = 200 + 'px';
+  text2.style.left = 200 + 'px';
+
+  //button to confirm quit
+  var btnQuit = document.createElement('button');
+  btnQuit.style.backgroundColor = "red";
+  btnQuit.innerHTML = "yes";
+  btnQuit.onclick = function () { //if user wants to quit
+    this.gamestate = GAMESTATE.RUNNING;
+    console.log("mission quit");
+    freeroam(); //return to freeroam gameplay
+    document.body.removeChild(text2); //remove this popup
+  }
+
+
+  //button to continue mission and ignore popup
+  var btnNoQuit = document.createElement('button');
+  btnNoQuit.style.backgroundColor = "blue";
+  btnNoQuit.innerHTML = "no";
+  btnNoQuit.onclick = function () { //if user doesn't want to quit, carry on with mission
+    this.gamestate = GAMESTATE.RUNNING;
+    
+    document.body.removeChild(text2);
+    //continue timer
+  }
+
+  text2.appendChild(btnQuit);
+  text2.appendChild(btnNoQuit);
+
+  document.body.appendChild(text2);
+
+  
+
+
+
+  //this.missionstate = MISSIONSTATE.FREEROAM;
 }
 
 function updatePhysics(deltaTime) { // update physics world
@@ -1019,4 +1155,29 @@ function arrayRemove(arr, value) {
   return arr.filter(function (element) {
     return element != value; //creates a new array, without the specific element
   });
+}
+
+function freeroam(){
+
+  this.missionstate = MISSIONSTATE.FREEROAM;
+
+  //remove timer
+  //remove points counter
+
+  //remove all collectibles
+  if (collectibles.length > 0){
+    let i = 0; //don't have to keep increasing i because the 0th element will keep on being removed until array size is 0
+    while(collectibles.length > 0){
+      physicsWorld.removeRigidBody(collectibles[i].getCollectibleObject().userData.physicsBody); //remove this rigid body from the physics world
+      scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
+      rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
+      collectibles.splice(i, 1); //delete element from collectibles array
+    }
+
+  }
+
+  collectCounter = 0;
+
+  
+
 }
