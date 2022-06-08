@@ -112,7 +112,12 @@ function start() {
 
   createBlock();
   createBall();
-  loadNPC();
+  //loadNPC();
+
+  let NPC1 = new NPC("./resources/models/Yasuo.glb");
+  NPC1.createNPC();
+  NPCs.push(NPC1);
+
   createWorld();
 
 
@@ -1031,6 +1036,23 @@ function isCollect() { //checking the collectibles array if any of the collectib
     if (cbContactPairResult.hasContact) { //if there is contact between the ball and collectible object
 
       collectCounter++;
+      const listener = new THREE.AudioListener();
+      camera.add(listener);
+
+
+      const loadAudio = new THREE.AudioLoader();
+
+      const audio = new THREE.Audio(listener);
+
+      //background music plays when the game is running
+      loadAudio.load("./resources/collectible.wav", function (buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(false);
+        audio.setVolume(0.8);
+        audio.play();
+      });
+      scene.add(audio);
+
       physicsWorld.removeRigidBody(collectibles[i].getCollectibleObject().userData.physicsBody); //remove this rigid body from the physics world
       scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
       rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
@@ -1120,7 +1142,7 @@ function isContactNPC() {
 
     physicsWorld.contactPairTest(
       ball.userData.physicsBody,
-      NPCs[i].userData.physicsBody,
+      NPCs[i].getNPCObject.userData.physicsBody,
       cbContactPairResult
     );
 
