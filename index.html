@@ -7,52 +7,60 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&family=Major+Mono+Display&display=swap" rel="stylesheet">
         <style>
+            @import url("http://fonts.cdnfonts.com/css/games");
             body { margin: 0; }
             
-            ul{
+            
+            ul {
                 position: relative;
                 transform: skewY(-15deg);
-               
             }
-            ul li{
+            #Time {
+                position: absolute;
+                left: 50%;
+                top: 2%;
+                font-family: "Games", sans-serif;
+                font-size: 30px;
+                color: rgb(255, 208, 0);
+            }
+            ul li {
                 position: relative;
                 list-style: none;
                 width: 200px;
-                background:#3e3f46;
+                background: #3e3f46;
                 padding: 15px;
                 z-index: var(--i);
                 transition: 0.5s;
             }
-            ul li:hover{
+            ul li:hover {
                 transform: translateX(-25px);
             }
-            ul li::before{
-                content: '';
+            ul li::before {
+                content: "";
                 position: absolute;
                 width: 40px;
                 height: 100%;
-                top:0;
-                left:-40px;
+                top: 0;
+                left: -40px;
                 background: #2e3133;
                 transform-origin: right;
                 transform: skewY(45deg);
                 transition: 0.5s;
-
             }
-            ul li::after{
-                content: '';
+            ul li::after {
+                content: "";
                 position: absolute;
                 width: 100%;
                 height: 40px;
-                top:-40px;
-                left:0;
+                top: -40px;
+                left: 0;
                 background: #2e3133;
                 transform-origin: bottom;
                 transform: skewX(45deg);
                 transition: 0.5s;
             }
 
-            ul li button{
+            ul li button {
                 text-decoration: none;
                 color: #999;
                 display: block;
@@ -60,12 +68,11 @@
                 letter-spacing: 0.05em;
                 transition: 0.5s;
             }
-            ul li:hover button{
+            ul li:hover button {
                 color: #fff;
-
             }
-            ul li:last-child::after{
-                box-shadow: -120px 120px 20px rgba(0,0,0, 0.25);
+            ul li:last-child::after {
+                box-shadow: -120px 120px 20px rgba(0, 0, 0, 0.25);
             }
 
             .glow {
@@ -84,146 +91,99 @@
                             0 0 130px #fff, 0 0 130px #fff;
             }
             }
-            
-        </style>
-    </head>
-    <body>
-        <div id='loadingScreen' class="loadingScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#77b3d4; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">
-            <img class="cloud" src="./resources/cloud v2.png" alt="cloud" style="height: 200px; position: absolute;">
-            <h3 style="position: absolute; top: 75%; transform: translateY(-75%); color: #fff; font-family:'Comfortaa',cursive;">Loading...</h3>
-        </div> 
-        <div id='landingScreen' class="landingScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:1 ;">
-            <h3 class="glow" style="position: absolute; top: 15%; left:10%; color: #fff;font-family: 'Comfortaa', cursive; font-size: xxx-large;">idyll</h3>
-            <h3 style="position: absolute; top: 35%; left:10%; color: #fff; font-family: 'Major Mono Display', monospace;font-size: x-large;">Welcome</h3>
-            <h3 style="position: absolute; top: 45%; left:10%; color: #fff; font-family: 'Comfortaa',cursive">Everything is fine.</h3>
-            <p style="color: #fff; font-size:small;font-family: 'Major Mono Display',monospace; top: 55%; left:31%; transform: translate(-31%, -55%); position: fixed;">You are dead. Your life on Earth has ended. The next phase of the human existence occurs either in The Good Place or The Bad Place. This depends on how many points you acquired on Earth.</p>
-            <p style="color: #fff;font-size: small; font-family: 'Major Mono Display',monospace; top: 65%; left:31%; transform: translate(-31%, -65%); position: fixed;">Unfortunately, you have not accumulated a sufficient amount of points to enjoy eternal life in The Good Place. We have, however, decided to give you one last chance to get enough points.</p>
-            <p style="color: #fff;font-size: small; font-family: 'Major Mono Display',monospace; top: 75%; left:19%; transform: translate(-19%, -75%); position: fixed;">Complete the tasks by talking to afterlife guides to gain more points.</p>
+
+    </style>
+  </head>
+  <body>
+
+    <div id='loadingScreen' class="loadingScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#77b3d4; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">
+        <img class="cloud" src="./resources/cloud v2.png" alt="cloud" style="height: 200px; position: absolute;">
+        <h3 style="position: absolute; top: 75%; transform: translateY(-75%); color: #fff; font-family:'Comfortaa',cursive;">Loading...</h3>
+    </div> 
+    <div id='landingScreen' class="landingScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:1 ;">
+        <h3 class="glow" style="position: absolute; top: 15%; left:10%; color: #fff;font-family: 'Comfortaa', cursive; font-size: xxx-large;">idyll</h3>
+        <h3 style="position: absolute; top: 35%; left:10%; color: #fff; font-family: 'Major Mono Display', monospace;font-size: x-large;">Welcome</h3>
+        <h3 style="position: absolute; top: 45%; left:10%; color: #fff; font-family: 'Comfortaa',cursive">Everything is fine.</h3>
+        <p style="color: #fff; font-size:small;font-family: 'Major Mono Display',monospace; top: 55%; left:31%; transform: translate(-31%, -55%); position: fixed;">You are dead. Your life on Earth has ended. The next phase of the human existence occurs either in The Good Place or The Bad Place. This depends on how many points you acquired on Earth.</p>
+        <p style="color: #fff;font-size: small; font-family: 'Major Mono Display',monospace; top: 65%; left:31%; transform: translate(-31%, -65%); position: fixed;">Unfortunately, you have not accumulated a sufficient amount of points to enjoy eternal life in The Good Place. We have, however, decided to give you one last chance to get enough points.</p>
+        <p style="color: #fff;font-size: small; font-family: 'Major Mono Display',monospace; top: 75%; left:19%; transform: translate(-19%, -75%); position: fixed;">Complete the tasks by talking to afterlife guides to gain more points.</p>
 
 
-            <button id="Start" onclick=Begin() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Begin The Journey</button>
-        </div>
+        <button id="Start" onclick=Begin() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Begin The Journey</button>
+    </div>
 
       
-        <script src="js/three.min.js"></script>
-        <script src="js/ammo.js"></script>
-        <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.118/examples/js/controls/OrbitControls.js"></script>
-        <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/jsm/loaders/FontLoader.js"></script>
-        <script src="js/world.js"></script>
-        <script src="main.js"></script>
-        <script src="js/collectible.js"></script>
-        <script src="js/StaticModel.js"></script>
+    <script src="js/three.min.js"></script>
+    <script src="js/ammo.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.118/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/jsm/loaders/FontLoader.js"></script>
+    <script src="js/world.js"></script>
+    <script src="main.js"></script>
+    <script src="js/collectible.js"></script>
+    <script src="js/StaticModel.js"></script>
         
-            <div id="Points" class="fixed text-white  ml-2 mt-1 select-none " style="display: none; position: fixed; top: 95%; right: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;"><span>Points: </span><span id="PointsEl">0</span></div> 
-            <!-- <button id="ref-button"
-            onclick="alert('1. https://github.com/simondevyoutube/](https://github.com/simondevyoutube/)\n2. https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5](https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5)\n3. Volcano by Poly by Google [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/dwSigTeSMCo)\n4. Bonfire by Quaternius [[CC0]](https://creativecommons.org/publicdomain/zero/1.0/), via [Poly Pizza](https://poly.pizza/m/k1e0cOzi8A)\n5. Adventurer by madtrollstudio [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/w0OIUlEgcF)\n6.LowPolyMegapackfree by QuaterniusDev [[CC0]]https://creativecommons.org/publicdomain/zero/1.0/,via https://www.reddit.com/user/QuaterniusDev/');">References</button>  -->
-            <div class="fixed absolute bottom-0 left-0 h-16 w-16 text-white">
-                <button id="menu" onclick="Menu()" class="border px-4 py-2 rounded-lg text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: none;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
-                    Menu
-                </button>
-            </div>
-        <div id="Game Paused"class=" text-align-center text-lg text-white select-none" style="position:fixed;left:45%; top:50%; visibility: hidden; font-family: 'Comfortaa', cursive;">
-            Game Paused 
-        </div>
+    <div id="Points" class="fixed text-white  ml-2 mt-1 select-none " style="display: none; position: fixed; top: 95%; right: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;"><span>Points: </span><span id="PointsEl">0</span></div> 
+    <!-- <button id="ref-button"
+    onclick="alert('1. https://github.com/simondevyoutube/](https://github.com/simondevyoutube/)\n2. https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5](https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5)\n3. Volcano by Poly by Google [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/dwSigTeSMCo)\n4. Bonfire by Quaternius [[CC0]](https://creativecommons.org/publicdomain/zero/1.0/), via [Poly Pizza](https://poly.pizza/m/k1e0cOzi8A)\n5. Adventurer by madtrollstudio [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/w0OIUlEgcF)\n6.LowPolyMegapackfree by QuaterniusDev [[CC0]]https://creativecommons.org/publicdomain/zero/1.0/,via https://www.reddit.com/user/QuaterniusDev/');">References</button>  -->
+    <div class="fixed absolute bottom-0 left-0 h-16 w-16 text-white">
+        <button id="menu" onclick="Menu()" class="border px-4 py-2 rounded-lg text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: none;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
+            Menu
+        </button>
+    </div>
+    <div id="Game Paused"class=" text-align-center text-lg text-white select-none" style="position:fixed;left:45%; top:50%; visibility: hidden; font-family: 'Comfortaa', cursive;">
+        Game Paused 
+    </div>
 
-        <!-- <div id='GameOverScreen' class="GameOverScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:0.9 ;">
-            <h3 class=" text-align-center text-lg text-white select-none" style="position: fixed; top: 50%; left:44%; color: #fff;font-family: 'Comfortaa', cursive; font-size: x-large;">GAME OVER</h3>
+    <!-- <div id='GameOverScreen' class="GameOverScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:0.9 ;">
+        <h3 class=" text-align-center text-lg text-white select-none" style="position: fixed; top: 50%; left:44%; color: #fff;font-family: 'Comfortaa', cursive; font-size: x-large;">GAME OVER</h3>
 
-            <button id="Try Again" onclick=Quit() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Major Monospace Display,monospace;">Try Again</button>
-        </div> -->
+        <button id="Try Again" onclick=Quit() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Major Monospace Display,monospace;">Try Again</button>
+    </div> -->
 
-        <div id="Menu_Buttons"class=" flex text-align-center text-lg fixed absolute text-white select-none" style="left:45%; top:35%; display: none;font-family:'Comfortaa',cursive;">
-            <ul>
-                <li id="Resume_Button" onclick="Resume()" style="--i:4;"><button> Resume  </button></li>
-                <li id="Controls_Button" onclick="Controls()" style="--i:3;"><button > Controls  </button></li>
-                <li id="Quit_Button" onclick="Quit()" style="--i:2;"><button> Quit </button></li>
-                <li id="Credits_Button" style="--i:1;"><button> Credits  </button></li>
-            </ul> 
-        </div>
+    <div id="Menu_Buttons"class=" flex text-align-center text-lg fixed absolute text-white select-none" style="left:45%; top:35%; display: none;font-family:'Comfortaa',cursive;">
+        <ul>
+            <li id="Resume_Button" onclick="Resume()" style="--i:4;"><button> Resume  </button></li>
+            <li id="Controls_Button" onclick="Controls()" style="--i:3;"><button > Controls  </button></li>
+            <li id="Quit_Button" onclick="Quit()" style="--i:2;"><button> Quit </button></li>
+            <li id="Credits_Button" style="--i:1;"><button> Credits  </button></li>
+        </ul> 
+    </div>
 
 
 
-        <div id='controlsScreen' class="controlsScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.8;">
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex; top: 55%; left:15%;font-family:'Comfortaa',cursive;" disabled><span>&#8592;</span></button>
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; left:19%;font-family:'Comfortaa',cursive;" disabled><span>&#8593;</span></button>
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:23%;font-family:'Comfortaa',cursive;" disabled><span>&#8594;</span></button>
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:19%;font-family:'Comfortaa',cursive;" disabled><span>&#8595;</span></button>
-            <h3 style="position: absolute; top: 65%; left: 19%;transform: translate(-19%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Switch views</h3>
+    <div id='controlsScreen' class="controlsScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.8;">
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex; top: 55%; left:15%;font-family:'Comfortaa',cursive;" disabled><span>&#8592;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; left:19%;font-family:'Comfortaa',cursive;" disabled><span>&#8593;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:23%;font-family:'Comfortaa',cursive;" disabled><span>&#8594;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:19%;font-family:'Comfortaa',cursive;" disabled><span>&#8595;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 19%;transform: translate(-19%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Switch views</h3>
+    
+                
+
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:60%;font-family:'Comfortaa',cursive;" disabled><span>&#70;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 63%;transform: translate(-63%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Toggle Camera</h3>
+
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:46%;font-family:'Comfortaa',cursive;" disabled><span>&#83; &#80; &#65; &#67; &#69;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 49%;transform: translate(-49%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Jump</h3>
         
-                    
-
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:60%;font-family:'Comfortaa',cursive;" disabled><span>&#70;</span></button>
-            <h3 style="position: absolute; top: 65%; left: 63%;transform: translate(-63%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Toggle Camera</h3>
-
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:46%;font-family:'Comfortaa',cursive;" disabled><span>&#83; &#80; &#65; &#67; &#69;</span></button>
-            <h3 style="position: absolute; top: 65%; left: 49%;transform: translate(-49%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Jump</h3>
-            
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:35%;font-family:'Comfortaa',cursive;" disabled><span>&#80;</span></button>
-            <h3 style="position: absolute; top: 65%; left: 36%;transform: translate(-36%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Pause</h3>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:35%;font-family:'Comfortaa',cursive;" disabled><span>&#80;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 36%;transform: translate(-36%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Pause</h3>
 
 
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex; top: 55%; right:23%;font-family:'Comfortaa',cursive;" disabled><span>&#65;</span></button>
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#87;</span></button>
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:15%;font-family:'Comfortaa',cursive;" disabled><span>&#68;</span></button>
-            <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#83;</span></button>
-            <h3 style="position: absolute; top: 65%; right: 20%;transform: translate(20%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Move</h3>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex; top: 55%; right:23%;font-family:'Comfortaa',cursive;" disabled><span>&#65;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#87;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:15%;font-family:'Comfortaa',cursive;" disabled><span>&#68;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#83;</span></button>
+        <h3 style="position: absolute; top: 65%; right: 20%;transform: translate(20%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Move</h3>
 
-            <button id="back" onclick="Back()" class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: flex;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
-                Back
-            </button>
-        </div>
+        <button id="back" onclick="Back()" class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: flex;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
+            Back
+        </button>
+    </div>
 
-        <!-- <section id="cards-section" class="cards-section wf-section">
-            <h1 class="heading-2">
-                <font style="vertical-align: inherit;"></font>
-                <font style="vertical-align: inherit;">Credits</font>
-            </h1>
-            <div class="cards-grid-container">
-                <div id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd6485-4c7ed100">
-                    <div class="cards-image-mask">
-                        <img src="https://uploads-ssl.webflow.com/5db1c76aadcfe25e881680fa/5db86dc421496616bf357c25_placeholder.svg" alt="" class="cards-image">
-                    </div>
-                    <h3>SimonDev</h3>
-                    <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">The pain itself is love, the main storage system. </font><font style="vertical-align: inherit;">For the polar element of the tank in the United States.</font></font></p>
-                </div>
-                <div id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd648c-4c7ed100">
-                    <div class="cards-image-mask">
-                        <img src="https://uploads-ssl.webflow.com/5db1c76aadcfe25e881680fa/5db86dc421496616bf357c25_placeholder.svg" alt="" class="cards-image"></div>
-                        <h3 id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd648f-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Genka</font></font></h3>
-                        <p id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd6491-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">The pain itself is love, the main storage system. </font><font style="vertical-align: inherit;">For the polar element of the tank in the United States.</font></font></p>
-                    </div>
-                    <div id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd6493-4c7ed100">
-                        <div class="cards-image-mask">
-                            <img src="https://uploads-ssl.webflow.com/5db1c76aadcfe25e881680fa/5db86dc421496616bf357c25_placeholder.svg" alt="" class="cards-image">
-                        </div>
-                        <h3 id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd6496-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Poly Pizza</font></font></h3>
-                        <p id="w-node-_7951774e-8291-1afb-4d1d-7730d3bd6498-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">The pain itself is love, the main storage system. </font><font style="vertical-align: inherit;">For the polar element of the tank in the United States.</font></font></p>
-                    </div>
-                    <div id="w-node-dc58c6f0-20f3-1bb8-5fdd-dc26fe75b10b-4c7ed100">
-                        <div class="cards-image-mask">
-                            <img src="https://uploads-ssl.webflow.com/5db1c76aadcfe25e881680fa/5db86dc421496616bf357c25_placeholder.svg" alt="" class="cards-image">
-                        </div>
-                        <h3 id="w-node-dc58c6f0-20f3-1bb8-5fdd-dc26fe75b10e-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Sketch Fab</font></font></h3>
-                        <p id="w-node-dc58c6f0-20f3-1bb8-5fdd-dc26fe75b110-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">The pain itself is love, the main storage system. </font><font style="vertical-align: inherit;">For the polar element of the tank in the United States.</font></font></p>
-                    </div>
-                    <div id="w-node-_3ed594e8-ee2e-af4e-45d3-f4f6ed440c01-4c7ed100">
-                        <div class="cards-image-mask">
-                            <img src="https://uploads-ssl.webflow.com/5db1c76aadcfe25e881680fa/5db86dc421496616bf357c25_placeholder.svg" alt="" class="cards-image">
-                        </div>
-                        <h3 id="w-node-_3ed594e8-ee2e-af4e-45d3-f4f6ed440c04-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Credit</font></font></h3>
-                        <p id="w-node-_3ed594e8-ee2e-af4e-45d3-f4f6ed440c06-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">The pain itself is love, the main storage system. </font><font style="vertical-align: inherit;">For the polar element of the tank in the United States.</font></font></p>
-                    </div>
-                    <div id="w-node-e01a5d52-928a-9e88-17e3-aa225125bb2f-4c7ed100">
-                        <div class="cards-image-mask">
-                            <img src="https://uploads-ssl.webflow.com/5db1c76aadcfe25e881680fa/5db86dc421496616bf357c25_placeholder.svg" alt="" class="cards-image">
-                        </div>
-                        <h3 id="w-node-e01a5d52-928a-9e88-17e3-aa225125bb32-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Credit</font></font></h3>
-                        <p id="w-node-e01a5d52-928a-9e88-17e3-aa225125bb34-4c7ed100"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">The pain itself is love, the main storage system. </font><font style="vertical-align: inherit;">For the polar element of the tank in the United States.</font></font></p>
-                    </div>
-                </div>
-            </section> -->
         
+        <!-- webflow credits -->
     </body>
 </html>

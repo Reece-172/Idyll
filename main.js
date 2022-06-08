@@ -10,8 +10,10 @@ let physicsWorld,
  * New models
  * Collision -> on new objects
  **/
+
+// Ball Graphics / THREE Object
 let ballObject = null,
-  moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
+  moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0}; //used to hold the respective directional key (WASD)
 
 // Variable to store first person / third person state
 // Handling "firstPersonPressed" differently from firstPerson so
@@ -20,35 +22,47 @@ let ballObject = null,
 // If treated depending on firstPerson variable, then "orbitControls.update()"
 // is run on every "updatePhysics()" call, which causes erratic camera / character movement
 let firstPerson = false, firstPersonPressed = false;
-let lookLeft = false,
-  lookRight = false,
-  lookBack = false;
 
 // Control Temp data
 var orbitControls;
-walkDirection = new THREE.Vector3();
+rollDirection = new THREE.Vector3();
 rotateAngle = new THREE.Vector3(0, 1, 0);
 
+// Platform related
+let platform1;
+let platforms = [];
 
-let heroObject = null,
-  HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
+
+let NPCObject = null
+  //HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
 //@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
 // let collectible1Object = null, //put here if want to make the object global
 //   collectible2Object = null;
 
-let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6; //collision purposes
+let colGroupBall = 2, colGroupNPC = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6, colGroupPlatform = 7; //collision purposes
 
 let collectCounter;
 
-let cbContactPairResult, blockPlane, ball, collectible1;
+let cbContactPairResult, blockPlane, ball, collectible1, yasuo;
 let cbContactResult;
 const GAMESTATE={
   PAUSED:0,
   RUNNING:1,
-  GAMEOVER:2
+  MENU:2,
+  GAMEOVER:3,
 };//for loading screen
+
+
+const MISSIONSTATE = { //didn't put mission state under GAMESTATE because we need the game to be in state RUNNING to be in a mission
+  FREEROAM:0,
+  MISSION:1
+}
+
+let points; //object that displays the points 
+
+
 window.addEventListener('load',function(){
   var loadingScreen=document.getElementById('loadingScreen');
   document.body.removeChild(loadingScreen);
@@ -56,9 +70,8 @@ window.addEventListener('load',function(){
 
 
 //for fps display
-(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+(function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//mrdoob.github.io/stats.js/build/stats.min.js'; document.head.appendChild(script); })()
 
-let isCollection1Present, isCollection2Present;
 let collectibles = [];
 
 let npcContact = false; //boolean to check if player made contact with NPC
@@ -66,43 +79,30 @@ let npcContact = false; //boolean to check if player made contact with NPC
 var mapCamera,
   mapWidth = 240,
   mapHeight = 160;
+let isTimeOut = false;
 //Ammojs Initialization
 Ammo().then(start);
-
 function start() {
   tmpTrans = new Ammo.btTransform();
   collectCounter = 0;
-  this.gamestate=GAMESTATE.RUNNING;
+  this.gamestate = GAMESTATE.RUNNING;
 
- 
-  
+
+
+  freeroam();
+
   setupPhysicsWorld();
   setupGraphics();
 
-  for (var i = 0; i < 70; i++) { //add high and low collectibles so user has to jump
-    collectible1 = new Collectible();
-    collectible1.createCollectible();
-    collectibles.push(collectible1);
-  }
+  // Load level (Create Platforms and Collectibles)
+  loadLevel_3_Objective();
 
 
   createBlock();
   createBall();
-  loadCharacter();
+  loadNPC();
   createWorld();
 
-  // for (var i = 0; i < 30; i++) {
-  //   createGrass();
-  // }
-  // for (var i = 0; i < 60; i++) {
-  //   createFlower_1();
-  // }
-  // for (var i = 0; i < 60; i++) {
-  //   createFlower_2();
-  // }
-  // for (var i = 0; i < 20; i++) {
-  //   createMushroom();
-  // }
 
   // for (var i = 0; i < 50; i++) {
   // createTree_2();
@@ -111,7 +111,7 @@ function start() {
   //   createTree_3();
   // }
 
-
+  //createOcean();
   loadVolcano();
   //createHead();
   // for (var i = 0; i < 50; i++) {
@@ -148,7 +148,7 @@ function setupGraphics() {
 
   //create the scene
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xffffff, 0.015, 1100);
+  scene.fog = new THREE.Fog(0xffffff, 0.015, 1500);
   const loader = new THREE.CubeTextureLoader();
   const texture = loader.load([
     "./resources/skybox/posx.jpg", //left
@@ -194,6 +194,7 @@ function setupGraphics() {
 
   const audio = new THREE.Audio(listener);
 
+  //background music plays when the game is running
   loadAudio.load("./resources/idyll.mp3", function (buffer) {
     audio.setBuffer(buffer);
     audio.setLoop(true);
@@ -240,7 +241,7 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Controls
+  // Controls -> mouse movement
   orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
   orbitControls.enablePan = false;
   orbitControls.minDistance = 15;
@@ -258,32 +259,47 @@ function renderFrame() {
   requestAnimationFrame(renderFrame);
   let deltaTime = clock.getDelta();
   //createFont();
-  
-    moveBall();
-  
+
+  // Move the ball
+  moveBall();
+
   //moveHero();
 
+  // Change camera focus according to whether in 1st person or 3rd person mode
   if (firstPerson == true) {
     camera.lookAt(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
   } else {
     camera.lookAt(ballObject.position);
   }
+  
   updatePhysics(deltaTime);
+
+  //pause
   if(this.gamestate===GAMESTATE.PAUSED){
     document.getElementById("Game Paused").style.visibility="visible";
   }
-  else{
-    document.getElementById("Game Paused").style.visibility="hidden";
+  else {
+    document.getElementById("Game Paused").style.visibility = "hidden";
   }
 
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
 
-  //handles collectibles
-  if (collectibles.length !== 0) {
+  //count collectibles
+  if (this.missionstate === MISSIONSTATE.MISSION){ //count and check collisions with collectibles only if the player is doing mission
+
+    //handles collectibles
+    if (collectibles.length !== 0) {
     isCollect();
+    }
+
+    points = document.getElementById('PointsEl'); 
+    points.innerHTML = collectCounter; //updates points on screen
   }
-  const points = document.getElementById('PointsEl'); 
-  points.innerHTML = collectCounter; //updates points on screen
+  
+  // if (this.missionstate === MISSIONSTATE.FREEROAM){
+  //   isContactNPC;
+  
+  // }
 
   renderer.render(scene, camera);
 
@@ -318,22 +334,18 @@ function handleKeyDown(event) {
   switch (keyCode) {
     case 87: //W: FORWARD
       moveDirection.forward = 1;
-      HeroMoveDirection.forward = 1;
       break;
 
     case 83: //S: BACK
       moveDirection.back = 1;
-      HeroMoveDirection.forward = 1;
       break;
 
     case 65: //A: LEFT
       moveDirection.left = 1;
-      HeroMoveDirection.forward = 1;
       break;
 
     case 68: //D: RIGHT
       moveDirection.right = 1;
-      HeroMoveDirection.forward = 1;
       break;
 
     case 70: //F: Toggle First Person
@@ -345,15 +357,6 @@ function handleKeyDown(event) {
       firstPersonPressed = true;
       break;
 
-    case 37:
-      lookLeft = true;
-      break;
-    case 39:
-      lookRight = true;
-      break;
-    case 40:
-      lookBack = true;
-      break;
 
     case 32: //space bar
       //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
@@ -365,13 +368,27 @@ function handleKeyDown(event) {
       break;
 
     case 77: //m
-      checkContact(); //shows what the ball collides with
+      //checkContact(); //shows what the ball collides with
+      console.log(this.missionstate);
       break;
 
-    case 80:
+    case 80: //p
       TogglePause(); 
-    // case 67: //c
-    //   isCollect();
+      break;
+
+    case 66: //b
+      isContactNPC(); //checks contact with NPC
+      break;
+
+    case 75: //k. TEMPORARY. USED TO TEST QUITTING MISSION
+      
+      if (this.missionstate === MISSIONSTATE.MISSION){ //only if player is currently in a mission, then they can quit a mission
+        quitMission();
+      }
+
+      break;
+      
+    
   }
 }
 
@@ -381,36 +398,22 @@ function handleKeyUp(event) {
   switch (keyCode) {
     case 87: //FORWARD
       moveDirection.forward = 0;
-      HeroMoveDirection.forward = 0;
       break;
 
     case 83: //BACK
       moveDirection.back = 0;
-      HeroMoveDirection.forward = 0;
       break;
 
     case 65: //LEFT
       moveDirection.left = 0;
-      HeroMoveDirection.forward = 0;
       break;
 
     case 68: //RIGHT
       moveDirection.right = 0;
-      HeroMoveDirection.forward = 0;
       break;
 
     case 70: // (First Person Button, "F", Pressed --> Change Camera)
       firstPersonPressed = false;
-      break;
-
-    case 37:
-      lookLeft = false;
-      break;
-    case 39:
-      lookRight = false;
-      break;
-    case 40:
-      lookBack = false;
       break;
 
     case 32: //space bar
@@ -418,19 +421,137 @@ function handleKeyUp(event) {
   }
 }
 
+function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
+
+  
+  display = document.querySelector('#time');
+  function timer() {
+    if (totalTime > 0) {
+
+      isTimeOut = false;
+      setTimeout(timer, 1000);
+      isTimerOn = true;
+      totalTime--;
+      //calculate the minutes and seconds
+      minutes = (totalTime / 60) | 0;
+      seconds = (totalTime % 60) | 0;
+      //display the result -> formats it into a proper timer string
+      minutes = minutes < 10 ? "0" + minutes : minutes;
+      seconds = seconds < 10 ? "0" + seconds : seconds;
+
+      display.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
+
+      //collectibles
+      if (collectibles.length == 0){
+        isTimeOut = true;
+        console.log("you have won");
+        //create a pop up to give player some story
+        var task = document.createElement('div');
+        task.style.position = 'absolute';
+        task.style.zIndex = 1;  
+        task.style.width = 600;
+        task.style.height = 200;
+        task.style.backgroundColor = "#242424";
+        task.style.opacity = "0.9";
+        task.innerHTML = "You have won<br><br>";
+        task.style.color = "white";
+        task.style.top = 200 + 'px';
+        task.style.left = 200 + 'px';
+
+        //button to confirm
+        var btnOk = document.createElement('button');
+        btnOk.style.backgroundColor = "red";
+        btnOk.innerHTML = "yay";
+        btnOk.onclick = function () { 
+          freeroam();
+          document.body.removeChild(task); 
+          
+
+        }
+
+      task.appendChild(btnOk)
+      document.body.appendChild(task)
+        
+
+      }
+
+    }
+    else {
+      isTimeOut = true;
+      //TO DO: Game Over screen -> mission failed with restart/exit button
+      //console.log("you have failed (timer function)");
+
+      if (collectibles.length > 0){
+        console.log("you have lost");
+        freeroam();
+
+      //create a pop up to give player some story
+      var task = document.createElement('div');
+      task.style.position = 'absolute';
+      task.style.zIndex = 1;  
+      task.style.width = 600;
+      task.style.height = 200;
+      task.style.backgroundColor = "#242424";
+      task.style.opacity = "0.9";
+      task.innerHTML = "You have failed. Would you like to retry or quit mission?<br><br>";
+      task.style.color = "white";
+      task.style.top = 200 + 'px';
+      task.style.left = 200 + 'px';
+
+      //button to retry
+      var btnOk = document.createElement('button');
+      btnOk.style.backgroundColor = "red";
+      btnOk.innerHTML = "retry";
+      btnOk.onclick = function () { 
+        console.log("retry mission");
+        startMission();
+      
+        document.body.removeChild(task); 
+
+      }
+
+      //button to quit mission and go back to normal
+      var btnCancel = document.createElement('button');
+      btnCancel.style.backgroundColor = "blue";
+      btnCancel.innerHTML = "quit mission";
+      btnCancel.onclick = function () { 
+        document.body.removeChild(task);  
+      }
+
+
+      task.appendChild(btnCancel)
+      task.appendChild(btnOk)
+      document.body.appendChild(task)
+
+      }
+
+    }
+  }
+
+  if (isTimeOut == false){
+    timer();
+
+  }
+
+  
+}
+
 
 
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 1000, y: 2, z: 1000 };
+  let scale = { x: 700, y: 2, z: 700 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
   const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
+  grass.wrapS = THREE.RepeatWrapping;
+  grass.wrapT = THREE.RepeatWrapping;
+  grass.repeat.set(8, 8);
   blockPlane = new THREE.Mesh(
     new THREE.BoxBufferGeometry(),
-    new THREE.MeshPhongMaterial({ map: grass })
+    new THREE.MeshLambertMaterial({ map: grass })
   );
 
   blockPlane.position.set(pos.x, pos.y, pos.z);
@@ -472,7 +593,7 @@ function createBlock() {
   physicsWorld.addRigidBody(
     body,
     colGroupBlock,
-    colGroupBall | colGroupChar | colGroupCollectible
+    colGroupBall | colGroupNPC | colGroupCollectible | colGroupPlatform
   );
 
   body.threeObject = blockPlane;
@@ -527,16 +648,143 @@ function createBall() {
   body.setRollingFriction(10);
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
 
-  physicsWorld.addRigidBody(body, colGroupBall, colGroupChar | colGroupBlock | colGroupTree | colGroupModel);
+  physicsWorld.addRigidBody(body, colGroupBall, colGroupNPC | colGroupBlock | colGroupTree | colGroupModel);
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
   body.threeObject = ball;
 }
 
+// Create a platform with a collectible on it
+function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
+
+  // createPlatform() method is overridable with x-y-z
+  // coordinates (E.g. createPlatform(10,5,-30))
+  platform1 = new JumpPlatform();
+  platform1.createPlatform({ posX: pos_x, posY: pos_y, posZ: pos_z });
+  platforms.push(platform1);
+
+  // createCollectible() method is overridable with x-y-z
+  // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+  collectible1 = new Collectible();
+  collectible1.createCollectible({ posX: pos_x, posY: pos_y + 2, posZ: pos_z, collectible_colour });
+  collectibles.push(collectible1);
+
+}
+
+// Platforms and Collectibles to load for level 1 (easy)
+function loadLevel_1_Objective() {
+
+  // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
+  n = 10;
+  collectible_colour = "gold";
+
+  // Arrays of all the platform locations
+  // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
+  all_platform_coordinates = [20,5,-80];
+  collectible_platform_coordinates = [20,10,-100,  40,5,-40,  -20,5,-120];
 
 
-function loadCharacter() {
+  for (var i = 0; i < n; i++) { //add high and low collectibles so user has to jump
+    // createCollectible() method is overridable with x-y-z
+    // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+    // and colour
+    collectible1 = new Collectible();
+    collectible1.createCollectible({ collectible_colour });
+    collectibles.push(collectible1);
+  }
+
+  for (var i = 0; i < all_platform_coordinates.length; i += 3) {
+    // createPlatform() method is overridable with x-y-z
+    // coordinates (E.g. createPlatform(10,5,-30))
+    platform1 = new JumpPlatform();
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platforms.push(platform1);
+  }
+
+  for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
+    // Setup Platform with Collectiable on it
+    // Parameters: x-y-z coordinates of platform, collectible colour
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+  }
+}
+
+// Platforms and Collectibles to load for level 2 (intermediate)
+function loadLevel_2_Objective() {
+  // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
+  n = 10;
+  collectible_colour = "pink";
+
+  // Array of all the platform locations
+  // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
+  all_platform_coordinates = [-20, 5, -20, -30, 10, -40];
+  collectible_platform_coordinates = [-25, 15, -60, -15, 20, -80, 0, 15, -120];
+
+
+  for (var i = 0; i < n; i++) { //add high and low collectibles so user has to jump
+    // createCollectible() method is overridable with x-y-z
+    // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+    // and colour
+    collectible1 = new Collectible();
+    collectible1.createCollectible({ collectible_colour });
+    collectibles.push(collectible1);
+  }
+
+  for (var i = 0; i < all_platform_coordinates.length; i += 3) {
+    // createPlatform() method is overridable with x-y-z
+    // coordinates (E.g. createPlatform(10,5,-30))
+    platform1 = new JumpPlatform();
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platforms.push(platform1);
+  }
+
+  for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
+    // Setup Platform with Collectiable on it
+    // Parameters: x-y-z coordinates of platform, collectible colour
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+  }
+
+}
+
+// Platforms and Collectibles to load for level 3 (advanced)
+function loadLevel_3_Objective() {
+  // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
+  n = 10;
+  collectible_colour = "red";
+
+  // Array of all the platform locations
+  // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
+  all_platform_coordinates = [-20,5,-20,  -30,10,-40, -30,15,-60,  -40,15,-60,  -50,15,-60,  -60,15,-60, -70,15,-60,  -70,15,-50,  -70,20,-30,
+                            -65,25,-10,  -55,30,10, -35,35,10];
+  collectible_platform_coordinates = [-15,20,-80,  0,15,-120, -15,40,10,  -15, 45, 30];
+
+
+  for (var i = 0; i < 10; i++) { //add high and low collectibles so user has to jump
+    // createCollectible() method is overridable with x-y-z
+    // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+    // and colour
+    collectible1 = new Collectible();
+    collectible1.createCollectible({ collectible_colour });
+    collectibles.push(collectible1);
+  }
+
+  for (var i = 0; i < all_platform_coordinates.length; i += 3) {
+    // createPlatform() method is overridable with x-y-z
+    // coordinates (E.g. createPlatform(10,5,-30))
+    platform1 = new JumpPlatform();
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platforms.push(platform1);
+  }
+
+  for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
+    // Setup Platform with Collectiable on it
+    // Parameters: x-y-z coordinates of platform, collectible colour
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+  }
+
+}
+
+function loadNPC() {
   let pos = { x: 10, y: 1, z: -50 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
@@ -551,17 +799,17 @@ function loadCharacter() {
           node.castShadow = true;
         }
       });
-      const yasuo = gltf.scene;
+      yasuo = gltf.scene;
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      heroObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
       scene.add(yasuo);
+      yasuo.userData.tag = "NPCYasuo";
       //Ammojs Section -> physics section
       let transform = new Ammo.btTransform();
       transform.setIdentity();
       transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
+      // transform.setRotation(
+      //   new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
+      // );
 
       let motionState = new Ammo.btDefaultMotionState(transform);
 
@@ -586,112 +834,13 @@ function loadCharacter() {
 
       physicsWorld.addRigidBody(
         body,
-        colGroupChar,
+        colGroupNPC,
         colGroupBall | colGroupBlock
       );
 
       yasuo.userData.physicsBody = body;
       rigidBodies.push(yasuo);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-
-function loadVolcano() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/Volcano.glb",
-    function (gltf) {
-      gltf.scene.scale.set(400, 400, 400);
-      gltf.scene.translateX(600);
-      gltf.scene.translateZ(-600);
-      gltf.scene.translateY(0);
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const model = gltf.scene;
-
-      model.castShadow = true;
-      model.receiveShadow = true;
-      scene.add(model);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = model.geometry.getAttribute("position").array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (model.geometry.verticesNeedUpdate = true)
-      );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      model.userData.physicsBody = body;
-      rigidBodies.push(model);
+      body.threeObject = yasuo; //using this to show the collisions with the ball (using in setupContactResultCallback)
     },
     undefined,
     function (error) {
@@ -729,44 +878,57 @@ function directionOffset() {
 
 function moveBall() {
   //this goes in renderframe()
-  if(this.gamestate===GAMESTATE.PAUSED){
+  if (this.gamestate === GAMESTATE.PAUSED) {
     return;
   }
   let scalingFactor = 20;
 
   let moveX = moveDirection.right - moveDirection.left;
   let moveZ = moveDirection.back - moveDirection.forward;
-  let moveY = moveDirection.up - moveDirection.down * 2;
+  let moveY = moveDirection.up;
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
-  var dirOffset = directionOffset();
-  var jumpOffset = (Math.PI / 4);
+  // ----- Check Contact before doing any move calculation (start) -----
+  cbContactPairResult.hasContact = false;
 
+  physicsWorld.contactPairTest(
+    ball.userData.physicsBody,
+    blockPlane.userData.physicsBody,
+    cbContactPairResult
+  );
 
-  camera.getWorldDirection(walkDirection);
-  walkDirection.y = 0;
-  walkDirection.normalize();
-
-  if (moveDirection.up == true) {
-    tempDirection = new THREE.Vector3();
-    tempDirection = walkDirection.applyAxisAngle(rotateAngle, dirOffset);
-    tempDirection.normalize();
-    walkDirection.applyAxisAngle(tempDirection, jumpOffset);
-    console.log("{1} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
-
-  } else {
-    walkDirection.applyAxisAngle(rotateAngle, dirOffset);
-    console.log("{2} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+  for (var i = 0; i < platforms.length; i++) {
+    physicsWorld.contactPairTest(
+      ball.userData.physicsBody,
+      platforms[i].getPlatformObject().userData.physicsBody,
+      cbContactPairResult
+    );
   }
 
-  let resultantImpulse = new Ammo.btVector3(walkDirection.x, walkDirection.y, walkDirection.z);
+  if (!cbContactPairResult.hasContact) return;
+  // ----- Check Contact before doing any move calculation (end) -----
+
+
+  var dirOffset = directionOffset();
+
+  camera.getWorldDirection(rollDirection);
+  rollDirection.y = 0;
+
+  if (moveDirection.up == true) {
+    rollDirection.y = 1;
+  }
+
+  rollDirection.normalize();
+  rollDirection.applyAxisAngle(rotateAngle, dirOffset);
+
+
+  let resultantImpulse = new Ammo.btVector3(rollDirection.x, rollDirection.y, rollDirection.z);
   resultantImpulse.op_mul(scalingFactor);
 
   let physicsBody = ballObject.userData.physicsBody;
   physicsBody.setLinearVelocity(resultantImpulse);
 }
-
 
 function setupContactResultCallback() {
   cbContactResult = new Ammo.ConcreteContactResultCallback();
@@ -836,27 +998,6 @@ function checkContact() {
   physicsWorld.contactTest(ball.userData.physicsBody, cbContactResult);
 }
 
-function jump() {
-  if(this.gamestate===GAMESTATE.PAUSED){
-    return;
-  }
-  cbContactPairResult.hasContact = false;
-
-  physicsWorld.contactPairTest(
-    ball.userData.physicsBody,
-    blockPlane.userData.physicsBody,
-    cbContactPairResult
-  );
-
-  if (!cbContactPairResult.hasContact) return;
-
-  let jumpImpulse = new Ammo.btVector3(0, 15, 0);
-
-  let physicsBody = ball.userData.physicsBody;
-  physicsBody.setLinearVelocity(jumpImpulse);
-}
-
-  
 
 function isCollect() { //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
 
@@ -884,19 +1025,20 @@ function isCollect() { //checking the collectibles array if any of the collectib
   }
 }
 
-function TogglePause(){
-  if(this.gamestate===GAMESTATE.PAUSED){
-    this.gamestate=GAMESTATE.RUNNING;
+function TogglePause() {
+  if (this.gamestate === GAMESTATE.PAUSED) {
+    this.gamestate = GAMESTATE.RUNNING;
 
   }
   else{
     this.gamestate=GAMESTATE.PAUSED;
+    //pause timer
 
 
   }
 }
 
-function Menu(){
+function Menu() {
   //window.location.href = "menu.html";
   // var menu_div=document.createElement('div');
   // menu_div.className='flex text-align-center text-lg fixed absolute font-serif text-white select-none';
@@ -909,11 +1051,12 @@ function Menu(){
   document.getElementById("Menu_Buttons").style.display='flex';
 }
 
-function Resume(){
+function Resume() {
   //window.location.href="index.html";
   document.getElementById("Menu_Buttons").style.display='none';
 
 }
+
 function Controls(){
   const controls=document.getElementById("controlsScreen");
   controls.style.display='flex';
@@ -937,29 +1080,30 @@ function Begin(){
   points.style.display='flex';
 }
 
-function setupContactPairResultCallback(){ //this is for the ball and the block
+function setupContactPairResultCallback(){ 
 
   cbContactPairResult = new Ammo.ConcreteContactResultCallback();
 
   cbContactPairResult.hasContact = false;
 
-  cbContactPairResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+  cbContactPairResult.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1) {
 
-      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+    let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
-      const distance = contactPoint.getDistance();
+    const distance = contactPoint.getDistance();
 
-      if( distance > 0 ) return;
+    if (distance > 0.5) return;
 
-      this.hasContact = true;
+    this.hasContact = true;
   };
 }
+
 function isContactNPC() {
   cbContactPairResult.hasContact = false;
 
   physicsWorld.contactPairTest(
     ball.userData.physicsBody,
-    blockPlane.userData.physicsBody, //change this line
+    yasuo.userData.physicsBody,
     cbContactPairResult
   );
 
@@ -968,11 +1112,172 @@ function isContactNPC() {
   if (!cbContactPairResult.hasContact) return;
 
   //what to do if there is contact:
-    //press button
+    //show prompt to press button
     npcContact = true;
+    //this.missionstate = MISSIONSTATE.MISSION;  
+    if (this.missionstate !== MISSIONSTATE.MISSION){ //if we are not in a mission, then start a mission
+      startMission();
+    }
+    else{
+      console.log("you have not completed the mission yet"); //make this display on screen
+    }
 
-      this.hasContact = true;
 
+}
+
+function startMission(){
+
+  
+
+  //create a pop up to give player some story
+  var task = document.createElement('div');
+  task.style.position = 'absolute';
+  task.style.zIndex = 1;  
+  task.style.width = 600;
+  task.style.height = 200;
+  task.style.backgroundColor = "#242424";
+  task.style.opacity = "0.9";
+  task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
+  task.style.color = "white";
+  task.style.top = 200 + 'px';
+  task.style.left = 200 + 'px';
+
+  //button to confirm
+  var btnOk = document.createElement('button');
+  btnOk.style.backgroundColor = "red";
+  btnOk.innerHTML = "ok";
+  btnOk.onclick = function () { 
+    console.log("mission started");
+   
+    collectCounter = 0; //reset counter 
+
+    let numCollectibles = 1;
+
+    for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
+      collectible1 = new Collectible();
+      collectible1.createCollectible();
+      collectibles.push(collectible1);
+    }
+
+    var totalTime = 20; //in seconds
+    startTimer(totalTime);
+
+    //display points counter
+
+    Mission();
+
+    document.body.removeChild(task); 
+    //start timer now 
+  }
+
+  //button to not accept mission and go back to normal
+  var btnCancel = document.createElement('button');
+  btnCancel.style.backgroundColor = "yellow";
+  btnCancel.innerHTML = "no.";
+  btnCancel.onclick = function () { 
+    document.body.removeChild(task);  
+  }
+
+
+  task.appendChild(btnCancel)
+  task.appendChild(btnOk)
+  document.body.appendChild(task)
+
+
+
+
+}
+
+function Mission(){
+
+  this.missionstate = MISSIONSTATE.MISSION;
+  console.log("currently in a mission");
+
+  //window.onload = function () { //this is how you set the timer
+    
+  //};
+
+
+  // if ((isTimeOut == false) && (collectibles.length == 0)) {
+  //   console.log("you have won");
+  //   freeroam();
+
+  // }
+  // else if ((isTimeOut) && (collectibles.length > 0)) {
+  //   console.log("you have failed");
+  //   freeroam();
+
+  // }
+  // timer stuff here.
+  // if (timer not run out) && (collectibles.length === 0){ 
+  //  success  
+  // }
+  // else if (timer run out) && (collectibles.length > 0) {
+  //        fail
+            // popup to retry or quit
+            // if quit then return to freeroam. call freeroam()
+            // if retry then call startMission() again ??
+
+  //} 
+
+  
+}
+
+function quitMission(){
+
+
+  //console.log("you have quit the mission")
+
+  //pause timer
+
+  this.gamestate = GAMESTATE.PAUSED; //pause game when dealing with popup
+
+  //create a pop up to ask if user wants to quit mission
+  var text2 = document.createElement('div');
+  text2.style.position = 'absolute';
+  text2.style.zIndex = 1;  
+  text2.style.width = 600;
+  text2.style.height = 200;
+  text2.style.backgroundColor = "#242424";
+  text2.style.opacity = "0.9";
+  text2.innerHTML = "Are you sure you want to abandon the mission?";
+  text2.style.color = "white";
+  text2.style.top = 200 + 'px';
+  text2.style.left = 200 + 'px';
+
+  //button to confirm quit
+  var btnQuit = document.createElement('button');
+  btnQuit.style.backgroundColor = "red";
+  btnQuit.innerHTML = "yes";
+  btnQuit.onclick = function () { //if user wants to quit
+    this.gamestate = GAMESTATE.RUNNING;
+    console.log("mission quit");
+    freeroam(); //return to freeroam gameplay
+    document.body.removeChild(text2); //remove this popup
+  }
+
+
+  //button to continue mission and ignore popup
+  var btnNoQuit = document.createElement('button');
+  btnNoQuit.style.backgroundColor = "blue";
+  btnNoQuit.innerHTML = "no";
+  btnNoQuit.onclick = function () { //if user doesn't want to quit, carry on with mission
+    this.gamestate = GAMESTATE.RUNNING;
+    
+    document.body.removeChild(text2);
+    //continue timer
+  }
+
+  text2.appendChild(btnQuit);
+  text2.appendChild(btnNoQuit);
+
+  document.body.appendChild(text2);
+
+  
+
+
+
+  //this.missionstate = MISSIONSTATE.FREEROAM;
 }
 
 function updatePhysics(deltaTime) { // update physics world
@@ -981,7 +1286,7 @@ function updatePhysics(deltaTime) { // update physics world
   // if(this.gamestate===GAMESTATE.PAUSED || this.gamestate===GAMESTATE.MENU){
   //   return;
   // }
-  
+
   // Update rigid bodies
   //for (let i = 0; i < rigidBodies.length; i++) {
   //console.log(rigidBodies);
@@ -1033,4 +1338,29 @@ function arrayRemove(arr, value) {
   return arr.filter(function (element) {
     return element != value; //creates a new array, without the specific element
   });
+}
+
+function freeroam(){
+
+  this.missionstate = MISSIONSTATE.FREEROAM;
+
+  //remove timer
+  //remove points counter
+
+  //remove all collectibles
+  if (collectibles.length > 0){
+    let i = 0; //don't have to keep increasing i because the 0th element will keep on being removed until array size is 0
+    while(collectibles.length > 0){
+      physicsWorld.removeRigidBody(collectibles[i].getCollectibleObject().userData.physicsBody); //remove this rigid body from the physics world
+      scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
+      rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
+      collectibles.splice(i, 1); //delete element from collectibles array
+    }
+
+  }
+
+  collectCounter = 0;
+
+  
+
 }

@@ -4,8 +4,15 @@ class Collectible {
     }
     
     //creates a collectible object
-    createCollectible(){ 
+    createCollectible({
+        posX = Math.floor(Math.random() * (245 + 1)),
+        posY = 2,
+        posZ = -Math.floor(Math.random() * (245 + 1)),
+        collectible_colour = "gold"
+        } = {})
+        { 
 
+        let pos = { x: posX, y: posY, z: posZ };
         let scale = { x: 1, y: 1, z: 1 };
         let quat = { x: 0, y: 0, z: 0, w: 1 };
         let mass = 0;
@@ -13,10 +20,10 @@ class Collectible {
         //threeJS Section
         this.collectible1Object = new THREE.Mesh(
             new THREE.BoxBufferGeometry(),
-            new THREE.MeshPhongMaterial({ color: "gold" })
+            new THREE.MeshPhongMaterial({ color: collectible_colour })
         );
         
-        this.collectible1Object.position.set(Math.floor(Math.random() * (245 + 1)),2,-Math.floor(Math.random() * (245 + 1)));
+        this.collectible1Object.position.set(pos.x, pos.y, pos.z);
         //collectible1.position.set(Math.floor(Math.random()*(100)),3,Math.floor(Math.random()*(100)));
         //collectible1.position.set(pos.x, pos.y, pos.z);
         this.collectible1Object.scale.set(scale.x, scale.y, scale.z);
