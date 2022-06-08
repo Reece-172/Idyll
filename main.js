@@ -87,6 +87,10 @@ var mapCamera,
   mapWidth = 240,
   mapHeight = 160;
 let isTimeOut = false;
+let myTimer;
+timerDisplay = document.querySelector('#time');
+
+
 //Ammojs Initialization
 Ammo().then(start);
 function start() {
@@ -430,15 +434,18 @@ function handleKeyUp(event) {
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
 
-  let gameWon = false;
-  let gameLost = false;
 
-  display = document.querySelector('#time');
-  function timer() {
+  let timerDisplay = document.querySelector('#time');
+  timerDisplay.style.display = "flex";
+  clearInterval(myTimer);
+
+  myTimer = setInterval(function () {
+
+
     if (totalTime > 0) {
 
       isTimeOut = false;
-      setTimeout(timer, 1000);
+      //myTimer = setTimeout(timer, 1000);
       isTimerOn = true;
       totalTime--;
       //calculate the minutes and seconds
@@ -448,7 +455,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
       minutes = minutes < 10 ? "0" + minutes : minutes;
       seconds = seconds < 10 ? "0" + seconds : seconds;
 
-      display.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
+      timerDisplay.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
 
       //collectibles
       if (collectibles.length == 0) {
@@ -458,6 +465,8 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
         isTimeOut = true;
         console.log("you have won");
+        totalTime = 0;
+        //clearInterval(myTimer);
         //create a pop up to give player some story
         var task = document.createElement('div');
         task.style.position = 'absolute';
@@ -477,21 +486,23 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         btnOk.innerHTML = "yay";
         btnOk.onclick = function () {
           freeroam();
-          document.body.removeChild(task);
-
-
-
+          document.body.removeChild(task); 
+  
         }
 
         task.appendChild(btnOk)
         document.body.appendChild(task)
-
+          
+        return;
 
       }
-
     }
-    else {
+    else{ //if timer is 0
+
       isTimeOut = true;
+      totalTime = 0;
+
+      let boolMsg
       //TO DO: Game Over screen -> mission failed with restart/exit button
       //console.log("you have failed (timer function)");
 
@@ -516,11 +527,11 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         var btnOk = document.createElement('button');
         btnOk.style.backgroundColor = "red";
         btnOk.innerHTML = "retry";
-        btnOk.onclick = function () {
+        btnOk.onclick = function () { 
           console.log("retry mission");
           startMission();
-
-          document.body.removeChild(task);
+        
+          document.body.removeChild(task); 
 
         }
 
@@ -529,24 +540,35 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         btnCancel.style.backgroundColor = "blue";
         btnCancel.innerHTML = "quit mission";
         btnCancel.onclick = function () {
-          document.body.removeChild(task);
-        }
+          //freeroam(); 
+          document.body.removeChild(task);  
+        } 
 
 
         task.appendChild(btnCancel)
         task.appendChild(btnOk)
         document.body.appendChild(task)
-
+        
+        return;
       }
+      
 
     }
-  }
 
-  if (isTimeOut == false) {
-    timer();
+    
+  }, 1000);
 
-  }
 
+  return;
+  // if (isTimeOut == false){
+  //   timer();
+    
+  // }
+  // else{
+  //   clearTimeout(timer);
+  //   totalTime = initTime;
+  //  
+  // }
 
 }
 
@@ -688,7 +710,7 @@ function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
 function loadLevel_1_Objective() {
 
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
-  n = 10;
+  n = 5;
   collectible_colour = "gold";
 
   // Arrays of all the platform locations
@@ -1134,7 +1156,7 @@ function isContactNPC() {
     npcContact = true;
 
     if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      startMission((i+2));
+      startMission((i+1));
     }
     else {
       console.log("you have not completed the mission yet"); //make this display on screen
@@ -1199,9 +1221,6 @@ function startMission(mission_level) {
         break;
     }
 
-    var totalTime = 100; //in seconds
-    startTimer(totalTime);
-
     //display points counter
     document.body.removeChild(task);
     Mission();
@@ -1231,6 +1250,7 @@ function startMission(mission_level) {
 function Mission() {
 
   this.missionstate = MISSIONSTATE.MISSION;
+  startTimer(10);
   console.log("currently in a mission");
 
   //window.onload = function () { //this is how you set the timer
@@ -1390,6 +1410,9 @@ function arrayRemove(arr, value) {
 function freeroam() {
 
   this.missionstate = MISSIONSTATE.FREEROAM;
+  
+  let timerDisplay = document.querySelector('#time');
+  timerDisplay.style.display = "none";
 
   //remove timer
   //remove points counter
