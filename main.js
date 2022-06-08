@@ -1220,7 +1220,6 @@ function startMission(mission_level){
     }
 
     //display points counter
-    document.body.removeChild(task);
     Mission();
 
     task.style.display='none';
