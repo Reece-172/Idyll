@@ -407,7 +407,6 @@ function handleKeyUp(event) {
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
   display = document.querySelector('#time');
-  totalTime = totalTime + 1000; //add 1 second to the total time so that the timer starts 
   function timer() {
     if (totalTime > 0) {
       setTimeout(timer, 1000);
@@ -430,10 +429,9 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
   timer();
 }
 
-window.onload = function () {
-  var totalTime = 0; //in seconds
+window.onload = function () { //this is how you set the timer
+  var totalTime = 10; //in seconds
   startTimer(totalTime);
-  clearTimeout(startTimer);
 };
 
 function createBlock() {
