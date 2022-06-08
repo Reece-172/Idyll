@@ -56,7 +56,7 @@ class JumpPlatform {
         physicsWorld.addRigidBody(
           body,
           colGroupBlock,
-          colGroupBall | colGroupChar | colGroupCollectible
+          colGroupBall | colGroupNPC | colGroupCollectible
         );
       
         body.threeObject = this.platformPlane;
