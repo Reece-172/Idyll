@@ -65,7 +65,7 @@ window.addEventListener('load',function(){
   document.body.removeChild(loadingScreen);
 });
 //for fps display
-(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+(function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//mrdoob.github.io/stats.js/build/stats.min.js'; document.head.appendChild(script); })()
 
 let collectibles = [];
 
@@ -74,13 +74,15 @@ let npcContact = false; //boolean to check if player made contact with NPC
 var mapCamera,
   mapWidth = 240,
   mapHeight = 160;
+let isTimeOut, isTimerOn = false;
 //Ammojs Initialization
 Ammo().then(start);
-
 function start() {
   tmpTrans = new Ammo.btTransform();
   collectCounter = 0;
-  this.gamestate=GAMESTATE.RUNNING;
+  this.gamestate = GAMESTATE.RUNNING;
+
+
 
   freeroam();
 
@@ -98,7 +100,19 @@ function start() {
   createWorld();
 
 
-  loadVolcano(); 
+  // for (var i = 0; i < 50; i++) {
+  // createTree_2();
+  // }
+  // for (var i = 0; i < 50; i++) {
+  //   createTree_3();
+  // }
+
+  createOcean();
+  loadVolcano();
+  //createHead();
+  // for (var i = 0; i < 50; i++) {
+  //   createTree();
+  // }  
 
   setupContactResultCallback();
   setupContactPairResultCallback();
@@ -130,7 +144,7 @@ function setupGraphics() {
 
   //create the scene
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xffffff, 0.015, 1100);
+  scene.fog = new THREE.Fog(0xffffff, 0.015, 1500);
   const loader = new THREE.CubeTextureLoader();
   const texture = loader.load([
     "./resources/skybox/posx.jpg", //left
@@ -176,6 +190,7 @@ function setupGraphics() {
 
   const audio = new THREE.Audio(listener);
 
+  //background music plays when the game is running
   loadAudio.load("./resources/idyll.mp3", function (buffer) {
     audio.setBuffer(buffer);
     audio.setLoop(true);
@@ -222,7 +237,7 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Controls
+  // Controls -> mouse movement
   orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
   orbitControls.enablePan = false;
   orbitControls.minDistance = 15;
@@ -240,10 +255,8 @@ function renderFrame() {
   requestAnimationFrame(renderFrame);
   let deltaTime = clock.getDelta();
   //createFont();
-  
-  moveBall();
-  
 
+  moveBall();
   if (firstPerson == true) {
     camera.lookAt(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
   } else {
@@ -255,8 +268,8 @@ function renderFrame() {
   if(this.gamestate===GAMESTATE.PAUSED){
     document.getElementById("Game Paused").style.visibility="visible";
   }
-  else{
-    document.getElementById("Game Paused").style.visibility="hidden";
+  else {
+    document.getElementById("Game Paused").style.visibility = "hidden";
   }
 
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
@@ -311,22 +324,18 @@ function handleKeyDown(event) {
   switch (keyCode) {
     case 87: //W: FORWARD
       moveDirection.forward = 1;
-      //HeroMoveDirection.forward = 1;
       break;
 
     case 83: //S: BACK
       moveDirection.back = 1;
-      //HeroMoveDirection.forward = 1;
       break;
 
     case 65: //A: LEFT
       moveDirection.left = 1;
-      //HeroMoveDirection.forward = 1;
       break;
 
     case 68: //D: RIGHT
       moveDirection.right = 1;
-      //HeroMoveDirection.forward = 1;
       break;
 
     case 70: //F: Toggle First Person
@@ -388,22 +397,18 @@ function handleKeyUp(event) {
   switch (keyCode) {
     case 87: //FORWARD
       moveDirection.forward = 0;
-      //HeroMoveDirection.forward = 0;
       break;
 
     case 83: //BACK
       moveDirection.back = 0;
-      //HeroMoveDirection.forward = 0;
       break;
 
     case 65: //LEFT
       moveDirection.left = 0;
-      //HeroMoveDirection.forward = 0;
       break;
 
     case 68: //RIGHT
       moveDirection.right = 0;
-      //HeroMoveDirection.forward = 0;
       break;
 
     case 70: // (First Person Button, "F", Pressed --> Change Camera)
@@ -425,17 +430,49 @@ function handleKeyUp(event) {
   }
 }
 
+function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
+  display = document.querySelector('#time');
+  function timer() {
+    if (totalTime > 0) {
+      setTimeout(timer, 1000);
+      isTimerOn = true;
+      totalTime--;
+      //calculate the minutes and seconds
+      minutes = (totalTime / 60) | 0;
+      seconds = (totalTime % 60) | 0;
+      //display the result -> formats it into a proper timer string
+      minutes = minutes < 10 ? "0" + minutes : minutes;
+      seconds = seconds < 10 ? "0" + seconds : seconds;
+
+      display.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
+    }
+    else {
+      isTimeOut = true;
+      //TO DO: Game Over screen -> mission failed with restart/exit button
+    }
+  }
+  timer();
+}
+
+window.onload = function () { //this is how you set the timer
+  var totalTime = 10; //in seconds
+  startTimer(totalTime);
+};
+
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
-  let scale = { x: 1000, y: 2, z: 1000 };
+  let scale = { x: 700, y: 2, z: 700 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
   const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
+  grass.wrapS = THREE.RepeatWrapping;
+  grass.wrapT = THREE.RepeatWrapping;
+  grass.repeat.set(8, 8);
   blockPlane = new THREE.Mesh(
     new THREE.BoxBufferGeometry(),
-    new THREE.MeshPhongMaterial({ map: grass })
+    new THREE.MeshLambertMaterial({ map: grass })
   );
 
   blockPlane.position.set(pos.x, pos.y, pos.z);
@@ -556,8 +593,6 @@ function loadNPC() {
       });
       yasuo = gltf.scene;
       yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      //NPCObject = new THREE.Mesh(yasuo.geometry, yasuo.material);
-
       scene.add(yasuo);
       yasuo.userData.tag = "NPCYasuo";
       //Ammojs Section -> physics section
@@ -606,106 +641,6 @@ function loadNPC() {
   );
 }
 
-function loadVolcano() {
-  let pos = { x: 0, y: 0, z: 0 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/Volcano.glb",
-    function (gltf) {
-      gltf.scene.scale.set(400, 400, 400);
-      gltf.scene.translateX(600);
-      gltf.scene.translateZ(-600);
-      gltf.scene.translateY(0);
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      const model = gltf.scene;
-
-      model.castShadow = true;
-      model.receiveShadow = true;
-      scene.add(model);
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      transform.setRotation(
-        new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-      let verticesPos = model.geometry.getAttribute("position").array;
-      let triangles = [];
-      for (let i = 0; i < verticesPos.length; i += 3) {
-        triangle.push({
-          x: verticesPos[i],
-          y: verticesPos[i + 2],
-          z: verticesPos(i + 3),
-        });
-      }
-
-      let triangle,
-        triangle_mesh = new Ammo.btTriangleMesh();
-
-      let vecA = new Ammo.btVector3(0, 0, 0);
-      let vecB = new Ammo.btVector3(0, 0, 0);
-      let vecC = new Ammo.btVector3(0, 0, 0);
-
-      for (let i = 0; i < triangles.length - 3; i += 3) {
-        vecA.setX(triangles[i].x);
-        vecA.setY(triangles[i].y);
-        vecA.setZ(triangles[i].z);
-
-        vecB.setX(triangles[i + 1].x);
-        vecB.setY(triangles[i + 1].y);
-        vecB.setZ(triangles[i + 1].z);
-
-        vecC.setX(triangles[i + 2].x);
-        vecC.setY(triangles[i + 2].y);
-        vecC.setZ(triangles[i + 2].z);
-
-        triangle_mesh.addTriangle(vecA, vecB, vecC, true);
-      }
-
-      Ammo.destroy(vecA);
-      Ammo.destroy(vecB);
-      Ammo.destroy(vecC);
-
-      const shape = new Ammo.btconvexTriangleMeshShape(
-        triangle_mesh,
-        (model.geometry.verticesNeedUpdate = true)
-      );
-      shape.getMargin(0.05);
-      shape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(body);
-
-      model.userData.physicsBody = body;
-      rigidBodies.push(model);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
-
 function directionOffset() {
   var directionOffset = 0;
 
@@ -735,7 +670,7 @@ function directionOffset() {
 
 function moveBall() {
   //this goes in renderframe()
-  if(this.gamestate===GAMESTATE.PAUSED){
+  if (this.gamestate === GAMESTATE.PAUSED) {
     return;
   }
   let scalingFactor = 20;
@@ -842,7 +777,7 @@ function checkContact() {
 }
 
 function jump() {
-  if(this.gamestate===GAMESTATE.PAUSED){
+  if (this.gamestate === GAMESTATE.PAUSED) {
     return;
   }
   cbContactPairResult.hasContact = false;
@@ -887,9 +822,9 @@ function isCollect() { //checking the collectibles array if any of the collectib
   }
 }
 
-function TogglePause(){
-  if(this.gamestate===GAMESTATE.PAUSED){
-    this.gamestate=GAMESTATE.RUNNING;
+function TogglePause() {
+  if (this.gamestate === GAMESTATE.PAUSED) {
+    this.gamestate = GAMESTATE.RUNNING;
 
   }
   else{
@@ -900,7 +835,7 @@ function TogglePause(){
   }
 }
 
-function Menu(){
+function Menu() {
   //window.location.href = "menu.html";
   // var menu_div=document.createElement('div');
   // menu_div.className='flex text-align-center text-lg fixed absolute font-serif text-white select-none';
@@ -910,12 +845,12 @@ function Menu(){
   // menu_div.style.top='35%';
 
 
-  document.getElementById("Menu_Buttons").style.visibility="visible";
+  document.getElementById("Menu_Buttons").style.visibility = "visible";
 }
 
-function Resume(){
+function Resume() {
   //window.location.href="index.html";
-  document.getElementById("Menu_Buttons").style.visibility="hidden";
+  document.getElementById("Menu_Buttons").style.visibility = "hidden";
 
 }
 
@@ -936,15 +871,15 @@ function setupContactPairResultCallback(){
 
   cbContactPairResult.hasContact = false;
 
-  cbContactPairResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+  cbContactPairResult.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1) {
 
-      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+    let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
-      const distance = contactPoint.getDistance();
+    const distance = contactPoint.getDistance();
 
-      if( distance > 0 ) return;
+    if (distance > 0) return;
 
-      this.hasContact = true;
+    this.hasContact = true;
   };
 }
 
@@ -1103,7 +1038,7 @@ function updatePhysics(deltaTime) { // update physics world
   // if(this.gamestate===GAMESTATE.PAUSED || this.gamestate===GAMESTATE.MENU){
   //   return;
   // }
-  
+
   // Update rigid bodies
   //for (let i = 0; i < rigidBodies.length; i++) {
   //console.log(rigidBodies);
