@@ -74,7 +74,7 @@ let npcContact = false; //boolean to check if player made contact with NPC
 var mapCamera,
   mapWidth = 240,
   mapHeight = 160;
-let isTimeOut, isTimerOn = false;
+let isTimeOut = false;
 //Ammojs Initialization
 Ammo().then(start);
 function start() {
@@ -107,7 +107,7 @@ function start() {
   //   createTree_3();
   // }
 
-  createOcean();
+  //createOcean();
   loadVolcano();
   //createHead();
   // for (var i = 0; i < 50; i++) {
@@ -431,9 +431,13 @@ function handleKeyUp(event) {
 }
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
+
+  
   display = document.querySelector('#time');
   function timer() {
     if (totalTime > 0) {
+
+      isTimeOut = false;
       setTimeout(timer, 1000);
       isTimerOn = true;
       totalTime--;
@@ -445,19 +449,103 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
       seconds = seconds < 10 ? "0" + seconds : seconds;
 
       display.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
+
+      //collectibles
+      if (collectibles.length == 0){
+        isTimeOut = true;
+        console.log("you have won");
+        //create a pop up to give player some story
+        var task = document.createElement('div');
+        task.style.position = 'absolute';
+        task.style.zIndex = 1;  
+        task.style.width = 600;
+        task.style.height = 200;
+        task.style.backgroundColor = "#242424";
+        task.style.opacity = "0.9";
+        task.innerHTML = "You have won<br><br>";
+        task.style.color = "white";
+        task.style.top = 200 + 'px';
+        task.style.left = 200 + 'px';
+
+        //button to confirm
+        var btnOk = document.createElement('button');
+        btnOk.style.backgroundColor = "red";
+        btnOk.innerHTML = "yay";
+        btnOk.onclick = function () { 
+          freeroam();
+          document.body.removeChild(task); 
+          
+
+        }
+
+      task.appendChild(btnOk)
+      document.body.appendChild(task)
+        
+
+      }
+
     }
     else {
       isTimeOut = true;
       //TO DO: Game Over screen -> mission failed with restart/exit button
+      //console.log("you have failed (timer function)");
+
+      if (collectibles.length > 0){
+        console.log("you have lost");
+        freeroam();
+
+      //create a pop up to give player some story
+      var task = document.createElement('div');
+      task.style.position = 'absolute';
+      task.style.zIndex = 1;  
+      task.style.width = 600;
+      task.style.height = 200;
+      task.style.backgroundColor = "#242424";
+      task.style.opacity = "0.9";
+      task.innerHTML = "You have failed. Would you like to retry or quit mission?<br><br>";
+      task.style.color = "white";
+      task.style.top = 200 + 'px';
+      task.style.left = 200 + 'px';
+
+      //button to retry
+      var btnOk = document.createElement('button');
+      btnOk.style.backgroundColor = "red";
+      btnOk.innerHTML = "retry";
+      btnOk.onclick = function () { 
+        console.log("retry mission");
+        startMission();
+      
+        document.body.removeChild(task); 
+
+      }
+
+      //button to quit mission and go back to normal
+      var btnCancel = document.createElement('button');
+      btnCancel.style.backgroundColor = "blue";
+      btnCancel.innerHTML = "quit mission";
+      btnCancel.onclick = function () { 
+        document.body.removeChild(task);  
+      }
+
+
+      task.appendChild(btnCancel)
+      task.appendChild(btnOk)
+      document.body.appendChild(task)
+
+      }
+
     }
   }
-  timer();
+
+  if (isTimeOut == false){
+    timer();
+
+  }
+
+  
 }
 
-window.onload = function () { //this is how you set the timer
-  var totalTime = 10; //in seconds
-  startTimer(totalTime);
-};
+
 
 function createBlock() {
   let pos = { x: 0, y: 0, z: 0 };
@@ -929,23 +1017,28 @@ function startMission(){
 
   //button to confirm
   var btnOk = document.createElement('button');
-
-  
   btnOk.style.backgroundColor = "red";
   btnOk.innerHTML = "ok";
   btnOk.onclick = function () { 
     console.log("mission started");
-    Mission();
-
+   
     collectCounter = 0; //reset counter 
 
-    let numCollectibles = 30;
+    let numCollectibles = 1;
 
     for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
       collectible1 = new Collectible();
       collectible1.createCollectible();
       collectibles.push(collectible1);
     }
+
+    var totalTime = 20; //in seconds
+    startTimer(totalTime);
+
+    //display points counter
+
+    Mission();
+
     document.body.removeChild(task); 
     //start timer now 
   }
@@ -969,8 +1062,36 @@ function startMission(){
 }
 
 function Mission(){
+
   this.missionstate = MISSIONSTATE.MISSION;
   console.log("currently in a mission");
+
+  //window.onload = function () { //this is how you set the timer
+    
+  //};
+
+
+  // if ((isTimeOut == false) && (collectibles.length == 0)) {
+  //   console.log("you have won");
+  //   freeroam();
+
+  // }
+  // else if ((isTimeOut) && (collectibles.length > 0)) {
+  //   console.log("you have failed");
+  //   freeroam();
+
+  // }
+  // timer stuff here.
+  // if (timer not run out) && (collectibles.length === 0){ 
+  //  success  
+  // }
+  // else if (timer run out) && (collectibles.length > 0) {
+  //        fail
+            // popup to retry or quit
+            // if quit then return to freeroam. call freeroam()
+            // if retry then call startMission() again ??
+
+  //} 
 
   
 }
