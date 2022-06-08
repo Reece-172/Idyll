@@ -47,13 +47,14 @@ let cbContactResult;
 const GAMESTATE={
   PAUSED:0,
   RUNNING:1,
-  MENU:2,
-  GAMEOVER:3
+  GAMEOVER:2
 };//for loading screen
 window.addEventListener('load',function(){
   var loadingScreen=document.getElementById('loadingScreen');
   document.body.removeChild(loadingScreen);
 });
+
+
 //for fps display
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
@@ -905,22 +906,35 @@ function Menu(){
   // menu_div.style.top='35%';
 
 
-  document.getElementById("Menu_Buttons").style.visibility="visible";
+  document.getElementById("Menu_Buttons").style.display='flex';
 }
 
 function Resume(){
   //window.location.href="index.html";
-  document.getElementById("Menu_Buttons").style.visibility="hidden";
+  document.getElementById("Menu_Buttons").style.display='none';
 
 }
 function Controls(){
-  document.getElementById("Menu_Buttons").style.visibility="hidden";
+  const controls=document.getElementById("controlsScreen");
+  controls.style.display='flex';
   //set controls div to visible
 
+}
+function Back(){
+  const controls=document.getElementById("controlsScreen");
+  controls.style.display='none';
 }
 function Quit(){
  location.reload();
 
+}
+function Begin(){
+  const landing_page= document.getElementById('landingScreen');
+  landing_page.style.display='none';
+  const menu_button=document.getElementById('menu');
+  menu_button.style.display='flex';
+  const points=document.getElementById('Points');
+  points.style.display='flex';
 }
 
 function setupContactPairResultCallback(){ //this is for the ball and the block
