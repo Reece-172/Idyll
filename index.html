@@ -122,6 +122,7 @@
     <script src="js/world.js"></script>
     <script src="main.js"></script>
     <script src="js/collectible.js"></script>
+    <script src="js/jumpPlatform.js"></script>
     <script src="js/StaticModel.js"></script>
         
     <div id="Points" class="fixed text-white  ml-2 mt-1 select-none " style="display: none; position: fixed; top: 95%; right: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;"><span>Points: </span><span id="PointsEl">0</span></div> 
@@ -136,17 +137,26 @@
         Game Paused 
     </div>
 
-    <!-- <div id='GameOverScreen' class="GameOverScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:0.9 ;">
-        <h3 class=" text-align-center text-lg text-white select-none" style="position: fixed; top: 50%; left:44%; color: #fff;font-family: 'Comfortaa', cursive; font-size: x-large;">GAME OVER</h3>
+    <div id="Time" class="fixed font-serif text-white ml-2 mt-1 select-none">       <span id="time"></span>     </div>
 
-        <button id="Try Again" onclick=Quit() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Major Monospace Display,monospace;">Try Again</button>
-    </div> -->
+    <div id='SuccessScreen' class="SuccessScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">
+        <h3 class=" text-align-center text-white select-none" style="position: fixed; top: 50%; left:44%; font-family: 'Comfortaa', cursive; font-size: x-large;">Congratulations</h3>
+        <p class=" text-align-center text-white select-none" style="position: fixed; top: 65%; left:14%;font-family: 'Major Mono Display', monospace; font-size: large;">You have accumulated enough points. You may now enter The Good Place.</p>
+
+        <button id="Restart" onclick='Quit()' class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Restart</button>
+    </div>
+
+    <div id='GameOverScreen' class="GameOverScreen" style="position: fixed; display:none; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">
+        <h3 class=" text-align-center text-white select-none" style="position: fixed; top: 50%; left:44%; font-family: 'Comfortaa', cursive; font-size: x-large;">GAME OVER</h3>
+        <button id="Restart" onclick='Quit()' class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Restart</button>
+    </div>
 
     <div id="Menu_Buttons"class=" flex text-align-center text-lg fixed absolute text-white select-none" style="left:45%; top:35%; display: none;font-family:'Comfortaa',cursive;">
         <ul>
-            <li id="Resume_Button" onclick="Resume()" style="--i:4;"><button> Resume  </button></li>
-            <li id="Controls_Button" onclick="Controls()" style="--i:3;"><button > Controls  </button></li>
-            <li id="Quit_Button" onclick="Quit()" style="--i:2;"><button> Quit </button></li>
+            <li id="Resume_Button" onclick="Resume()" style="--i:5;"><button> Resume  </button></li>
+            <li id="Controls_Button" onclick="Controls()" style="--i:4;"><button > Controls  </button></li>
+            <li id="Quit_Mission_Button" onclick="quitMission()" style="--i:3; display: none;"><button type="button"> Quit Mission  </button></li>
+            <li id="Quit_Button" onclick="Quit()" style="--i:2;"><button> Quit Game</button></li>
             <li id="Credits_Button" style="--i:1;"><button> Credits  </button></li>
         </ul> 
     </div>
@@ -154,10 +164,8 @@
 
 
     <div id='controlsScreen' class="controlsScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.8;">
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex; top: 55%; left:15%;font-family:'Comfortaa',cursive;" disabled><span>&#8592;</span></button>
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; left:19%;font-family:'Comfortaa',cursive;" disabled><span>&#8593;</span></button>
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:23%;font-family:'Comfortaa',cursive;" disabled><span>&#8594;</span></button>
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:19%;font-family:'Comfortaa',cursive;" disabled><span>&#8595;</span></button>
+        <img class="mouse" src="./resources/mouse.png" alt="mouse" style="height: 100px; position: absolute;left:19%">
+
         <h3 style="position: absolute; top: 65%; left: 19%;transform: translate(-19%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Switch views</h3>
     
                 
@@ -181,6 +189,20 @@
         <button id="back" onclick="Back()" class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: flex;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
             Back
         </button>
+    </div>
+
+    <div id='task' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">
+        <p>Hello there young traveller. I seem to have misplaced my things. Please help me find them.</p>
+        <button id='Accept' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Accept</button>
+        <button id='Reject' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px; left:100px; display: flex;font-family:'Comfortaa',cursive;">Reject</button>
+
+    </div>
+
+    <div id='quitMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">
+        <p>Are you sure you want to quit the mission?</p>
+        <button id='Yes' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Yes</button>
+        <button id='No' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px; left:100px; display: flex;font-family:'Comfortaa',cursive;">No</button>
+
     </div>
 
         
