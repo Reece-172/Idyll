@@ -10,8 +10,10 @@ let physicsWorld,
  * New models
  * Collision -> on new objects
  **/
+
+// Ball Graphics / THREE Object
 let ballObject = null,
-  moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0, down: 0 }; //used to hold the respective directional key (WASD)
+  moveDirection = { left: 0, right: 0, forward: 0, back: 0, up: 0}; //used to hold the respective directional key (WASD)
 
 // Variable to store first person / third person state
 // Handling "firstPersonPressed" differently from firstPerson so
@@ -20,14 +22,15 @@ let ballObject = null,
 // If treated depending on firstPerson variable, then "orbitControls.update()"
 // is run on every "updatePhysics()" call, which causes erratic camera / character movement
 let firstPerson = false, firstPersonPressed = false;
-let lookLeft = false,
-  lookRight = false,
-  lookBack = false;
 
 // Control Temp data
 var orbitControls;
-walkDirection = new THREE.Vector3();
+rollDirection = new THREE.Vector3();
 rotateAngle = new THREE.Vector3(0, 1, 0);
+
+// Platform related
+let platform1;
+let platforms = [];
 
 
 let heroObject = null,
@@ -38,24 +41,24 @@ const STATE = { DISABLE_DEACTIVATION: 4 };
 // let collectible1Object = null, //put here if want to make the object global
 //   collectible2Object = null;
 
-let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6; //collision purposes
+let colGroupBall = 2, colGroupChar = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6, colGroupPlatform = 7; //collision purposes
 
 let collectCounter;
 
 let cbContactPairResult, blockPlane, ball, collectible1;
 let cbContactResult;
-const GAMESTATE={
-  PAUSED:0,
-  RUNNING:1,
-  MENU:2,
-  GAMEOVER:3
+const GAMESTATE = {
+  PAUSED: 0,
+  RUNNING: 1,
+  MENU: 2,
+  GAMEOVER: 3
 };//for loading screen
-window.addEventListener('load',function(){
-  var loadingScreen=document.getElementById('loadingScreen');
+window.addEventListener('load', function () {
+  var loadingScreen = document.getElementById('loadingScreen');
   document.body.removeChild(loadingScreen);
 });
 //for fps display
-(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+(function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//mrdoob.github.io/stats.js/build/stats.min.js'; document.head.appendChild(script); })()
 
 let isCollection1Present, isCollection2Present;
 let collectibles = [];
@@ -65,24 +68,24 @@ let npcContact = false; //boolean to check if player made contact with NPC
 var mapCamera,
   mapWidth = 240,
   mapHeight = 160;
+
 //Ammojs Initialization
 Ammo().then(start);
+
+
+// Start of All Functions
 
 function start() {
   tmpTrans = new Ammo.btTransform();
   collectCounter = 0;
-  this.gamestate=GAMESTATE.RUNNING;
+  this.gamestate = GAMESTATE.RUNNING;
 
- 
-  
+
   setupPhysicsWorld();
   setupGraphics();
 
-  for (var i = 0; i < 70; i++) { //add high and low collectibles so user has to jump
-    collectible1 = new Collectible();
-    collectible1.createCollectible();
-    collectibles.push(collectible1);
-  }
+  // Load level (Create Platforms and Collectibles)
+  loadLevel_3_Objective();
 
 
   createBlock();
@@ -257,22 +260,25 @@ function renderFrame() {
   requestAnimationFrame(renderFrame);
   let deltaTime = clock.getDelta();
   //createFont();
-  
-    moveBall();
-  
+
+  // Move the ball
+  moveBall();
+
   //moveHero();
 
+  // Change camera focus according to whether in 1st person or 3rd person mode
   if (firstPerson == true) {
     camera.lookAt(ballObject.position.x, ballObject.position.y + 3, ballObject.position.z);
   } else {
     camera.lookAt(ballObject.position);
   }
+  
   updatePhysics(deltaTime);
-  if(this.gamestate===GAMESTATE.PAUSED){
-    document.getElementById("Game Paused").style.visibility="visible";
+  if (this.gamestate === GAMESTATE.PAUSED) {
+    document.getElementById("Game Paused").style.visibility = "visible";
   }
-  else{
-    document.getElementById("Game Paused").style.visibility="hidden";
+  else {
+    document.getElementById("Game Paused").style.visibility = "hidden";
   }
 
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
@@ -281,7 +287,7 @@ function renderFrame() {
   if (collectibles.length !== 0) {
     isCollect();
   }
-  const points = document.getElementById('PointsEl'); 
+  const points = document.getElementById('PointsEl');
   points.innerHTML = collectCounter; //updates points on screen
 
   renderer.render(scene, camera);
@@ -344,15 +350,6 @@ function handleKeyDown(event) {
       firstPersonPressed = true;
       break;
 
-    case 37:
-      lookLeft = true;
-      break;
-    case 39:
-      lookRight = true;
-      break;
-    case 40:
-      lookBack = true;
-      break;
 
     case 32: //space bar
       //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
@@ -368,7 +365,7 @@ function handleKeyDown(event) {
       break;
 
     case 80:
-      TogglePause(); 
+      TogglePause();
     // case 67: //c
     //   isCollect();
   }
@@ -400,16 +397,6 @@ function handleKeyUp(event) {
 
     case 70: // (First Person Button, "F", Pressed --> Change Camera)
       firstPersonPressed = false;
-      break;
-
-    case 37:
-      lookLeft = false;
-      break;
-    case 39:
-      lookRight = false;
-      break;
-    case 40:
-      lookBack = false;
       break;
 
     case 32: //space bar
@@ -471,7 +458,7 @@ function createBlock() {
   physicsWorld.addRigidBody(
     body,
     colGroupBlock,
-    colGroupBall | colGroupChar | colGroupCollectible
+    colGroupBall | colGroupChar | colGroupCollectible | colGroupPlatform
   );
 
   body.threeObject = blockPlane;
@@ -533,7 +520,134 @@ function createBall() {
   body.threeObject = ball;
 }
 
+// Create a platform with a collectible on it
+function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
 
+  // createPlatform() method is overridable with x-y-z
+  // coordinates (E.g. createPlatform(10,5,-30))
+  platform1 = new JumpPlatform();
+  platform1.createPlatform({ posX: pos_x, posY: pos_y, posZ: pos_z });
+  platforms.push(platform1);
+
+  // createCollectible() method is overridable with x-y-z
+  // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+  collectible1 = new Collectible();
+  collectible1.createCollectible({ posX: pos_x, posY: pos_y + 2, posZ: pos_z, collectible_colour });
+  collectibles.push(collectible1);
+
+}
+
+// Platforms and Collectibles to load for level 1 (easy)
+function loadLevel_1_Objective() {
+
+  // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
+  n = 10;
+  collectible_colour = "gold";
+
+  // Arrays of all the platform locations
+  // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
+  all_platform_coordinates = [20,5,-80];
+  collectible_platform_coordinates = [20,10,-100,  40,5,-40,  -20,5,-120];
+
+
+  for (var i = 0; i < n; i++) { //add high and low collectibles so user has to jump
+    // createCollectible() method is overridable with x-y-z
+    // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+    // and colour
+    collectible1 = new Collectible();
+    collectible1.createCollectible({ collectible_colour });
+    collectibles.push(collectible1);
+  }
+
+  for (var i = 0; i < all_platform_coordinates.length; i += 3) {
+    // createPlatform() method is overridable with x-y-z
+    // coordinates (E.g. createPlatform(10,5,-30))
+    platform1 = new JumpPlatform();
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platforms.push(platform1);
+  }
+
+  for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
+    // Setup Platform with Collectiable on it
+    // Parameters: x-y-z coordinates of platform, collectible colour
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+  }
+}
+
+// Platforms and Collectibles to load for level 2 (intermediate)
+function loadLevel_2_Objective() {
+  // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
+  n = 10;
+  collectible_colour = "pink";
+
+  // Array of all the platform locations
+  // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
+  all_platform_coordinates = [-20, 5, -20, -30, 10, -40];
+  collectible_platform_coordinates = [-25, 15, -60, -15, 20, -80, 0, 15, -120];
+
+
+  for (var i = 0; i < n; i++) { //add high and low collectibles so user has to jump
+    // createCollectible() method is overridable with x-y-z
+    // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+    // and colour
+    collectible1 = new Collectible();
+    collectible1.createCollectible({ collectible_colour });
+    collectibles.push(collectible1);
+  }
+
+  for (var i = 0; i < all_platform_coordinates.length; i += 3) {
+    // createPlatform() method is overridable with x-y-z
+    // coordinates (E.g. createPlatform(10,5,-30))
+    platform1 = new JumpPlatform();
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platforms.push(platform1);
+  }
+
+  for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
+    // Setup Platform with Collectiable on it
+    // Parameters: x-y-z coordinates of platform, collectible colour
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+  }
+
+}
+
+// Platforms and Collectibles to load for level 3 (advanced)
+function loadLevel_3_Objective() {
+  // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
+  n = 10;
+  collectible_colour = "red";
+
+  // Array of all the platform locations
+  // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
+  all_platform_coordinates = [-20,5,-20,  -30,10,-40, -30,15,-60,  -40,15,-60,  -50,15,-60,  -60,15,-60, -70,15,-60,  -70,15,-50,  -70,20,-30,
+                            -65,25,-10,  -55,30,10, -35,35,10];
+  collectible_platform_coordinates = [-15,20,-80,  0,15,-120, -15,40,10,  -15, 45, 30];
+
+
+  for (var i = 0; i < 10; i++) { //add high and low collectibles so user has to jump
+    // createCollectible() method is overridable with x-y-z
+    // coordinates (E.g. createCollectible(posX: 10, posY: 2, posZ: -30))
+    // and colour
+    collectible1 = new Collectible();
+    collectible1.createCollectible({ collectible_colour });
+    collectibles.push(collectible1);
+  }
+
+  for (var i = 0; i < all_platform_coordinates.length; i += 3) {
+    // createPlatform() method is overridable with x-y-z
+    // coordinates (E.g. createPlatform(10,5,-30))
+    platform1 = new JumpPlatform();
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platforms.push(platform1);
+  }
+
+  for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
+    // Setup Platform with Collectiable on it
+    // Parameters: x-y-z coordinates of platform, collectible colour
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+  }
+
+}
 
 function loadCharacter() {
   let pos = { x: 10, y: 1, z: -50 };
@@ -728,38 +842,52 @@ function directionOffset() {
 
 function moveBall() {
   //this goes in renderframe()
-  if(this.gamestate===GAMESTATE.PAUSED){
+  if (this.gamestate === GAMESTATE.PAUSED) {
     return;
   }
   let scalingFactor = 20;
 
   let moveX = moveDirection.right - moveDirection.left;
   let moveZ = moveDirection.back - moveDirection.forward;
-  let moveY = moveDirection.up - moveDirection.down * 2;
+  let moveY = moveDirection.up;
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
-  var dirOffset = directionOffset();
-  var jumpOffset = (Math.PI / 4);
+  // ----- Check Contact before doing any move calculation (start) -----
+  cbContactPairResult.hasContact = false;
 
+  physicsWorld.contactPairTest(
+    ball.userData.physicsBody,
+    blockPlane.userData.physicsBody,
+    cbContactPairResult
+  );
 
-  camera.getWorldDirection(walkDirection);
-  walkDirection.y = 0;
-  walkDirection.normalize();
-
-  if (moveDirection.up == true) {
-    tempDirection = new THREE.Vector3();
-    tempDirection = walkDirection.applyAxisAngle(rotateAngle, dirOffset);
-    tempDirection.normalize();
-    walkDirection.applyAxisAngle(tempDirection, jumpOffset);
-    console.log("{1} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
-
-  } else {
-    walkDirection.applyAxisAngle(rotateAngle, dirOffset);
-    console.log("{2} Direction for Impulse:\n" + "\nx: " + walkDirection.x + "\ny: " + walkDirection.y + "\nz: " + walkDirection.z);
+  for (var i = 0; i < platforms.length; i++) {
+    physicsWorld.contactPairTest(
+      ball.userData.physicsBody,
+      platforms[i].getPlatformObject().userData.physicsBody,
+      cbContactPairResult
+    );
   }
 
-  let resultantImpulse = new Ammo.btVector3(walkDirection.x, walkDirection.y, walkDirection.z);
+  if (!cbContactPairResult.hasContact) return;
+  // ----- Check Contact before doing any move calculation (end) -----
+
+
+  var dirOffset = directionOffset();
+
+  camera.getWorldDirection(rollDirection);
+  rollDirection.y = 0;
+
+  if (moveDirection.up == true) {
+    rollDirection.y = 1;
+  }
+
+  rollDirection.normalize();
+  rollDirection.applyAxisAngle(rotateAngle, dirOffset);
+
+
+  let resultantImpulse = new Ammo.btVector3(rollDirection.x, rollDirection.y, rollDirection.z);
   resultantImpulse.op_mul(scalingFactor);
 
   let physicsBody = ballObject.userData.physicsBody;
@@ -835,27 +963,7 @@ function checkContact() {
   physicsWorld.contactTest(ball.userData.physicsBody, cbContactResult);
 }
 
-function jump() {
-  if(this.gamestate===GAMESTATE.PAUSED){
-    return;
-  }
-  cbContactPairResult.hasContact = false;
 
-  physicsWorld.contactPairTest(
-    ball.userData.physicsBody,
-    blockPlane.userData.physicsBody,
-    cbContactPairResult
-  );
-
-  if (!cbContactPairResult.hasContact) return;
-
-  let jumpImpulse = new Ammo.btVector3(0, 15, 0);
-
-  let physicsBody = ball.userData.physicsBody;
-  physicsBody.setLinearVelocity(jumpImpulse);
-}
-
-  
 
 function isCollect() { //checking the collectibles array if any of the collectibles were in contact with the ball. If so, remove collectible from scene
 
@@ -883,19 +991,19 @@ function isCollect() { //checking the collectibles array if any of the collectib
   }
 }
 
-function TogglePause(){
-  if(this.gamestate===GAMESTATE.PAUSED){
-    this.gamestate=GAMESTATE.RUNNING;
+function TogglePause() {
+  if (this.gamestate === GAMESTATE.PAUSED) {
+    this.gamestate = GAMESTATE.RUNNING;
 
   }
-  else{
-    this.gamestate=GAMESTATE.PAUSED;
+  else {
+    this.gamestate = GAMESTATE.PAUSED;
 
 
   }
 }
 
-function Menu(){
+function Menu() {
   //window.location.href = "menu.html";
   // var menu_div=document.createElement('div');
   // menu_div.className='flex text-align-center text-lg fixed absolute font-serif text-white select-none';
@@ -905,39 +1013,39 @@ function Menu(){
   // menu_div.style.top='35%';
 
 
-  document.getElementById("Menu_Buttons").style.visibility="visible";
+  document.getElementById("Menu_Buttons").style.visibility = "visible";
 }
 
-function Resume(){
+function Resume() {
   //window.location.href="index.html";
-  document.getElementById("Menu_Buttons").style.visibility="hidden";
+  document.getElementById("Menu_Buttons").style.visibility = "hidden";
 
 }
-function Controls(){
-  document.getElementById("Menu_Buttons").style.visibility="hidden";
+function Controls() {
+  document.getElementById("Menu_Buttons").style.visibility = "hidden";
   //set controls div to visible
 
 }
-function Quit(){
- location.reload();
+function Quit() {
+  location.reload();
 
 }
 
-function setupContactPairResultCallback(){ //this is for the ball and the block
+function setupContactPairResultCallback() { //this is for the ball and the block
 
   cbContactPairResult = new Ammo.ConcreteContactResultCallback();
 
   cbContactPairResult.hasContact = false;
 
-  cbContactPairResult.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1){
+  cbContactPairResult.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1) {
 
-      let contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+    let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
-      const distance = contactPoint.getDistance();
+    const distance = contactPoint.getDistance();
 
-      if( distance > 0 ) return;
+    if (distance > 0.5) return;
 
-      this.hasContact = true;
+    this.hasContact = true;
   };
 }
 function isContactNPC() {
@@ -954,10 +1062,10 @@ function isContactNPC() {
   if (!cbContactPairResult.hasContact) return;
 
   //what to do if there is contact:
-    //press button
-    npcContact = true;
+  //press button
+  npcContact = true;
 
-      this.hasContact = true;
+  this.hasContact = true;
 
 }
 
@@ -967,7 +1075,7 @@ function updatePhysics(deltaTime) { // update physics world
   // if(this.gamestate===GAMESTATE.PAUSED || this.gamestate===GAMESTATE.MENU){
   //   return;
   // }
-  
+
   // Update rigid bodies
   //for (let i = 0; i < rigidBodies.length; i++) {
   //console.log(rigidBodies);
