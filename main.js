@@ -113,7 +113,16 @@ function start() {
 
   createBlock();
   createBall();
-  loadNPC();
+
+  loadNPC1();
+  loadNPC2();
+  loadNPC3();
+  
+
+  // let NPC1 = new NPC("./resources/models/Yasuo.glb");
+  // NPC1.createNPC();
+  // NPCs.push(NPC1);
+
   createWorld();
 
 
@@ -254,6 +263,12 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  window.addEventListener('resize',function(){
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+
   // Controls -> mouse movement
   orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
   orbitControls.enablePan = false;
@@ -381,8 +396,8 @@ function handleKeyDown(event) {
       break;
 
     case 77: //m
-      //checkContact(); //shows what the ball collides with
-      console.log(this.missionstate);
+      checkContact(); //shows what the ball collides with
+      //console.log(this.missionstate);
       break;
 
     case 80: //p
@@ -471,30 +486,18 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         totalTime = 0;
         //clearInterval(myTimer);
         //create a pop up to give player some story
-        var task = document.createElement('div');
-        task.style.position = 'absolute';
-        task.style.zIndex = 1;
-        task.style.width = 600;
-        task.style.height = 200;
-        task.style.backgroundColor = "#242424";
-        task.style.opacity = "0.9";
-        task.innerHTML = "You have won<br><br>";
-        task.style.color = "white";
-        task.style.top = 200 + 'px';
-        task.style.left = 200 + 'px';
+        var task = document.getElementById('completedMission');
+        task.style.display='flex';
 
         //button to confirm
-        var btnOk = document.createElement('button');
-        btnOk.style.backgroundColor = "red";
-        btnOk.innerHTML = "yay";
+        var btnOk = document.getElementById('Okay');
+
         btnOk.onclick = function () {
           freeroam();
-          document.body.removeChild(task); 
+          task.style.display='none'; 
   
         }
 
-        task.appendChild(btnOk)
-        document.body.appendChild(task)
           
         return;
 
@@ -514,43 +517,29 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         freeroam();
 
         //create a pop up to give player some story
-        var task = document.createElement('div');
-        task.style.position = 'absolute';
-        task.style.zIndex = 1;
-        task.style.width = 600;
-        task.style.height = 200;
-        task.style.backgroundColor = "#242424";
-        task.style.opacity = "0.9";
-        task.innerHTML = "You have failed. Would you like to retry or quit mission?<br><br>";
-        task.style.color = "white";
-        task.style.top = 200 + 'px';
-        task.style.left = 200 + 'px';
+        var task = document.getElementById('failedMission');
+        task.style.display='flex';
+
 
         //button to retry
-        var btnOk = document.createElement('button');
-        btnOk.style.backgroundColor = "red";
-        btnOk.innerHTML = "retry";
+        var btnOk = document.getElementById('Retry');
         btnOk.onclick = function () { 
           console.log("retry mission");
           startMission(mission_active);
         
-          document.body.removeChild(task); 
+          task.style.display='none';
 
         }
 
         //button to quit mission and go back to normal
-        var btnCancel = document.createElement('button');
-        btnCancel.style.backgroundColor = "blue";
-        btnCancel.innerHTML = "quit mission";
+        var btnCancel = document.getElementById('Quit_Mission');
+
         btnCancel.onclick = function () {
           //freeroam(); 
-          document.body.removeChild(task);  
+          task.style.display='none' ;
         } 
 
 
-        task.appendChild(btnCancel)
-        task.appendChild(btnOk)
-        document.body.appendChild(task)
         
         return;
       }
@@ -829,73 +818,9 @@ function loadLevel_3_Objective() {
 
 }
 
-function loadNPC() {
-  let pos = { x: 10, y: 1, z: -50 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
 
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/Yasuo.glb",
-    function (gltf) {
-      gltf.scene.scale.set(10, 10, 10);
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      yasuo = gltf.scene;
-      yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      scene.add(yasuo);
-      yasuo.userData.tag = "NPCYasuo";
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      // transform.setRotation(
-      //   new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      // );
 
-      let motionState = new Ammo.btDefaultMotionState(transform);
 
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-
-      const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(yasuo.scale.x * 0.3, yasuo.scale.y * 2, yasuo.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.getMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(
-        body,
-        colGroupNPC,
-        colGroupBall | colGroupBlock
-      );
-
-      yasuo.userData.physicsBody = body;
-      rigidBodies.push(yasuo);
-      body.threeObject = yasuo; //using this to show the collisions with the ball (using in setupContactResultCallback)
-
-      NPCs.push(yasuo);
-
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
 
 function directionOffset() {
   var directionOffset = 0;
@@ -934,6 +859,7 @@ function moveBall() {
   let moveX = moveDirection.right - moveDirection.left;
   let moveZ = moveDirection.back - moveDirection.forward;
   let moveY = moveDirection.up;
+
 
   if (moveX == 0 && moveY == 0 && moveZ == 0) return;
 
@@ -1059,6 +985,23 @@ function isCollect() { //checking the collectibles array if any of the collectib
     if (cbContactPairResult.hasContact) { //if there is contact between the ball and collectible object
 
       collectCounter++;
+      const listener = new THREE.AudioListener();
+      camera.add(listener);
+
+
+      const loadAudio = new THREE.AudioLoader();
+
+      const audio = new THREE.Audio(listener);
+
+      //background music plays when the game is running
+      loadAudio.load("./resources/collectible.wav", function (buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(false);
+        audio.setVolume(0.8);
+        audio.play();
+      });
+      scene.add(audio);
+
       physicsWorld.removeRigidBody(collectibles[i].getCollectibleObject().userData.physicsBody); //remove this rigid body from the physics world
       scene.remove(collectibles[i].getCollectibleObject()); //remove from scene
       rigidBodies = arrayRemove(rigidBodies, collectibles[i].getCollectibleObject()); //remove from rigidbodies array
@@ -1087,14 +1030,6 @@ function TogglePause() {
 }
 
 function Menu() {
-  //window.location.href = "menu.html";
-  // var menu_div=document.createElement('div');
-  // menu_div.className='flex text-align-center text-lg fixed absolute font-serif text-white select-none';
-  // var menu_ul=document.createElement('ul');
-  // var menu_li=document.createElement('li');
-  // menu_div.style.left='45%';
-  // menu_div.style.top='35%';
-
 
   document.getElementById("Menu_Buttons").style.display = 'flex';
 }
@@ -1119,13 +1054,13 @@ function Quit() {
   location.reload();
 
 }
-function Begin() {
-  const landing_page = document.getElementById('landingScreen');
-  landing_page.style.display = 'none';
-  const menu_button = document.getElementById('menu');
-  menu_button.style.display = 'flex';
-  const points = document.getElementById('Points');
-  points.style.display = 'flex';
+
+function Begin(){
+  const landing_page= document.getElementById('landingScreen');
+  landing_page.style.display='none';
+  const menu_button=document.getElementById('menu');
+  menu_button.style.display='flex';
+
 }
 
 function setupContactPairResultCallback() {
@@ -1149,6 +1084,7 @@ function setupContactPairResultCallback() {
 
 function isContactNPC() {
 
+  console.log("There are " + NPCs.length + " NPCs");
 
   for (let i = 0; i < NPCs.length; i++) {
 
@@ -1156,22 +1092,28 @@ function isContactNPC() {
 
     physicsWorld.contactPairTest(
       ball.userData.physicsBody,
+      //NPCs[i].getNPCObject().userData.physicsBody,
       NPCs[i].userData.physicsBody,
       cbContactPairResult
     );
 
     npcContact = false;
 
-    if (!cbContactPairResult.hasContact) break;
+    if (cbContactPairResult.hasContact) {
 
-    npcContact = true;
+      npcContact = true;
 
     if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
       mission_active = i+3;
       startMission(mission_active);
     }
     else {
-      console.log("you have not completed the mission yet"); //make this display on screen
+      const duringMission=document.getElementById('duringMission'); //make this display on screen
+      duringMission.style.display='flex'
+      var Okaybtn=document.getElementById('Ok');
+      Okaybtn.onclick = function () { 
+        duringMission.style.display='none'; 
+      }
     }
 
   }
@@ -1181,30 +1123,32 @@ function isContactNPC() {
 
 }
 
-function startMission(mission_level) {
-
-
-
+function startMission(mission_level){
+  const quit_Button=document.getElementById('Quit_Mission_Button');
+  
+  
   //create a pop up to give player some story
-  var task = document.createElement('div');
-  task.style.position = 'absolute';
-  task.style.zIndex = 1;
-  task.style.width = 600;
-  task.style.height = 200;
-  task.style.backgroundColor = "#242424";
-  task.style.opacity = "0.9";
-  task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
-  task.style.color = "white";
-  task.style.top = 200 + 'px';
-  task.style.left = 200 + 'px';
+  const task = document.getElementById('task');
+  task.style.display='flex';
+  // task.style.position = 'absolute';
+  // task.style.zIndex = 1;  
+  // task.style.width = 600;
+  // task.style.height = 200;
+  // task.style.backgroundColor = "#242424";
+  // task.style.opacity = "0.9";
+  // task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
+  // task.style.color = "white";
+  // task.style.top = 200 + 'px';
+  // task.style.left = 200 + 'px';
 
   //button to confirm
-  var btnOk = document.createElement('button');
-  btnOk.style.backgroundColor = "red";
-  btnOk.innerHTML = "ok";
-  btnOk.onclick = function () {
+  var btnOk = document.getElementById('Accept');
+  btnOk.onclick = function () { 
     console.log("mission started");
+    quit_Button.style.display='flex';
+    document.getElementById('Points').style.display='flex';
 
+   
     collectCounter = 0; //reset counter 
 
     // let numCollectibles = 1;
@@ -1234,25 +1178,18 @@ function startMission(mission_level) {
     }
 
     //display points counter
-    document.body.removeChild(task);
     Mission();
 
-
+    task.style.display='none';
     //start timer now 
   }
 
   //button to not accept mission and go back to normal
-  var btnCancel = document.createElement('button');
-  btnCancel.style.backgroundColor = "yellow";
-  btnCancel.innerHTML = "no.";
-  btnCancel.onclick = function () {
-    document.body.removeChild(task);
+  var btnCancel = document.getElementById('Reject');
+  btnCancel.onclick = function () { 
+    task.style.display='none'; 
   }
 
-
-  task.appendChild(btnCancel)
-  task.appendChild(btnOk)
-  document.body.appendChild(task)
 
 
 
@@ -1326,45 +1263,32 @@ function quitMission() {
   this.gamestate = GAMESTATE.PAUSED; //pause game when dealing with popup
 
   //create a pop up to ask if user wants to quit mission
-  var text2 = document.createElement('div');
-  text2.style.position = 'absolute';
-  text2.style.zIndex = 1;
-  text2.style.width = 600;
-  text2.style.height = 200;
-  text2.style.backgroundColor = "#242424";
-  text2.style.opacity = "0.9";
-  text2.innerHTML = "Are you sure you want to abandon the mission?";
-  text2.style.color = "white";
-  text2.style.top = 200 + 'px';
-  text2.style.left = 200 + 'px';
+  var quitMission = document.getElementById('quitMission');
+  quitMission.style.display='flex';
+
 
   //button to confirm quit
-  var btnQuit = document.createElement('button');
-  btnQuit.style.backgroundColor = "red";
-  btnQuit.innerHTML = "yes";
+  var btnQuit = document.getElementById('Yes');
   btnQuit.onclick = function () { //if user wants to quit
     this.gamestate = GAMESTATE.RUNNING;
+    document.getElementById('Points').style.display='none';
     console.log("mission quit");
     freeroam(); //return to freeroam gameplay
-    document.body.removeChild(text2); //remove this popup
+    quitMission.style.display='none';
+    
   }
 
 
   //button to continue mission and ignore popup
-  var btnNoQuit = document.createElement('button');
-  btnNoQuit.style.backgroundColor = "blue";
-  btnNoQuit.innerHTML = "no";
+  var btnNoQuit = document.getElementById('No');
   btnNoQuit.onclick = function () { //if user doesn't want to quit, carry on with mission
     this.gamestate = GAMESTATE.RUNNING;
-
-    document.body.removeChild(text2);
+    
+    quitMission.style.display='none';
+    document.getElementById('Menu_Buttons').style.display='none';
     //continue timer
   }
 
-  text2.appendChild(btnQuit);
-  text2.appendChild(btnNoQuit);
-
-  document.body.appendChild(text2);
 
 
 
