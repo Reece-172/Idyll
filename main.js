@@ -112,11 +112,15 @@ function start() {
 
   createBlock();
   createBall();
-  //loadNPC();
 
-  let NPC1 = new NPC("./resources/models/Yasuo.glb");
-  NPC1.createNPC();
-  NPCs.push(NPC1);
+  loadNPC1();
+  loadNPC2();
+  loadNPC3();
+  
+
+  // let NPC1 = new NPC("./resources/models/Yasuo.glb");
+  // NPC1.createNPC();
+  // NPCs.push(NPC1);
 
   createWorld();
 
@@ -385,8 +389,8 @@ function handleKeyDown(event) {
       break;
 
     case 77: //m
-      //checkContact(); //shows what the ball collides with
-      console.log(this.missionstate);
+      checkContact(); //shows what the ball collides with
+      //console.log(this.missionstate);
       break;
 
     case 80: //p
@@ -825,73 +829,9 @@ function loadLevel_3_Objective() {
 
 }
 
-function loadNPC() {
-  let pos = { x: 10, y: 1, z: -50 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
 
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/Yasuo.glb",
-    function (gltf) {
-      gltf.scene.scale.set(10, 10, 10);
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      yasuo = gltf.scene;
-      yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      scene.add(yasuo);
-      yasuo.userData.tag = "NPCYasuo";
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      // transform.setRotation(
-      //   new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      // );
 
-      let motionState = new Ammo.btDefaultMotionState(transform);
 
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-
-      const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(yasuo.scale.x * 0.3, yasuo.scale.y * 2, yasuo.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.getMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(
-        body,
-        colGroupNPC,
-        colGroupBall | colGroupBlock
-      );
-
-      yasuo.userData.physicsBody = body;
-      rigidBodies.push(yasuo);
-      body.threeObject = yasuo; //using this to show the collisions with the ball (using in setupContactResultCallback)
-
-      NPCs.push(yasuo);
-
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
 
 function directionOffset() {
   var directionOffset = 0;
@@ -1155,6 +1095,7 @@ function setupContactPairResultCallback() {
 
 function isContactNPC() {
 
+  console.log("There are " + NPCs.length + " NPCs");
 
   for (let i = 0; i < NPCs.length; i++) {
 
@@ -1162,22 +1103,24 @@ function isContactNPC() {
 
     physicsWorld.contactPairTest(
       ball.userData.physicsBody,
-      NPCs[i].getNPCObject.userData.physicsBody,
+      //NPCs[i].getNPCObject().userData.physicsBody,
+      NPCs[i].userData.physicsBody,
       cbContactPairResult
     );
 
     npcContact = false;
 
-    if (!cbContactPairResult.hasContact) break;
+    if (cbContactPairResult.hasContact) {
 
-    npcContact = true;
+      npcContact = true;
 
-    if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      mission_active = i+1;
-      startMission(mission_active);
-    }
-    else {
-      console.log("you have not completed the mission yet"); //make this display on screen
+      if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
+        mission_active = i+1;
+        startMission(mission_active);
+      }
+      else {
+        console.log("you have not completed the mission yet"); //make this display on screen
+      }
     }
 
   }
