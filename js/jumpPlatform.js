@@ -5,16 +5,21 @@ class JumpPlatform {
     
     // Create Platform
     // Accepted Paramaters: x-y-z coordinates with the below values as defualts
-    createPlatform({posX = -20, posY = 5, posZ = -20} = {}) {
+    createPlatform({posX = -20, posY = 5, posZ = -20, object_texture = "image2.jpg"} = {}) {
         let pos = { x: posX, y: posY, z: posZ };
         let scale = { x: 10, y: 1, z: 10 };
         let quat = { x: 0, y: 0, z: 0, w: 1 };
         let mass = 0;
+        let obj_texture = "./resources/" + object_texture;
       
         //threeJS Section
+        const platform_texture = new THREE.TextureLoader().load(obj_texture);
+        platform_texture.wrapS = THREE.RepeatWrapping;
+        platform_texture.wrapT = THREE.RepeatWrapping;
+        // platform_texture.repeat.set(8, 8);
         this.platformPlane = new THREE.Mesh(
           new THREE.BoxBufferGeometry(),
-          new THREE.MeshPhongMaterial({ color: "blue"})
+          new THREE.MeshLambertMaterial({ map: platform_texture})
         );
       
         this.platformPlane.position.set(pos.x, pos.y, pos.z);
