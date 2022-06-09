@@ -91,6 +91,8 @@ let isTimeOut = false;
 let myTimer;
 timerDisplay = document.querySelector('#time');
 
+let isQuit = false;
+
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -446,7 +448,6 @@ function handleKeyUp(event) {
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
 
-
   let timerDisplay = document.querySelector('#time');
   timerDisplay.style.display = "flex";
   clearInterval(myTimer);
@@ -471,6 +472,8 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
       //collectibles
       if (collectibles.length == 0) {
+
+        if (isQuit){return} //if player chooses to quit mission, then dont go ahead with the rest of this function
 
         // Update Level Completion Array
         switch (mission_active) {
@@ -829,10 +832,6 @@ function loadLevel_3_Objective() {
 
 }
 
-
-
-
-
 function directionOffset() {
   var directionOffset = 0;
 
@@ -1160,7 +1159,6 @@ function isContactNPC() {
 
   }
 
-
 }
 
 function startMission(mission_level) {
@@ -1169,17 +1167,29 @@ function startMission(mission_level) {
 
   //create a pop up to give player some story
   const task = document.getElementById('task');
-  task.style.display = 'flex';
-  // task.style.position = 'absolute';
-  // task.style.zIndex = 1;  
-  // task.style.width = 600;
-  // task.style.height = 200;
-  // task.style.backgroundColor = "#242424";
-  // task.style.opacity = "0.9";
-  // task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
-  // task.style.color = "white";
-  // task.style.top = 200 + 'px';
-  // task.style.left = 200 + 'px';
+  const description=document.getElementById('description');
+
+  switch (mission_level) {
+
+    case 1:
+      console.log("Level 1 started")
+      break;
+
+    case 2:
+
+      console.log("Level 2 started")
+      description.innerHTML='LEVEL 2'+'<br>'+'Greetings mortal! It appears that I have a major deadline coming soon for my research project & I need to collect data. Will you help me?';
+      break;
+
+    case 3:
+      description.innerHTML='LEVEL 3'+'<br>'+'Hello human. I had bad day today & I am feeling down. Will you help me feel better by gathering some feel-good music? ';
+      break;
+  }
+
+
+
+  task.style.display='flex';
+
 
   //button to confirm
   var btnOk = document.getElementById('Accept');
@@ -1190,6 +1200,7 @@ function startMission(mission_level) {
 
 
     collectCounter = 0; //reset counter 
+    isQuit = false;
 
     // let numCollectibles = 1;
 
@@ -1207,6 +1218,7 @@ function startMission(mission_level) {
         break;
 
       case 2:
+
         console.log("Level 2 started")
         loadLevel_2_Objective();
         break;
@@ -1263,32 +1275,6 @@ function Mission() {
   startTimer(mission_timer);
   console.log("currently in a mission");
 
-  //window.onload = function () { //this is how you set the timer
-
-  //};
-
-
-  // if ((isTimeOut == false) && (collectibles.length == 0)) {
-  //   console.log("you have won");
-  //   freeroam();
-
-  // }
-  // else if ((isTimeOut) && (collectibles.length > 0)) {
-  //   console.log("you have failed");
-  //   freeroam();
-
-  // }
-  // timer stuff here.
-  // if (timer not run out) && (collectibles.length === 0){ 
-  //  success  
-  // }
-  // else if (timer run out) && (collectibles.length > 0) {
-  //        fail
-  // popup to retry or quit
-  // if quit then return to freeroam. call freeroam()
-  // if retry then call startMission() again ??
-
-  //} 
 
 
 }
@@ -1310,12 +1296,15 @@ function quitMission() {
   //button to confirm quit
   var btnQuit = document.getElementById('Yes');
   btnQuit.onclick = function () { //if user wants to quit
-    this.gamestate = GAMESTATE.RUNNING;
-    document.getElementById('Points').style.display = 'none';
+    //this.gamestate = GAMESTATE.RUNNING;
+    isQuit  = true;
+    document.getElementById('Points').style.display='none';
     console.log("mission quit");
     freeroam(); //return to freeroam gameplay
-    quitMission.style.display = 'none';
-
+    quitMission.style.display='none';
+   
+    return;
+    
   }
 
 
@@ -1328,11 +1317,6 @@ function quitMission() {
     document.getElementById('Menu_Buttons').style.display = 'none';
     //continue timer
   }
-
-
-
-
-
 
   //this.missionstate = MISSIONSTATE.FREEROAM;
 }
@@ -1436,9 +1420,6 @@ function freeroam() {
     }
 
   }
-
-
-  //delete platforms
 
   collectCounter = 0;
 
