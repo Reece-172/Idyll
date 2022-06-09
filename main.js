@@ -46,12 +46,11 @@ let collectCounter;
 
 let cbContactPairResult, blockPlane, ball, collectible1, yasuo;
 let cbContactResult;
-const GAMESTATE = {
+const GAMESTATE = {   //gamestates of the game for interface purposes
   PAUSED: 0,
   RUNNING: 1,
-  MENU: 2,
-  GAMEOVER: 3,
-};//for loading screen
+
+};
 
 
 const MISSIONSTATE = { //in open-world, can either be free roam or mission
@@ -62,13 +61,13 @@ const MISSIONSTATE = { //in open-world, can either be free roam or mission
 let points; //object that displays the points 
 
 
-window.addEventListener('load', function () {
+window.addEventListener('load', function () {   //shows loading page until window has loaded
   var loadingScreen = document.getElementById('loadingScreen');
   document.body.removeChild(loadingScreen);
 });
 
 
-//for fps display
+//for fps/RAM display
 (function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//mrdoob.github.io/stats.js/build/stats.min.js'; document.head.appendChild(script); })()
 
 let collectibles = [];
@@ -90,7 +89,7 @@ Ammo().then(start);
 function start() {
   tmpTrans = new Ammo.btTransform();
   collectCounter = 0;
-  this.gamestate = GAMESTATE.RUNNING;
+  this.gamestate = GAMESTATE.RUNNING;   //change gamestate when game has started
 
 
   //start off in free roam
@@ -200,8 +199,6 @@ function setupGraphics() {
 
   scene.add(camera);
 
-  const PointsEl = document.querySelector("#PointsEl");
-  console.log(PointsEl);
 
   //Add hemisphere light
   let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
@@ -236,7 +233,7 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  window.addEventListener('resize', function () {
+  window.addEventListener('resize', function () {   //when the user resizes their browser window, the game adjusts appropriately
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -273,7 +270,7 @@ function renderFrame() {
 
   updatePhysics(deltaTime);
 
-  //pause
+  //if user pauses toggle between paused screen
   if (this.gamestate === GAMESTATE.PAUSED) {
     document.getElementById("Game Paused").style.visibility = "visible";
   }
@@ -453,11 +450,11 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         mission_active = 0;
 
         isTimeOut = true;
-        console.log("you have won");
-        totalTime = 0;
+        console.log("you have won");            
+        totalTime = 0;                                        
         //clearInterval(myTimer);
-        //create a pop up to give player story
-        var task = document.getElementById('completedMission');
+        //create a pop up to give player some story
+        var task = document.getElementById('completedMission') ;          //display pop up for a completed level
         task.style.display = 'flex';
 
         //button to confirm
@@ -486,7 +483,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         freeroam();
 
         //create a pop up to give player some story
-        var task = document.getElementById('failedMission');
+        var task = document.getElementById('failedMission');    //display pop up if user failed level
         task.style.display = 'flex';
 
 
@@ -980,51 +977,52 @@ function isCollect() { //checking the collectibles array if any of the collectib
   }
 }
 
-function TogglePause() {
+function TogglePause() {            //change gamestate on click of 'p' key
   if (this.gamestate === GAMESTATE.PAUSED) {
     this.gamestate = GAMESTATE.RUNNING;
 
   }
   else {
     this.gamestate = GAMESTATE.PAUSED;
-    //pause timer
 
 
   }
 }
 
-function Menu() {
+function Menu() {     //on click method to display in game menu
 
   document.getElementById("Menu_Buttons").style.display = 'flex';
 }
 
-function Resume() {
-  //window.location.href="index.html";
+function Resume() {         //on click method close in game menu
   document.getElementById("Menu_Buttons").style.display = 'none';
 
 }
 
-function Controls() {
+function Controls() {     //on click method to display controls
   const controls = document.getElementById("controlsScreen");
   controls.style.display = 'flex';
-  //set controls div to visible
 
 }
-function Back() {
+function Back() {       //on click method to return from controls screen
   const controls = document.getElementById("controlsScreen");
   controls.style.display = 'none';
 }
-function Quit() {
+function Quit() {     //on click method to quit the game
   location.reload();
 
 }
 
-function Begin() {
+function Begin() {    //on click method to start the game
   const landing_page = document.getElementById('landingScreen');
   landing_page.style.display = 'none';
   const menu_button = document.getElementById('menu');
   menu_button.style.display = 'flex';
 
+}
+
+function Credits(){     //on click method to view credits
+  window.open('https://idyl.webflow.io/', '_blank');
 }
 
 function setupContactPairResultCallback() {
@@ -1074,7 +1072,7 @@ function isContactNPC() { //check if contact with npc
           startMission(mission_active);
         }
         else {
-          const duringMission = document.getElementById('duringMission'); //make this display on screen
+          const duringMission = document.getElementById('duringMission'); //make this display on screen when user is already in a mission & tries to start a new one
           duringMission.style.display = 'flex'
           var Okaybtn = document.getElementById('Ok');
           Okaybtn.onclick = function () {
@@ -1116,7 +1114,7 @@ function isContactNPC() { //check if contact with npc
 }
 
 function startMission(mission_level) {
-  const quit_Button = document.getElementById('Quit_Mission_Button');
+  const quit_Button = document.getElementById('Quit_Mission_Button');   //make quit level button available when user is in a level
 
 
   //create a pop up to give player some story
