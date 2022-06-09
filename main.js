@@ -109,6 +109,7 @@ function start() {
   // Load level (Create Platforms and Collectibles)
   // loadLevel_3_Objective();
 
+  loadLevel_3_Objective();
 
   createBlock();
   createBall();
@@ -692,12 +693,12 @@ function createBall() {
 }
 
 // Create a platform with a collectible on it
-function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
+function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour, obj_texture) {
 
   // createPlatform() method is overridable with x-y-z
   // coordinates (E.g. createPlatform(10,5,-30))
   platform1 = new JumpPlatform();
-  platform1.createPlatform({ posX: pos_x, posY: pos_y, posZ: pos_z });
+  platform1.createPlatform({ posX: pos_x, posY: pos_y, posZ: pos_z , object_texture: obj_texture});
   platforms.push(platform1);
 
   // createCollectible() method is overridable with x-y-z
@@ -710,6 +711,8 @@ function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
 
 // Platforms and Collectibles to load for level 1 (easy)
 function loadLevel_1_Objective() {
+
+  obj_texture = "image2.jpg";
 
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 5;
@@ -734,19 +737,22 @@ function loadLevel_1_Objective() {
     // createPlatform() method is overridable with x-y-z
     // coordinates (E.g. createPlatform(10,5,-30))
     platform1 = new JumpPlatform();
-    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2], object_texture: obj_texture});
     platforms.push(platform1);
   }
 
   for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
     // Setup Platform with Collectiable on it
     // Parameters: x-y-z coordinates of platform, collectible colour
-    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour, obj_texture);
   }
 }
 
 // Platforms and Collectibles to load for level 2 (intermediate)
 function loadLevel_2_Objective() {
+
+  obj_texture = "image3.webp";
+
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 10;
   collectible_colour = "pink";
@@ -770,20 +776,23 @@ function loadLevel_2_Objective() {
     // createPlatform() method is overridable with x-y-z
     // coordinates (E.g. createPlatform(10,5,-30))
     platform1 = new JumpPlatform();
-    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2], object_texture: obj_texture});
     platforms.push(platform1);
   }
 
   for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
     // Setup Platform with Collectiable on it
     // Parameters: x-y-z coordinates of platform, collectible colour
-    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour, obj_texture);
   }
 
 }
 
 // Platforms and Collectibles to load for level 3 (advanced)
 function loadLevel_3_Objective() {
+
+  obj_texture = "image4.jpg";
+
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 10;
   collectible_colour = "red";
@@ -808,14 +817,14 @@ function loadLevel_3_Objective() {
     // createPlatform() method is overridable with x-y-z
     // coordinates (E.g. createPlatform(10,5,-30))
     platform1 = new JumpPlatform();
-    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2], object_texture: obj_texture });
     platforms.push(platform1);
   }
 
   for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
     // Setup Platform with Collectiable on it
     // Parameters: x-y-z coordinates of platform, collectible colour
-    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour, obj_texture);
   }
 
 }
@@ -1158,7 +1167,7 @@ function isContactNPC() {
     npcContact = true;
 
     if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      mission_active = i+1;
+      mission_active = i+3;
       startMission(mission_active);
     }
     else {
