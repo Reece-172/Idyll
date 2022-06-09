@@ -5,11 +5,6 @@ let physicsWorld,
   renderer,
   rigidBodies = [],
   tmpTrans = null;
-/**TO-DO
- * Orbital control
- * New models
- * Collision -> on new objects
- **/
 
 // Ball Graphics / THREE Object
 let ballObject = null,
@@ -33,7 +28,7 @@ let platform1;
 let platforms = [];
 
 // Levels Completed
-let levels_completed = { one: false, two: false, three: false };
+let levels_completed = [false,false,false];
 let mission_active = 0;
 
 
@@ -42,12 +37,8 @@ let NPCs = [];
 
 
 let NPCObject = null
-//HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
-//@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
-// let collectible1Object = null, //put here if want to make the object global
-//   collectible2Object = null;
 
 let colGroupBall = 2, colGroupNPC = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6, colGroupPlatform = 7; //collision purposes
 
@@ -55,15 +46,14 @@ let collectCounter;
 
 let cbContactPairResult, blockPlane, ball, collectible1, yasuo;
 let cbContactResult;
-const GAMESTATE = {
+const GAMESTATE = {   //gamestates of the game for interface purposes
   PAUSED: 0,
   RUNNING: 1,
-  MENU: 2,
-  GAMEOVER: 3,
-};//for loading screen
+
+};
 
 
-const MISSIONSTATE = { //didn't put mission state under GAMESTATE because we need the game to be in state RUNNING to be in a mission
+const MISSIONSTATE = { //in open-world, can either be free roam or mission
   FREEROAM: 0,
   MISSION: 1
 }
@@ -71,13 +61,13 @@ const MISSIONSTATE = { //didn't put mission state under GAMESTATE because we nee
 let points; //object that displays the points 
 
 
-window.addEventListener('load', function () {
+window.addEventListener('load', function () {   //shows loading page until window has loaded
   var loadingScreen = document.getElementById('loadingScreen');
   document.body.removeChild(loadingScreen);
 });
 
 
-//for fps display
+//for fps/RAM display
 (function () { var script = document.createElement('script'); script.onload = function () { var stats = new Stats(); document.body.appendChild(stats.dom); requestAnimationFrame(function loop() { stats.update(); requestAnimationFrame(loop) }); }; script.src = '//mrdoob.github.io/stats.js/build/stats.min.js'; document.head.appendChild(script); })()
 
 let collectibles = [];
@@ -91,47 +81,39 @@ let isTimeOut = false;
 let myTimer;
 timerDisplay = document.querySelector('#time');
 
+let isQuit = false;
+
 
 //Ammojs Initialization
 Ammo().then(start);
 function start() {
   tmpTrans = new Ammo.btTransform();
   collectCounter = 0;
-  this.gamestate = GAMESTATE.RUNNING;
+  this.gamestate = GAMESTATE.RUNNING;   //change gamestate when game has started
 
 
-
+  //start off in free roam
   freeroam();
 
   setupPhysicsWorld();
   setupGraphics();
 
-  // Load level (Create Platforms and Collectibles)
-  // loadLevel_3_Objective();
-
-
   createBlock();
   createBall();
-  loadNPC();
+
+  //3 npcs
+  loadNPC1();
+  loadNPC2();
+  loadNPC3();
+
+
   createWorld();
-
-
-  // for (var i = 0; i < 50; i++) {
-  // createTree_2();
-  // }
-  // for (var i = 0; i < 50; i++) {
-  //   createTree_3();
-  // }
 
   //createOcean();
   loadVolcano();
-  //createHead();
-  // for (var i = 0; i < 50; i++) {
-  //   createTree();
-  // }  
 
   setupContactResultCallback();
-  setupContactPairResultCallback();
+  setupContactPairResultCallback(); //handles collisions
 
   setupEventHandlers();
   renderFrame();
@@ -218,8 +200,6 @@ function setupGraphics() {
 
   scene.add(camera);
 
-  const PointsEl = document.querySelector("#PointsEl");
-  console.log(PointsEl);
 
   //Add hemisphere light
   let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
@@ -254,6 +234,12 @@ function setupGraphics() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  window.addEventListener('resize', function () {   //when the user resizes their browser window, the game adjusts appropriately
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+
   // Controls -> mouse movement
   orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
   orbitControls.enablePan = false;
@@ -271,12 +257,10 @@ function setupGraphics() {
 function renderFrame() {
   requestAnimationFrame(renderFrame);
   let deltaTime = clock.getDelta();
-  //createFont();
 
   // Move the ball
   moveBall();
 
-  //moveHero();
 
   // Change camera focus according to whether in 1st person or 3rd person mode
   if (firstPerson == true) {
@@ -287,7 +271,7 @@ function renderFrame() {
 
   updatePhysics(deltaTime);
 
-  //pause
+  //if user pauses toggle between paused screen
   if (this.gamestate === GAMESTATE.PAUSED) {
     document.getElementById("Game Paused").style.visibility = "visible";
   }
@@ -308,11 +292,6 @@ function renderFrame() {
     points = document.getElementById('PointsEl');
     points.innerHTML = collectCounter; //updates points on screen
   }
-
-  // if (this.missionstate === MISSIONSTATE.FREEROAM){
-  //   isContactNPC;
-
-  // }
 
   renderer.render(scene, camera);
 
@@ -373,17 +352,12 @@ function handleKeyDown(event) {
 
 
     case 32: //space bar
-      //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
-      //moveDirection.up = 1 //infinitely goes up if key is pressed and held
-      // break;
-      //}
-      // jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
       moveDirection.up = true;
       break;
 
     case 77: //m
-      //checkContact(); //shows what the ball collides with
-      console.log(this.missionstate);
+      checkContact(); //shows what the ball collides with
+      //console.log(this.missionstate);
       break;
 
     case 80: //p
@@ -392,14 +366,6 @@ function handleKeyDown(event) {
 
     case 66: //b
       isContactNPC(); //checks contact with NPC
-      break;
-
-    case 75: //k. TEMPORARY. USED TO TEST QUITTING MISSION
-
-      if (this.missionstate === MISSIONSTATE.MISSION) { //only if player is currently in a mission, then they can quit a mission
-        quitMission();
-      }
-
       break;
 
 
@@ -437,7 +403,6 @@ function handleKeyUp(event) {
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
 
-
   let timerDisplay = document.querySelector('#time');
   timerDisplay.style.display = "flex";
   clearInterval(myTimer);
@@ -461,112 +426,100 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
       timerDisplay.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
 
       //collectibles
+      //if timer has not run out and there are no collectibles
       if (collectibles.length == 0) {
 
+        if (isQuit){return} //if player chooses to quit mission, then dont go ahead with the rest of this function
+
         // Update Level Completion Array
-        levels_completed.one = true;
+        switch (mission_active) {
+          case 1:
+            console.log("Completed Level 1");
+            levels_completed[0] = true;
+            break;
+
+          case 2:
+            console.log("Completed Level 2");
+            levels_completed[1] = true;
+            break;
+
+          case 3:
+            console.log("Completed Level 3");
+            levels_completed[2] = true;
+            break;
+
+        }
         mission_active = 0;
 
         isTimeOut = true;
-        console.log("you have won");
-        totalTime = 0;
+        console.log("you have won");            
+        totalTime = 0;                                        
         //clearInterval(myTimer);
         //create a pop up to give player some story
-        var task = document.createElement('div');
-        task.style.position = 'absolute';
-        task.style.zIndex = 1;
-        task.style.width = 600;
-        task.style.height = 200;
-        task.style.backgroundColor = "#242424";
-        task.style.opacity = "0.9";
-        task.innerHTML = "You have won<br><br>";
-        task.style.color = "white";
-        task.style.top = 200 + 'px';
-        task.style.left = 200 + 'px';
+        var task = document.getElementById('completedMission') ;          //display pop up for a completed level
+        task.style.display = 'flex';
 
         //button to confirm
-        var btnOk = document.createElement('button');
-        btnOk.style.backgroundColor = "red";
-        btnOk.innerHTML = "yay";
+        var btnOk = document.getElementById('Okay');
+
         btnOk.onclick = function () {
-          freeroam();
-          document.body.removeChild(task); 
-  
+          freeroam(); //go back to freeroam if user won
+          task.style.display = 'none';
+
         }
 
-        task.appendChild(btnOk)
-        document.body.appendChild(task)
-          
+
         return;
 
       }
     }
-    else{ //if timer is 0
+    else { //if timer is 0
 
       isTimeOut = true;
       totalTime = 0;
 
-      let boolMsg
-      //TO DO: Game Over screen -> mission failed with restart/exit button
-      //console.log("you have failed (timer function)");
-
+         
+      //if timer is up and there are still collectibles on screen
       if (collectibles.length > 0) {
         console.log("you have lost");
         freeroam();
 
         //create a pop up to give player some story
-        var task = document.createElement('div');
-        task.style.position = 'absolute';
-        task.style.zIndex = 1;
-        task.style.width = 600;
-        task.style.height = 200;
-        task.style.backgroundColor = "#242424";
-        task.style.opacity = "0.9";
-        task.innerHTML = "You have failed. Would you like to retry or quit mission?<br><br>";
-        task.style.color = "white";
-        task.style.top = 200 + 'px';
-        task.style.left = 200 + 'px';
+        var task = document.getElementById('failedMission');    //display pop up if user failed level
+        task.style.display = 'flex';
+
 
         //button to retry
-        var btnOk = document.createElement('button');
-        btnOk.style.backgroundColor = "red";
-        btnOk.innerHTML = "retry";
-        btnOk.onclick = function () { 
+        var btnOk = document.getElementById('Retry');
+        btnOk.onclick = function () {
           console.log("retry mission");
           startMission(mission_active);
-        
-          document.body.removeChild(task); 
+
+          task.style.display = 'none';
 
         }
 
         //button to quit mission and go back to normal
-        var btnCancel = document.createElement('button');
-        btnCancel.style.backgroundColor = "blue";
-        btnCancel.innerHTML = "quit mission";
+        var btnCancel = document.getElementById('Quit_Mission');
+
         btnCancel.onclick = function () {
-          //freeroam(); 
-          document.body.removeChild(task);  
-        } 
+          task.style.display = 'none';
+        }
 
-
-        task.appendChild(btnCancel)
-        task.appendChild(btnOk)
-        document.body.appendChild(task)
-        
         return;
       }
-      
+
 
     }
 
-    
+
   }, 1000);
 
 
   return;
   // if (isTimeOut == false){
   //   timer();
-    
+
   // }
   // else{
   //   clearTimeout(timer);
@@ -576,14 +529,14 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
 }
 
-function createBlock() {
+function createBlock() { //creating the world platform
   let pos = { x: 0, y: 0, z: 0 };
   let scale = { x: 700, y: 2, z: 700 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
-  const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
+  const grass = new THREE.TextureLoader().load("./resources/grass.jpg"); //adding grass as texture
   grass.wrapS = THREE.RepeatWrapping;
   grass.wrapT = THREE.RepeatWrapping;
   grass.repeat.set(8, 8);
@@ -639,13 +592,15 @@ function createBlock() {
   blockPlane.userData.physicsBody = body;
 }
 
-function createBall() {
+function createBall() { //this is what the player controls
   let pos = { x: 0, y: 4, z: 0 };
   let radius = 2;
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 1;
 
   //threeJS Section
+
+  //ball is a Dodecahedron
   ball = ballObject = new THREE.Mesh(
     new THREE.DodecahedronGeometry(radius),
     new THREE.MeshPhongMaterial({ color: 0xff0505 })
@@ -694,12 +649,12 @@ function createBall() {
 }
 
 // Create a platform with a collectible on it
-function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
+function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour, obj_texture) {
 
   // createPlatform() method is overridable with x-y-z
   // coordinates (E.g. createPlatform(10,5,-30))
   platform1 = new JumpPlatform();
-  platform1.createPlatform({ posX: pos_x, posY: pos_y, posZ: pos_z });
+  platform1.createPlatform({ posX: pos_x, posY: pos_y, posZ: pos_z, object_texture: obj_texture });
   platforms.push(platform1);
 
   // createCollectible() method is overridable with x-y-z
@@ -712,6 +667,8 @@ function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour) {
 
 // Platforms and Collectibles to load for level 1 (easy)
 function loadLevel_1_Objective() {
+
+  obj_texture = "image2.jpg";
 
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 5;
@@ -736,19 +693,22 @@ function loadLevel_1_Objective() {
     // createPlatform() method is overridable with x-y-z
     // coordinates (E.g. createPlatform(10,5,-30))
     platform1 = new JumpPlatform();
-    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2], object_texture: obj_texture });
     platforms.push(platform1);
   }
 
   for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
     // Setup Platform with Collectiable on it
     // Parameters: x-y-z coordinates of platform, collectible colour
-    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour, obj_texture);
   }
 }
 
 // Platforms and Collectibles to load for level 2 (intermediate)
 function loadLevel_2_Objective() {
+
+  obj_texture = "image3.webp";
+
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 10;
   collectible_colour = "pink";
@@ -756,7 +716,7 @@ function loadLevel_2_Objective() {
   // Array of all the platform locations
   // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
   all_platform_coordinates = [-20, 5, -20, -30, 10, -40];
-  collectible_platform_coordinates = [-25, 15, -60, -15, 20, -80, 0, 15, -120];
+  collectible_platform_coordinates = [-25, 15, -60, -15, 20, -80, 0, 15, -100];
 
 
   for (var i = 0; i < n; i++) { //add high and low collectibles so user has to jump
@@ -772,20 +732,23 @@ function loadLevel_2_Objective() {
     // createPlatform() method is overridable with x-y-z
     // coordinates (E.g. createPlatform(10,5,-30))
     platform1 = new JumpPlatform();
-    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2], object_texture: obj_texture });
     platforms.push(platform1);
   }
 
   for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
     // Setup Platform with Collectiable on it
     // Parameters: x-y-z coordinates of platform, collectible colour
-    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour, obj_texture);
   }
 
 }
 
 // Platforms and Collectibles to load for level 3 (advanced)
 function loadLevel_3_Objective() {
+
+  obj_texture = "image4.jpg";
+
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 10;
   collectible_colour = "red";
@@ -794,7 +757,7 @@ function loadLevel_3_Objective() {
   // E.g. [Platform1_x, Platform1_y, Platform1_z, Platform2_x, Platform2_y, Platform2_z,]...
   all_platform_coordinates = [-20, 5, -20, -30, 10, -40, -30, 15, -60, -40, 15, -60, -50, 15, -60, -60, 15, -60, -70, 15, -60, -70, 15, -50, -70, 20, -30,
   -65, 25, -10, -55, 30, 10, -35, 35, 10];
-  collectible_platform_coordinates = [-15, 20, -80, 0, 15, -120, -15, 40, 10, -15, 45, 30];
+  collectible_platform_coordinates = [-15, 20, -80, 10, 15, -80, -15, 40, 10, -15, 45, 30];
 
 
   for (var i = 0; i < 10; i++) { //add high and low collectibles so user has to jump
@@ -810,84 +773,16 @@ function loadLevel_3_Objective() {
     // createPlatform() method is overridable with x-y-z
     // coordinates (E.g. createPlatform(10,5,-30))
     platform1 = new JumpPlatform();
-    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2] });
+    platform1.createPlatform({ posX: all_platform_coordinates[i], posY: all_platform_coordinates[i + 1], posZ: all_platform_coordinates[i + 2], object_texture: obj_texture });
     platforms.push(platform1);
   }
 
   for (var i = 0; i < collectible_platform_coordinates.length; i += 3) {
     // Setup Platform with Collectiable on it
     // Parameters: x-y-z coordinates of platform, collectible colour
-    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour);
+    createCollectablePlatform(collectible_platform_coordinates[i], collectible_platform_coordinates[i + 1], collectible_platform_coordinates[i + 2], collectible_colour, obj_texture);
   }
 
-}
-
-function loadNPC() {
-  let pos = { x: 10, y: 1, z: -50 };
-  let quat = { x: 0, y: 0, z: 0, w: 1 };
-  let mass = 0;
-
-  var loader = new THREE.GLTFLoader();
-  loader.load(
-    "./resources/models/Yasuo.glb",
-    function (gltf) {
-      gltf.scene.scale.set(10, 10, 10);
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-        }
-      });
-      yasuo = gltf.scene;
-      yasuo.position.set(pos.x, pos.y, pos.z); //initial position of the model
-      scene.add(yasuo);
-      yasuo.userData.tag = "NPCYasuo";
-      //Ammojs Section -> physics section
-      let transform = new Ammo.btTransform();
-      transform.setIdentity();
-      transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-      // transform.setRotation(
-      //   new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)
-      // );
-
-      let motionState = new Ammo.btDefaultMotionState(transform);
-
-      let localInertia = new Ammo.btVector3(0, 0, 0);
-
-      const colShape = new Ammo.btBoxShape(
-        new Ammo.btVector3(yasuo.scale.x * 0.3, yasuo.scale.y * 2, yasuo.scale.z * 0.5) //this is the size of the box around the model
-      );
-      colShape.getMargin(0.05);
-      colShape.calculateLocalInertia(mass, localInertia);
-      let rbInfo = new Ammo.btRigidBodyConstructionInfo(
-        mass,
-        motionState,
-        colShape,
-        localInertia
-      );
-      let body = new Ammo.btRigidBody(rbInfo);
-
-      body.setFriction(4);
-
-      body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-      physicsWorld.addRigidBody(
-        body,
-        colGroupNPC,
-        colGroupBall | colGroupBlock
-      );
-
-      yasuo.userData.physicsBody = body;
-      rigidBodies.push(yasuo);
-      body.threeObject = yasuo; //using this to show the collisions with the ball (using in setupContactResultCallback)
-
-      NPCs.push(yasuo);
-
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
 }
 
 function directionOffset() {
@@ -1084,51 +979,52 @@ function isCollect() { //checking the collectibles array if any of the collectib
   }
 }
 
-function TogglePause() {
+function TogglePause() {            //change gamestate on click of 'p' key
   if (this.gamestate === GAMESTATE.PAUSED) {
     this.gamestate = GAMESTATE.RUNNING;
 
   }
   else {
     this.gamestate = GAMESTATE.PAUSED;
-    //pause timer
 
 
   }
 }
 
-function Menu() {
+function Menu() {     //on click method to display in game menu
 
   document.getElementById("Menu_Buttons").style.display = 'flex';
 }
 
-function Resume() {
-  //window.location.href="index.html";
+function Resume() {         //on click method close in game menu
   document.getElementById("Menu_Buttons").style.display = 'none';
 
 }
 
-function Controls() {
+function Controls() {     //on click method to display controls
   const controls = document.getElementById("controlsScreen");
   controls.style.display = 'flex';
-  //set controls div to visible
 
 }
-function Back() {
+function Back() {       //on click method to return from controls screen
   const controls = document.getElementById("controlsScreen");
   controls.style.display = 'none';
 }
-function Quit() {
+function Quit() {     //on click method to quit the game
   location.reload();
 
 }
 
-function Begin(){
-  const landing_page= document.getElementById('landingScreen');
-  landing_page.style.display='none';
-  const menu_button=document.getElementById('menu');
-  menu_button.style.display='flex';
+function Begin() {    //on click method to start the game
+  const landing_page = document.getElementById('landingScreen');
+  landing_page.style.display = 'none';
+  const menu_button = document.getElementById('menu');
+  menu_button.style.display = 'flex';
 
+}
+
+function Credits(){     //on click method to view credits
+  window.open('https://idyl.webflow.io/', '_blank');
 }
 
 function setupContactPairResultCallback() {
@@ -1143,15 +1039,16 @@ function setupContactPairResultCallback() {
 
     const distance = contactPoint.getDistance();
 
-    if (distance > 0.5) return;
+    if (distance > 0.5) return; //if distance between objects are greater than 0.5, then no collision
 
     this.hasContact = true;
   };
 }
 
 
-function isContactNPC() {
+function isContactNPC() { //check if contact with npc
 
+  console.log("There are " + NPCs.length + " NPCs");
 
   for (let i = 0; i < NPCs.length; i++) {
 
@@ -1159,66 +1056,105 @@ function isContactNPC() {
 
     physicsWorld.contactPairTest(
       ball.userData.physicsBody,
+      //NPCs[i].getNPCObject().userData.physicsBody,
       NPCs[i].userData.physicsBody,
       cbContactPairResult
     );
 
     npcContact = false;
 
-    if (!cbContactPairResult.hasContact) break;
+    if (cbContactPairResult.hasContact) {
 
-    npcContact = true;
+      npcContact = true;
 
-    if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      mission_active = i+1;
-      startMission(mission_active);
-    }
-    else {
-      console.log("you have not completed the mission yet"); //make this display on screen
+      if (i == 0) {
+
+        if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
+          mission_active = i + 1;
+          startMission(mission_active);
+        }
+        else {
+          const duringMission = document.getElementById('duringMission'); //make this display on screen when user is already in a mission & tries to start a new one
+          duringMission.style.display = 'flex'
+          var Okaybtn = document.getElementById('Ok');
+          Okaybtn.onclick = function () {
+            duringMission.style.display = 'none';
+          }
+        }
+
+
+      } else {
+
+        if (levels_completed[(i-1)] == false) {
+          const prevMission = document.getElementById('prevMission'); //make this display on screen
+          prevMission.style.display = 'flex'
+          var Okaybtn = document.getElementById('prevMissionOk');
+          Okaybtn.onclick = function () {
+            prevMission.style.display = 'none';
+          }
+        } else {
+          if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
+            mission_active = i + 1;
+            startMission(mission_active);
+          }
+          else {
+            const duringMission = document.getElementById('duringMission'); //make this display on screen
+            duringMission.style.display = 'flex'
+            var Okaybtn = document.getElementById('Ok');
+            Okaybtn.onclick = function () {
+              duringMission.style.display = 'none';
+            }
+          }
+
+        }
+      }
+
     }
 
   }
 
-
-
-
 }
 
-function startMission(mission_level){
-  const quit_Button=document.getElementById('Quit_Mission_Button');
-  
-  
+function startMission(mission_level) {
+  const quit_Button = document.getElementById('Quit_Mission_Button');   //make quit level button available when user is in a level
+
+
   //create a pop up to give player some story
   const task = document.getElementById('task');
+  const description=document.getElementById('description');
+
+  switch (mission_level) {
+
+    case 1:
+      console.log("Level 1 started")
+      break;
+
+    case 2:
+
+      console.log("Level 2 started")
+      description.innerHTML='LEVEL 2'+'<br>'+'Greetings mortal! It appears that I have a major deadline coming soon for my research project & I need to collect data. Will you help me?';
+      break;
+
+    case 3:
+      description.innerHTML='LEVEL 3'+'<br>'+'Hello human. I had bad day today & I am feeling down. Will you help me feel better by gathering some feel-good music? ';
+      break;
+  }
+
+
+
   task.style.display='flex';
-  // task.style.position = 'absolute';
-  // task.style.zIndex = 1;  
-  // task.style.width = 600;
-  // task.style.height = 200;
-  // task.style.backgroundColor = "#242424";
-  // task.style.opacity = "0.9";
-  // task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
-  // task.style.color = "white";
-  // task.style.top = 200 + 'px';
-  // task.style.left = 200 + 'px';
+
 
   //button to confirm
   var btnOk = document.getElementById('Accept');
-  btnOk.onclick = function () { 
+  btnOk.onclick = function () {
     console.log("mission started");
-    quit_Button.style.display='flex';
-    document.getElementById('Points').style.display='flex';
+    quit_Button.style.display = 'flex';
+    document.getElementById('Points').style.display = 'flex';
 
-   
+
     collectCounter = 0; //reset counter 
-
-    // let numCollectibles = 1;
-
-    // for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
-    //   collectible1 = new Collectible();
-    //   collectible1.createCollectible();
-    //   collectibles.push(collectible1);
-    // }
+    isQuit = false;
 
     switch (mission_level) {
 
@@ -1228,6 +1164,7 @@ function startMission(mission_level){
         break;
 
       case 2:
+
         console.log("Level 2 started")
         loadLevel_2_Objective();
         break;
@@ -1238,17 +1175,15 @@ function startMission(mission_level){
         break;
     }
 
-    //display points counter
     Mission();
 
-    task.style.display='none';
-    //start timer now 
+    task.style.display = 'none';
   }
 
   //button to not accept mission and go back to normal
   var btnCancel = document.getElementById('Reject');
-  btnCancel.onclick = function () { 
-    task.style.display='none'; 
+  btnCancel.onclick = function () {
+    task.style.display = 'none';
   }
 
 
@@ -1263,55 +1198,24 @@ function Mission() {
 
   let mission_timer = 10;
 
-  switch(mission_active){
+  switch (mission_active) {
 
     case 1:
-    mission_timer = 60;
+      mission_timer = 100;
       break;
 
     case 2:
-    mission_timer = 90;
+      mission_timer = 90;
       break;
 
     case 3:
-    mission_timer = 120;
+      mission_timer = 120;
       break;
 
   }
 
-
-
   startTimer(mission_timer);
   console.log("currently in a mission");
-
-  //window.onload = function () { //this is how you set the timer
-
-  //};
-
-
-  // if ((isTimeOut == false) && (collectibles.length == 0)) {
-  //   console.log("you have won");
-  //   freeroam();
-
-  // }
-  // else if ((isTimeOut) && (collectibles.length > 0)) {
-  //   console.log("you have failed");
-  //   freeroam();
-
-  // }
-  // timer stuff here.
-  // if (timer not run out) && (collectibles.length === 0){ 
-  //  success  
-  // }
-  // else if (timer run out) && (collectibles.length > 0) {
-  //        fail
-  // popup to retry or quit
-  // if quit then return to freeroam. call freeroam()
-  // if retry then call startMission() again ??
-
-  //} 
-
-
 }
 
 function quitMission() {
@@ -1325,17 +1229,20 @@ function quitMission() {
 
   //create a pop up to ask if user wants to quit mission
   var quitMission = document.getElementById('quitMission');
-  quitMission.style.display='flex';
+  quitMission.style.display = 'flex';
 
 
   //button to confirm quit
   var btnQuit = document.getElementById('Yes');
   btnQuit.onclick = function () { //if user wants to quit
-    this.gamestate = GAMESTATE.RUNNING;
+    //this.gamestate = GAMESTATE.RUNNING;
+    isQuit  = true;
     document.getElementById('Points').style.display='none';
     console.log("mission quit");
     freeroam(); //return to freeroam gameplay
     quitMission.style.display='none';
+   
+    return;
     
   }
 
@@ -1344,16 +1251,11 @@ function quitMission() {
   var btnNoQuit = document.getElementById('No');
   btnNoQuit.onclick = function () { //if user doesn't want to quit, carry on with mission
     this.gamestate = GAMESTATE.RUNNING;
-    
-    quitMission.style.display='none';
-    document.getElementById('Menu_Buttons').style.display='none';
+
+    quitMission.style.display = 'none';
+    document.getElementById('Menu_Buttons').style.display = 'none';
     //continue timer
   }
-
-
-
-
-
 
   //this.missionstate = MISSIONSTATE.FREEROAM;
 }
@@ -1405,35 +1307,32 @@ function updatePhysics(deltaTime) { // update physics world
       orbitControls.update();
     }
 
-    if(p.y() <= -10){
+    if (p.y() <= -10) {
       console.log("Off Map");
       const game_over = document.getElementById("GameOverScreen");
       game_over.style.display = "flex";
-    }else{
+    } else {
 
-    objThree.position.set(p.x(), p.y(), p.z());
-    objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+      objThree.position.set(p.x(), p.y(), p.z());
+      objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
     }
 
   }
 }
 
-function arrayRemove(arr, value) {
+function arrayRemove(arr, value) { //general function to remove value from array
 
   return arr.filter(function (element) {
     return element != value; //creates a new array, without the specific element
   });
 }
 
-function freeroam() {
+function freeroam() { //this basically reset all mission stuff to go back to freeroam
 
   this.missionstate = MISSIONSTATE.FREEROAM;
-  
+
   let timerDisplay = document.querySelector('#time');
   timerDisplay.style.display = "none";
-
-  //remove timer
-  //remove points counter
 
   //remove all collectibles
   if (collectibles.length > 0) {
@@ -1457,9 +1356,6 @@ function freeroam() {
     }
 
   }
-
-
-  //delete platforms
 
   collectCounter = 0;
 

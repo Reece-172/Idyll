@@ -2,8 +2,8 @@
     <head>
         <meta charset="utf-8">
         <title>idyll</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <script src="https://cdn.tailwindcss.com"></script>   <!--imported css shortcuts library!-->
+        <link rel="preconnect" href="https://fonts.googleapis.com"> <!--imported fonts from Google Fonts!-->
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&family=Major+Mono+Display&display=swap" rel="stylesheet">
         <style>
@@ -12,11 +12,11 @@
             
             
             ul {
-                position: relative;
+                position: relative;                 /*styling for menu list*/
                 transform: skewY(-15deg);
             }
             #Time {
-                position: absolute;
+                position: absolute;                 /*styling for timer*/
                 left: 50%;
                 top: 2%;
                 font-family: "Games", sans-serif;
@@ -26,14 +26,14 @@
             ul li {
                 position: relative;
                 list-style: none;
-                width: 200px;
+                width: 200px;                   /*styling for menu list*/
                 background: #3e3f46;
                 padding: 15px;
                 z-index: var(--i);
                 transition: 0.5s;
             }
             ul li:hover {
-                transform: translateX(-25px);
+                transform: translateX(-25px);   /*styling for menu list: hover effects*/
             }
             ul li::before {
                 content: "";
@@ -77,7 +77,7 @@
 
             .glow {
                 -webkit-animation: glow 1s ease-in-out infinite alternate;
-                -moz-animation: glow 1s ease-in-out infinite alternate;
+                -moz-animation: glow 1s ease-in-out infinite alternate;         /*styling for opening screen: glowing text*/
                 animation: glow 1s ease-in-out infinite alternate;
             }
 
@@ -96,11 +96,8 @@
   </head>
   <body>
 
-    <div id='loadingScreen' class="loadingScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#77b3d4; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">
-        <img class="cloud" src="./resources/cloud v2.png" alt="cloud" style="height: 200px; position: absolute;">
-        <h3 style="position: absolute; top: 75%; transform: translateY(-75%); color: #fff; font-family:'Comfortaa',cursive;">Loading...</h3>
-    </div> 
-    <div id='landingScreen' class="landingScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:1 ;">
+    
+    <div id='landingScreen' class="landingScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: flex; justify-content: center; align-items: center; opacity:1 ;">            <!--components of the landing screen (first screen the user sees) !-->
         <h3 class="glow" style="position: absolute; top: 15%; left:10%; color: #fff;font-family: 'Comfortaa', cursive; font-size: xxx-large;">idyll</h3>
         <h3 style="position: absolute; top: 35%; left:10%; color: #fff; font-family: 'Major Mono Display', monospace;font-size: x-large;">Welcome</h3>
         <h3 style="position: absolute; top: 45%; left:10%; color: #fff; font-family: 'Comfortaa',cursive">Everything is fine.</h3>
@@ -109,8 +106,12 @@
         <p style="color: #fff;font-size: small; font-family: 'Major Mono Display',monospace; top: 75%; left:19%; transform: translate(-19%, -75%); position: fixed;">Complete the tasks by talking to afterlife guides to gain more points.</p>
 
 
-        <button id="Start" onclick=Begin() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Begin The Journey</button>
+        <button id="Start" onclick=Begin() class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Begin The Journey</button>       <!--on click of a button the game begins !-->
     </div>
+    <div id='loadingScreen' class="loadingScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#77b3d4; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">            <!--components of the loading screen !-->
+        <img class="cloud" src="./resources/cloud v3.png" alt="cloud" style="height: 200px; position: absolute;">
+        <h3 style="position: absolute; top: 75%; transform: translateY(-75%); color: #fff; font-family:'Comfortaa',cursive;">Loading...</h3>
+    </div> 
 
       
     <script src="js/three.min.js"></script>
@@ -124,89 +125,115 @@
     <script src="js/collectible.js"></script>
     <script src="js/jumpPlatform.js"></script>
     <script src="js/StaticModel.js"></script>
+    <script src="js/npc.js"></script>
         
 
-    <div id="Time" class="fixed font-serif text-white ml-2 mt-1 select-none"><span id="time"></span></div>
-    <div id="Points" class="fixed text-white  ml-2 mt-1 select-none " style="display: none; position: fixed; top: 95%; right: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;"><span>Points: </span><span id="PointsEl">0</span></div> 
+    <div id="Time" class="fixed font-serif text-white ml-2 mt-1 select-none"><span id="time"></span></div>  <!--components of the timer !-->
+    <div id="Points" class="fixed text-white  ml-2 mt-1 select-none " style="display: none; position: fixed; top: 95%; right: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;"><span>Points: </span><span id="PointsEl">0</span></div> <!--components of the point tracker !-->
     <!-- <button id="ref-button"
     onclick="alert('1. https://github.com/simondevyoutube/](https://github.com/simondevyoutube/)\n2. https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5](https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5)\n3. Volcano by Poly by Google [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/dwSigTeSMCo)\n4. Bonfire by Quaternius [[CC0]](https://creativecommons.org/publicdomain/zero/1.0/), via [Poly Pizza](https://poly.pizza/m/k1e0cOzi8A)\n5. Adventurer by madtrollstudio [[CC-BY]](https://creativecommons.org/licenses/by/3.0/), via [Poly Pizza](https://poly.pizza/m/w0OIUlEgcF)\n6.LowPolyMegapackfree by QuaterniusDev [[CC0]]https://creativecommons.org/publicdomain/zero/1.0/,via https://www.reddit.com/user/QuaterniusDev/');">References</button>  -->
-    <div class="fixed absolute bottom-0 left-0 h-16 w-16 text-white">
+    <div class="fixed absolute bottom-0 left-0 h-16 w-16 text-white"> <!--button to the in game menu !-->
         <button id="menu" onclick="Menu()" class="border px-4 py-2 rounded-lg text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: none;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
             Menu
         </button>
     </div>
-    <div id="Game Paused"class=" text-align-center text-lg text-white select-none" style="position:fixed;left:45%; top:50%; visibility: hidden; font-family: 'Comfortaa', cursive;">
+    <div id="Game Paused"class=" text-align-center text-lg text-white select-none" style="position:fixed;left:45%; top:50%; visibility: hidden; font-family: 'Comfortaa', cursive;">    <!--displays if the user pauses the game !-->
         Game Paused 
     </div>
 
 
-    <div id='SuccessScreen' class="SuccessScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">
+    <div id='SuccessScreen' class="SuccessScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">      <!--components of the success screen: displays when user has completed the game !-->
         <h3 class=" text-align-center text-white select-none" style="position: fixed; top: 50%; left:44%; font-family: 'Comfortaa', cursive; font-size: x-large;">Congratulations</h3>
         <p class=" text-align-center text-white select-none" style="position: fixed; top: 65%; left:14%;font-family: 'Major Mono Display', monospace; font-size: large;">You have accumulated enough points. You may now enter The Good Place.</p>
 
-        <button id="Restart" onclick='Quit()' class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Restart</button>
+        <button id="Restart" onclick='Quit()' class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Restart</button>      <!--on click of the restart button the landing page is displayed !-->
     </div>
 
-    <div id='GameOverScreen' class="GameOverScreen" style="position: fixed; display:none; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">
+    <div id='GameOverScreen' class="GameOverScreen" style="position: fixed; display:none; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">       <!--the game over screen displays when a user falls off the map & has to restart the game on click of a button !-->
         <h3 class=" text-align-center text-white select-none" style="position: fixed; top: 50%; left:44%; font-family: 'Comfortaa', cursive; font-size: x-large;">GAME OVER</h3>
         <button id="Restart" onclick='Quit()' class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Restart</button>
     </div>
 
-    <div id="Menu_Buttons"class=" flex text-align-center text-lg fixed absolute text-white select-none" style="left:45%; top:35%; display: none;font-family:'Comfortaa',cursive;">
+    <div id="Menu_Buttons"class=" flex text-align-center text-lg fixed absolute text-white select-none" style="left:45%; top:35%; display: none;font-family:'Comfortaa',cursive;">      <!--components of the in game menu !-->
         <ul>
             <li id="Resume_Button" onclick="Resume()" style="--i:5;"><button> Resume  </button></li>
             <li id="Controls_Button" onclick="Controls()" style="--i:4;"><button > Controls  </button></li>
             <li id="Quit_Mission_Button" onclick="quitMission()" style="--i:3; display: none;"><button type="button"> Quit Mission  </button></li>
             <li id="Quit_Button" onclick="Quit()" style="--i:2;"><button> Quit Game</button></li>
-            <li id="Credits_Button" style="--i:1;"><button> Credits  </button></li>
+            <li id="Credits_Button" onclick='Credits()' style="--i:1;"><button> Credits  </button></li>
         </ul> 
     </div>
 
 
 
-    <div id='controlsScreen' class="controlsScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.8;">
-        <img class="mouse" src="./resources/mouse.png" alt="mouse" style="height: 100px; position: absolute;left:19%">
+    <div id='controlsScreen' class="controlsScreen" style="position: fixed; top:0; width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.8;">       <!--components of the controls screen in the in game menu !-->
+        <img class="mouse" src="./resources/mouse.png" alt="mouse" style="height: 100px; position: absolute;left:15%; top:45%">
 
-        <h3 style="position: absolute; top: 65%; left: 19%;transform: translate(-19%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Switch views</h3>
-    
+        <h3 style="position: absolute; top: 65%; left: 15%;transform: translate(-15%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Switch views</h3>
+        
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:31%;font-family:'Comfortaa',cursive;" disabled><span>&#66;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 31%;transform: translate(-31%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Begin Missions</h3>
+
                 
 
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:60%;font-family:'Comfortaa',cursive;" disabled><span>&#70;</span></button>
-        <h3 style="position: absolute; top: 65%; left: 63%;transform: translate(-63%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Toggle Camera</h3>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm " style="position: absolute; display: flex;top: 55%; left:64%;font-family:'Comfortaa',cursive;" disabled><span>&#70;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 67%;transform: translate(-67%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Toggle Camera</h3>
 
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:46%;font-family:'Comfortaa',cursive;" disabled><span>&#83; &#80; &#65; &#67; &#69;</span></button>
-        <h3 style="position: absolute; top: 65%; left: 49%;transform: translate(-49%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Jump</h3>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:50%;font-family:'Comfortaa',cursive;" disabled><span>&#83; &#80; &#65; &#67; &#69;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 54%;transform: translate(-54%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Jump</h3>
         
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:35%;font-family:'Comfortaa',cursive;" disabled><span>&#80;</span></button>
-        <h3 style="position: absolute; top: 65%; left: 36%;transform: translate(-36%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Pause</h3>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; left:42%;font-family:'Comfortaa',cursive;" disabled><span>&#80;</span></button>
+        <h3 style="position: absolute; top: 65%; left: 43.5%;transform: translate(-43.5%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Pause</h3>
 
 
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex; top: 55%; right:23%;font-family:'Comfortaa',cursive;" disabled><span>&#65;</span></button>
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#87;</span></button>
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:15%;font-family:'Comfortaa',cursive;" disabled><span>&#68;</span></button>
-        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#83;</span></button>
-        <h3 style="position: absolute; top: 65%; right: 20%;transform: translate(20%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Move</h3>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex; top: 55%; right:19%;font-family:'Comfortaa',cursive;" disabled><span>&#65;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 47%; right:15%;font-family:'Comfortaa',cursive;" disabled><span>&#87;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:11%;font-family:'Comfortaa',cursive;" disabled><span>&#68;</span></button>
+        <button  class="border px-4 py-2 rounded-lg text-white text-sm" style="position: absolute; display: flex;top: 55%; right:15%;font-family:'Comfortaa',cursive;" disabled><span>&#83;</span></button>
+        <h3 style="position: absolute; top: 65%; right: 15%;transform: translate(15%,-65%); color: #fff; font-family:'Comfortaa',cursive;">Move</h3>
 
-        <button id="back" onclick="Back()" class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: flex;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >
+        <button id="back" onclick="Back()" class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="display: flex;position: fixed; top: 95%; left: 1%; transform: translate(1%, -95%);font-family:'Comfortaa',cursive;" >   <!--back button to exit controls screen !-->
             Back
         </button>
     </div>
 
-    <div id='task' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">
-        <p>Hello there young traveller. I seem to have misplaced my things. Please help me find them.</p>
+    <div id='task' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">          <!--pop up to display description for each level !-->
+        <p id="description">LEVEL 1<br> Hello young soul. I seem to have misplaced my belongings that I urgently need. Will you help me find them?</p>
         <button id='Accept' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Accept</button>
         <button id='Reject' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px; left:100px; display: flex;font-family:'Comfortaa',cursive;">Reject</button>
 
     </div>
 
-    <div id='quitMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">
+    <div id='quitMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">       <!--pop up to display description if user wants to quit a level !-->
         <p>Are you sure you want to quit the mission?</p>
         <button id='Yes' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Yes</button>
         <button id='No' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px; left:100px; display: flex;font-family:'Comfortaa',cursive;">No</button>
 
     </div>
 
-        
-        <!-- webflow credits -->
+    <div id='failedMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">     <!--pop up to display description if user fails a level !-->
+        <p>You have failed. Would you like to retry or quit the mission?</p>
+        <button id='Retry' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Retry</button>
+        <button id='Quit_Mission' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px; left:100px; display: flex;font-family:'Comfortaa',cursive;">Quit Mission</button>
+
+    </div>
+    <div id='duringMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">     <!--pop up to display description if user tries to start another level while still in another level !-->
+        <p>You have not comepleted the mission yet.</p>
+        <button id='Ok' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Okay</button>
+
+    </div>
+    <div id='prevMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">       <!--pop up to display description if user has not completed previous levels (restrict levels) !-->
+        <p>Complete all easier missions to unlock this mission!</p>
+        <button id='prevMissionOk' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Okay</button>
+
+    </div>
+
+    <div id='completedMission' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">      <!--pop up to display description if user completes level successfully !-->
+        <p>Good Job! You collected all the items.</p>
+        <button id='Okay' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Okay</button>
+
+    </div>
+    
+    
     </body>
 </html>

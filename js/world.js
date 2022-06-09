@@ -49,10 +49,10 @@ function createWorld() {
       colShapeScaleZ: 0,
     });
   }
-  Bush = new StaticModel("./resources/models/island_bush_1.glb");
-  for (var i = 0; i < 30; i++) {
-    Bush.createModel({ posY: 0 });
-  }
+  // Bush = new StaticModel("./resources/models/island_bush_1.glb");
+  // for (var i = 0; i < 30; i++) {
+  //   Bush.createModel({ posY: 0 });
+  // }
 //add clouds to the scene
   Cloud = new StaticModel("./resources/models/Clouds.glb");
   for (var i = 0; i < 50; i++) {
