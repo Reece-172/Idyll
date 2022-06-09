@@ -108,9 +108,6 @@ function start() {
   loadNPC2();
   loadNPC3();
 
-  levels_completed[2] = true;
-  levels_completed[1] = true;
-  levels_completed[0] = true;
   loadDoor();
 
   createWorld();
@@ -1215,7 +1212,7 @@ function Mission() {
       break;
 
     case 2:
-      mission_timer = 90;
+      mission_timer = 100;
       break;
 
     case 3:
