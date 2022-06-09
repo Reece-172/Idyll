@@ -114,6 +114,7 @@
     </div> 
 
       
+    <script src="js/door.js"></script>
     <script src="js/three.min.js"></script>
     <script src="js/ammo.js"></script>
     <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
@@ -126,6 +127,7 @@
     <script src="js/jumpPlatform.js"></script>
     <script src="js/StaticModel.js"></script>
     <script src="js/npc.js"></script>
+    
         
 
     <div id="Time" class="fixed font-serif text-white ml-2 mt-1 select-none"><span id="time"></span></div>  <!--components of the timer !-->
@@ -144,7 +146,7 @@
 
     <div id='SuccessScreen' class="SuccessScreen" style="position: fixed;  width:100%; height:100vh; background:#000; display: none; justify-content: center; align-items: center; opacity:0.9 ;">      <!--components of the success screen: displays when user has completed the game !-->
         <h3 class=" text-align-center text-white select-none" style="position: fixed; top: 50%; left:44%; font-family: 'Comfortaa', cursive; font-size: x-large;">Congratulations</h3>
-        <p class=" text-align-center text-white select-none" style="position: fixed; top: 65%; left:14%;font-family: 'Major Mono Display', monospace; font-size: large;">You have accumulated enough points. You may now enter The Good Place.</p>
+        <p class=" text-align-center text-white select-none" style="position: fixed; top: 65%; left:22%;font-family: 'Major Mono Display', monospace; font-size: large;">You have accumulated enough points. You may now enter The Good Place.</p>
 
         <button id="Restart" onclick='Quit()' class="border px-4 py-2 rounded-lg text-sm text-white hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style=" position:fixed;top: 80%; left: 50%; transform: translate(-50%, 80%);font-family:'Comfortaa',cursive;">Restart</button>      <!--on click of the restart button the landing page is displayed !-->
     </div>
@@ -198,7 +200,7 @@
     </div>
 
     <div id='task' class='text-white border px-4 py-2 rounded-lg' style="font-family:'Comfortaa',cursive;display:none; top: 200px;left: 200px;position:absolute;z-index: 1;width: 500; height:200; background-color: #000; opacity: 0.9;">          <!--pop up to display description for each level !-->
-        <p id="description">LEVEL 1<br> Hello young soul. I seem to have misplaced my belongings that I urgently need. Will you help me find them?</p>
+        <p id="description">LEVEL 1<br> Hello young soul. I seem to have misplaced my belongings that I urgently need. Will you help me find them?<br>Target points: 8</p>
         <button id='Accept' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px;display: flex;font-family:'Comfortaa',cursive;">Accept</button>
         <button id='Reject' class="border px-4 py-2 rounded-lg text-white text-sm hover:bg-white hover:text-[#9ca3af] hover:border-[#f1f5f9]" style="position:absolute; top:130px; left:100px; display: flex;font-family:'Comfortaa',cursive;">Reject</button>
 

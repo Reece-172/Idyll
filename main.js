@@ -27,6 +27,8 @@ rotateAngle = new THREE.Vector3(0, 1, 0);
 let platform1;
 let platforms = [];
 
+let doorObject;
+
 // Levels Completed
 let levels_completed = [false,false,false];
 let mission_active = 0;
@@ -44,7 +46,7 @@ let colGroupBall = 2, colGroupNPC = 5, colGroupCollectible = 3, colGroupBlock = 
 
 let collectCounter;
 
-let cbContactPairResult, blockPlane, ball, collectible1, yasuo;
+let cbContactPairResult, blockPlane, ball, collectible1;
 let cbContactResult;
 const GAMESTATE = {   //gamestates of the game for interface purposes
   PAUSED: 0,
@@ -106,6 +108,10 @@ function start() {
   loadNPC2();
   loadNPC3();
 
+  levels_completed[2] = true;
+  levels_completed[1] = true;
+  levels_completed[0] = true;
+  loadDoor();
 
   createWorld();
 
@@ -288,9 +294,13 @@ function renderFrame() {
       isCollect();
     }
 
+ 
+
     points = document.getElementById('PointsEl');
     points.innerHTML = collectCounter; //updates points on screen
   }
+
+  isContactDoor();
 
   renderer.render(scene, camera);
 
@@ -1130,11 +1140,11 @@ function startMission(mission_level) {
     case 2:
 
       console.log("Level 2 started")
-      description.innerHTML='LEVEL 2'+'<br>'+'Greetings mortal! It appears that I have a major deadline coming soon for my research project & I need to collect data. Will you help me?';
+      description.innerHTML='LEVEL 2'+'<br>'+'Greetings mortal! It appears that I have a major deadline coming soon for my research project & I need to collect data. Will you help me?' + '<br>' + 'Target points: 13';
       break;
 
     case 3:
-      description.innerHTML='LEVEL 3'+'<br>'+'Hello human. I had bad day today & I am feeling down. Will you help me feel better by gathering some feel-good music? ';
+      description.innerHTML='LEVEL 3'+'<br>'+'Hello human. I had bad day today & I am feeling down. Will you help me feel better by gathering some feel-good music? '  + '<br>' + 'Target points: 14';
       break;
   }
 
@@ -1360,3 +1370,35 @@ function freeroam() { //this basically reset all mission stuff to go back to fre
 
 
 }
+
+function isContactDoor() { //check if contact with door
+
+
+  cbContactPairResult.hasContact = false;
+
+  physicsWorld.contactPairTest(
+    ball.userData.physicsBody,
+    doorObject.userData.physicsBody,
+    cbContactPairResult
+  );
+
+
+  if (!cbContactPairResult.hasContact) {return} //return if no contact
+
+  if (levels_completed[2]){
+    console.log("you have succeeded in everything")
+    let successScreen = document.getElementById("SuccessScreen");
+    successScreen.style.display = "flex";
+    //window.reload();
+  }
+  else{
+    console.log("you have not completed all missions as yet")
+  }
+
+
+
+
+  
+
+}
+
