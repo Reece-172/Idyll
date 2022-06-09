@@ -160,8 +160,8 @@ function setupGraphics() {
 
   //create the scene
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xffffff, 0.015, 1500);
-  const loader = new THREE.CubeTextureLoader();
+  scene.fog = new THREE.Fog(0xffffff, 0.015, 1500); //fog color, near, far
+  const loader = new THREE.CubeTextureLoader();//cubemap used for the static skybox
   const texture = loader.load([
     "./resources/skybox/posx.jpg", //left
     "./resources/skybox/negx.jpg", //right
@@ -183,6 +183,7 @@ function setupGraphics() {
   camera.position.set(0, 20, 50);
   camera.lookAt(new THREE.Vector3(0, 20, 20));
 
+  //orthographic camera for map
   mapCamera = new THREE.OrthographicCamera(
     window.innerWidth / -10, // Left
     window.innerWidth / 10, // Right
@@ -316,6 +317,7 @@ function renderFrame() {
   renderer.render(scene, camera);
 
   renderer.clearDepth();
+// only the pixels within the defined scissor area will be affected by further renderer actions - the minimap
   renderer.setScissorTest(true);
   renderer.setScissor(
     window.innerWidth - mapWidth - 16,
@@ -1059,7 +1061,7 @@ function isCollect() { //checking the collectibles array if any of the collectib
 
       const audio = new THREE.Audio(listener);
 
-      //background music plays when the game is running
+      //an audio file is loaded and then played -> used for the collectibles
       loadAudio.load("./resources/collectible.wav", function (buffer) {
         audio.setBuffer(buffer);
         audio.setLoop(false);
