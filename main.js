@@ -1122,17 +1122,29 @@ function startMission(mission_level){
   
   //create a pop up to give player some story
   const task = document.getElementById('task');
+  const description=document.getElementById('description');
+
+  switch (mission_level) {
+
+    case 1:
+      console.log("Level 1 started")
+      break;
+
+    case 2:
+
+      console.log("Level 2 started")
+      description.innerHTML='LEVEL 2'+'<br>'+'Greetings mortal! It appears that I have a major deadline coming soon for my research project & I need to collect data. Will you help me?';
+      break;
+
+    case 3:
+      description.innerHTML='LEVEL 3'+'<br>'+'Hello human. I had bad day today & I am feeling down. Will you help me feel better by gathering some feel-good music? ';
+      break;
+  }
+
+
+
   task.style.display='flex';
-  // task.style.position = 'absolute';
-  // task.style.zIndex = 1;  
-  // task.style.width = 600;
-  // task.style.height = 200;
-  // task.style.backgroundColor = "#242424";
-  // task.style.opacity = "0.9";
-  // task.innerHTML = "Hello there young traveller. I seem to have misplaced my things. Please help me find them<br><br>";
-  // task.style.color = "white";
-  // task.style.top = 200 + 'px';
-  // task.style.left = 200 + 'px';
+
 
   //button to confirm
   var btnOk = document.getElementById('Accept');
@@ -1161,6 +1173,7 @@ function startMission(mission_level){
         break;
 
       case 2:
+
         console.log("Level 2 started")
         loadLevel_2_Objective();
         break;
