@@ -5,11 +5,6 @@ let physicsWorld,
   renderer,
   rigidBodies = [],
   tmpTrans = null;
-/**TO-DO
- * Orbital control
- * New models
- * Collision -> on new objects
- **/
 
 // Ball Graphics / THREE Object
 let ballObject = null,
@@ -42,12 +37,8 @@ let NPCs = [];
 
 
 let NPCObject = null
-//HeroMoveDirection = { left: 0, right: 0, forward: 0, back: 0 };
 const STATE = { DISABLE_DEACTIVATION: 4 };
-//@deveshj48 add the collision configuration here -> kniematic objects and what nnot
 
-// let collectible1Object = null, //put here if want to make the object global
-//   collectible2Object = null;
 
 let colGroupBall = 2, colGroupNPC = 5, colGroupCollectible = 3, colGroupBlock = 1, colGroupTree = 4, colGroupModel = 6, colGroupPlatform = 7; //collision purposes
 
@@ -63,7 +54,7 @@ const GAMESTATE = {
 };//for loading screen
 
 
-const MISSIONSTATE = { //didn't put mission state under GAMESTATE because we need the game to be in state RUNNING to be in a mission
+const MISSIONSTATE = { //in open-world, can either be free roam or mission
   FREEROAM: 0,
   MISSION: 1
 }
@@ -102,7 +93,7 @@ function start() {
   this.gamestate = GAMESTATE.RUNNING;
 
 
-
+  //start off in free roam
   freeroam();
 
   setupPhysicsWorld();
@@ -111,34 +102,19 @@ function start() {
   createBlock();
   createBall();
 
+  //3 npcs
   loadNPC1();
   loadNPC2();
   loadNPC3();
 
 
-  // let NPC1 = new NPC("./resources/models/Yasuo.glb");
-  // NPC1.createNPC();
-  // NPCs.push(NPC1);
-
   createWorld();
-
-
-  // for (var i = 0; i < 50; i++) {
-  // createTree_2();
-  // }
-  // for (var i = 0; i < 50; i++) {
-  //   createTree_3();
-  // }
 
   //createOcean();
   loadVolcano();
-  //createHead();
-  // for (var i = 0; i < 50; i++) {
-  //   createTree();
-  // }  
 
   setupContactResultCallback();
-  setupContactPairResultCallback();
+  setupContactPairResultCallback(); //handles collisions
 
   setupEventHandlers();
   renderFrame();
@@ -283,12 +259,10 @@ function setupGraphics() {
 function renderFrame() {
   requestAnimationFrame(renderFrame);
   let deltaTime = clock.getDelta();
-  //createFont();
 
   // Move the ball
   moveBall();
 
-  //moveHero();
 
   // Change camera focus according to whether in 1st person or 3rd person mode
   if (firstPerson == true) {
@@ -320,11 +294,6 @@ function renderFrame() {
     points = document.getElementById('PointsEl');
     points.innerHTML = collectCounter; //updates points on screen
   }
-
-  // if (this.missionstate === MISSIONSTATE.FREEROAM){
-  //   isContactNPC;
-
-  // }
 
   renderer.render(scene, camera);
 
@@ -384,11 +353,6 @@ function handleKeyDown(event) {
 
 
     case 32: //space bar
-      //if (ballObject.position.getComponent(1) <= 10){ //get the y-component. only allow to jump if the y-comp is <=6, otherwise they can jump forever
-      //moveDirection.up = 1 //infinitely goes up if key is pressed and held
-      // break;
-      //}
-      // jump(); //get to work simultaneously with movement, ie, be able to jump while a movement key is pressed
       moveDirection.up = true;
       break;
 
@@ -403,14 +367,6 @@ function handleKeyDown(event) {
 
     case 66: //b
       isContactNPC(); //checks contact with NPC
-      break;
-
-    case 75: //k. TEMPORARY. USED TO TEST QUITTING MISSION
-
-      if (this.missionstate === MISSIONSTATE.MISSION) { //only if player is currently in a mission, then they can quit a mission
-        quitMission();
-      }
-
       break;
 
 
@@ -471,6 +427,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
       timerDisplay.textContent = minutes + ":" + seconds; //display the timer on the HTML created element
 
       //collectibles
+      //if timer has not run out and there are no collectibles
       if (collectibles.length == 0) {
 
         if (isQuit){return} //if player chooses to quit mission, then dont go ahead with the rest of this function
@@ -499,7 +456,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         console.log("you have won");
         totalTime = 0;
         //clearInterval(myTimer);
-        //create a pop up to give player some story
+        //create a pop up to give player story
         var task = document.getElementById('completedMission');
         task.style.display = 'flex';
 
@@ -507,7 +464,7 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         var btnOk = document.getElementById('Okay');
 
         btnOk.onclick = function () {
-          freeroam();
+          freeroam(); //go back to freeroam if user won
           task.style.display = 'none';
 
         }
@@ -522,10 +479,8 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
       isTimeOut = true;
       totalTime = 0;
 
-      let boolMsg
-      //TO DO: Game Over screen -> mission failed with restart/exit button
-      //console.log("you have failed (timer function)");
-
+         
+      //if timer is up and there are still collectibles on screen
       if (collectibles.length > 0) {
         console.log("you have lost");
         freeroam();
@@ -549,11 +504,8 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
         var btnCancel = document.getElementById('Quit_Mission');
 
         btnCancel.onclick = function () {
-          //freeroam(); 
           task.style.display = 'none';
         }
-
-
 
         return;
       }
@@ -578,14 +530,14 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
 }
 
-function createBlock() {
+function createBlock() { //creating the world platform
   let pos = { x: 0, y: 0, z: 0 };
   let scale = { x: 700, y: 2, z: 700 };
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 0;
 
   //threeJS Section
-  const grass = new THREE.TextureLoader().load("./resources/grass.jpg");
+  const grass = new THREE.TextureLoader().load("./resources/grass.jpg"); //adding grass as texture
   grass.wrapS = THREE.RepeatWrapping;
   grass.wrapT = THREE.RepeatWrapping;
   grass.repeat.set(8, 8);
@@ -641,13 +593,15 @@ function createBlock() {
   blockPlane.userData.physicsBody = body;
 }
 
-function createBall() {
+function createBall() { //this is what the player controls
   let pos = { x: 0, y: 4, z: 0 };
   let radius = 2;
   let quat = { x: 0, y: 0, z: 0, w: 1 };
   let mass = 1;
 
   //threeJS Section
+
+  //ball is a Dodecahedron
   ball = ballObject = new THREE.Mesh(
     new THREE.DodecahedronGeometry(radius),
     new THREE.MeshPhongMaterial({ color: 0xff0505 })
@@ -1085,14 +1039,14 @@ function setupContactPairResultCallback() {
 
     const distance = contactPoint.getDistance();
 
-    if (distance > 0.5) return;
+    if (distance > 0.5) return; //if distance between objects are greater than 0.5, then no collision
 
     this.hasContact = true;
   };
 }
 
 
-function isContactNPC() {
+function isContactNPC() { //check if contact with npc
 
   console.log("There are " + NPCs.length + " NPCs");
 
@@ -1202,14 +1156,6 @@ function startMission(mission_level) {
     collectCounter = 0; //reset counter 
     isQuit = false;
 
-    // let numCollectibles = 1;
-
-    // for (var i = 0; i < numCollectibles; i++) { //add high and low collectibles so user has to jump
-    //   collectible1 = new Collectible();
-    //   collectible1.createCollectible();
-    //   collectibles.push(collectible1);
-    // }
-
     switch (mission_level) {
 
       case 1:
@@ -1229,11 +1175,9 @@ function startMission(mission_level) {
         break;
     }
 
-    //display points counter
     Mission();
 
     task.style.display = 'none';
-    //start timer now 
   }
 
   //button to not accept mission and go back to normal
@@ -1257,7 +1201,7 @@ function Mission() {
   switch (mission_active) {
 
     case 1:
-      mission_timer = 60;
+      mission_timer = 100;
       break;
 
     case 2:
@@ -1270,13 +1214,8 @@ function Mission() {
 
   }
 
-
-
   startTimer(mission_timer);
   console.log("currently in a mission");
-
-
-
 }
 
 function quitMission() {
@@ -1381,22 +1320,19 @@ function updatePhysics(deltaTime) { // update physics world
   }
 }
 
-function arrayRemove(arr, value) {
+function arrayRemove(arr, value) { //general function to remove value from array
 
   return arr.filter(function (element) {
     return element != value; //creates a new array, without the specific element
   });
 }
 
-function freeroam() {
+function freeroam() { //this basically reset all mission stuff to go back to freeroam
 
   this.missionstate = MISSIONSTATE.FREEROAM;
 
   let timerDisplay = document.querySelector('#time');
   timerDisplay.style.display = "none";
-
-  //remove timer
-  //remove points counter
 
   //remove all collectibles
   if (collectibles.length > 0) {
