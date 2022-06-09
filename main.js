@@ -1097,24 +1097,23 @@ function isContactNPC() {
 
       npcContact = true;
 
-    if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      mission_active = i+1;
-      startMission(mission_active);
-    }
-    else {
-      const duringMission=document.getElementById('duringMission'); //make this display on screen
-      duringMission.style.display='flex'
-      var Okaybtn=document.getElementById('Ok');
-      Okaybtn.onclick = function () { 
-        duringMission.style.display='none'; 
+      if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
+        mission_active = i+1;
+        startMission(mission_active);
       }
+      else {
+        const duringMission=document.getElementById('duringMission'); //make this display on screen
+        duringMission.style.display='flex'
+        var Okaybtn=document.getElementById('Ok');
+        Okaybtn.onclick = function () { 
+          duringMission.style.display='none'; 
+        }
+      }
+
     }
 
   }
 
-  }
-
-  }
 }
 
 function startMission(mission_level){
