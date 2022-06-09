@@ -106,11 +106,6 @@ function start() {
   setupPhysicsWorld();
   setupGraphics();
 
-  // Load level (Create Platforms and Collectibles)
-  // loadLevel_3_Objective();
-
-  loadLevel_3_Objective();
-
   createBlock();
   createBall();
 
@@ -1104,7 +1099,7 @@ function isContactNPC() {
       npcContact = true;
 
     if (this.missionstate !== MISSIONSTATE.MISSION) { //if we are not in a mission, then start a mission
-      mission_active = i+3;
+      mission_active = i+1;
       startMission(mission_active);
     }
     else {
@@ -1118,7 +1113,7 @@ function isContactNPC() {
 
   }
 
-
+  }
 
 
 }
