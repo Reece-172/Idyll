@@ -91,6 +91,8 @@ let isTimeOut = false;
 let myTimer;
 timerDisplay = document.querySelector('#time');
 
+let isQuit = false;
+
 
 //Ammojs Initialization
 Ammo().then(start);
@@ -446,7 +448,6 @@ function handleKeyUp(event) {
 
 function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/how-to-write-a-countdown-timer-in-javascript
 
-
   let timerDisplay = document.querySelector('#time');
   timerDisplay.style.display = "flex";
   clearInterval(myTimer);
@@ -471,6 +472,8 @@ function startTimer(totalTime) {//https://stackoverflow.com/questions/20618355/h
 
       //collectibles
       if (collectibles.length == 0) {
+
+        if (isQuit){return} //if player chooses to quit mission, then dont go ahead with the rest of this function
 
         // Update Level Completion Array
         levels_completed.one = true;
@@ -813,10 +816,6 @@ function loadLevel_3_Objective() {
 
 }
 
-
-
-
-
 function directionOffset() {
   var directionOffset = 0;
 
@@ -1115,7 +1114,7 @@ function isContactNPC() {
 
   }
 
-
+  }
 }
 
 function startMission(mission_level){
@@ -1157,6 +1156,7 @@ function startMission(mission_level){
 
    
     collectCounter = 0; //reset counter 
+    isQuit = false;
 
     // let numCollectibles = 1;
 
@@ -1231,32 +1231,6 @@ function Mission() {
   startTimer(mission_timer);
   console.log("currently in a mission");
 
-  //window.onload = function () { //this is how you set the timer
-
-  //};
-
-
-  // if ((isTimeOut == false) && (collectibles.length == 0)) {
-  //   console.log("you have won");
-  //   freeroam();
-
-  // }
-  // else if ((isTimeOut) && (collectibles.length > 0)) {
-  //   console.log("you have failed");
-  //   freeroam();
-
-  // }
-  // timer stuff here.
-  // if (timer not run out) && (collectibles.length === 0){ 
-  //  success  
-  // }
-  // else if (timer run out) && (collectibles.length > 0) {
-  //        fail
-  // popup to retry or quit
-  // if quit then return to freeroam. call freeroam()
-  // if retry then call startMission() again ??
-
-  //} 
 
 
 }
@@ -1278,11 +1252,14 @@ function quitMission() {
   //button to confirm quit
   var btnQuit = document.getElementById('Yes');
   btnQuit.onclick = function () { //if user wants to quit
-    this.gamestate = GAMESTATE.RUNNING;
+    //this.gamestate = GAMESTATE.RUNNING;
+    isQuit  = true;
     document.getElementById('Points').style.display='none';
     console.log("mission quit");
     freeroam(); //return to freeroam gameplay
     quitMission.style.display='none';
+   
+    return;
     
   }
 
@@ -1296,11 +1273,6 @@ function quitMission() {
     document.getElementById('Menu_Buttons').style.display='none';
     //continue timer
   }
-
-
-
-
-
 
   //this.missionstate = MISSIONSTATE.FREEROAM;
 }
@@ -1404,9 +1376,6 @@ function freeroam() {
     }
 
   }
-
-
-  //delete platforms
 
   collectCounter = 0;
 
