@@ -108,9 +108,6 @@ function start() {
   loadNPC2();
   loadNPC3();
 
-  levels_completed[2] = true;
-  levels_completed[1] = true;
-  levels_completed[0] = true;
   loadDoor();
 
   createWorld();
@@ -199,7 +196,7 @@ function setupGraphics() {
   loadAudio.load("./resources/idyll.mp3", function (buffer) {
     audio.setBuffer(buffer);
     audio.setLoop(true);
-    audio.setVolume(0.4);
+    audio.setVolume(0.2);
     audio.play();
   });
   scene.add(audio);
@@ -1211,7 +1208,7 @@ function Mission() {
   switch (mission_active) {
 
     case 1:
-      mission_timer = 100;
+      mission_timer = 60;
       break;
 
     case 2:
