@@ -1212,7 +1212,7 @@ function Mission() {
       break;
 
     case 2:
-      mission_timer = 90;
+      mission_timer = 100;
       break;
 
     case 3:
