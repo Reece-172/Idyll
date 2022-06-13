@@ -675,7 +675,7 @@ function createCollectablePlatform(pos_x, pos_y, pos_z, collectible_colour, obj_
 // Platforms and Collectibles to load for level 1 (easy)
 function loadLevel_1_Objective() {
 
-  obj_texture = "image2.jpg";
+  obj_texture = "platform_texture_1.jpg";
 
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 5;
@@ -714,7 +714,7 @@ function loadLevel_1_Objective() {
 // Platforms and Collectibles to load for level 2 (intermediate)
 function loadLevel_2_Objective() {
 
-  obj_texture = "image3.webp";
+  obj_texture = "platform_texture_2.webp";
 
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 10;
@@ -754,7 +754,7 @@ function loadLevel_2_Objective() {
 // Platforms and Collectibles to load for level 3 (advanced)
 function loadLevel_3_Objective() {
 
-  obj_texture = "image4.jpg";
+  obj_texture = "platform_texture_3.jpg";
 
   // NOTE: Total Collectibles is n + (collectible_platform_coordinates.length / 3)
   n = 10;
